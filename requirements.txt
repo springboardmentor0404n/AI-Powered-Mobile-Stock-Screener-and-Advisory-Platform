@@ -1,0 +1,10 @@
+Flask
+Flask-JWT-Extended
+SQLAlchemy
+psycopg2-binary
+requests
+Werkzeug
+dotenv
+flask_cors
+pandas
+google
