@@ -50,10 +50,12 @@ def create_app():
     from app.routes.gateway_routes import gateway_bp
     from app.routes.upload import upload_bp
     from app.routes.chat import chat_bp
+    from app.routes.analytics import analytics_bp   # ✅ NEW
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(gateway_bp, url_prefix="/gateway")
     app.register_blueprint(upload_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(analytics_bp)             # ✅ NEW
 
     return app

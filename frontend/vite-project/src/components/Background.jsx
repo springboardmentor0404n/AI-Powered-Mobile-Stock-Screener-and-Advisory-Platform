@@ -4,21 +4,61 @@ export default function Background() {
   return (
     <>
       <style>{`
-        .bg-root{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
-        .bg-blob{ position:absolute; border-radius:50%; filter:blur(60px); opacity:0.7; transform:translate3d(0,0,0); }
-        .b1{ width:520px; height:520px; left:-120px; top:-80px; background: radial-gradient(circle at 30% 30%, #7c3aed, #4f46e5 60%, transparent 70%); animation: move1 12s ease-in-out infinite; }
-        .b2{ width:420px; height:420px; right:-100px; top:40px; background: radial-gradient(circle at 20% 20%, #06b6d4, #0ea5a4 50%, transparent 70%); animation: move2 14s ease-in-out infinite; }
-        .b3{ width:360px; height:360px; right:30%; bottom:-140px; background: radial-gradient(circle at 40% 40%, #fb7185, #fb923c 50%, transparent 70%); animation: move3 10s ease-in-out infinite; }
+        .bg-root { 
+          position: fixed; 
+          inset: 0; 
+          z-index: -1; 
+          background-color: #f8fafc; /* Very light slate */
+          overflow: hidden; 
+          pointer-events: none; 
+        }
 
-        @keyframes move1{ 0%{ transform: translateY(0) translateX(0) } 50%{ transform: translateY(30px) translateX(20px)} 100%{ transform: translateY(0) translateX(0)} }
-        @keyframes move2{ 0%{ transform: translateY(0) translateX(0) } 50%{ transform: translateY(-30px) translateX(-20px)} 100%{ transform: translateY(0) translateX(0)} }
-        @keyframes move3{ 0%{ transform: translateY(0) translateX(0) } 50%{ transform: translateY(20px) translateX(-30px)} 100%{ transform: translateY(0) translateX(0)} }
+        /* The Grid Pattern */
+        .bg-grid {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+          background-size: 40px 40px;
+          mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+        }
+
+        /* The Dynamic Glow */
+        .bg-glow { 
+          position: absolute; 
+          width: 800px; 
+          height: 800px; 
+          border-radius: 50%; 
+          filter: blur(100px); 
+          opacity: 0.15;
+          background: radial-gradient(circle, #6366f1, #a855f7, transparent 70%);
+          animation: orbit 20s linear infinite;
+        }
+
+        @keyframes orbit {
+          0% { top: -10%; left: -10%; transform: scale(1); }
+          33% { top: 20%; left: 60%; transform: scale(1.1); }
+          66% { top: 60%; left: 10%; transform: scale(0.9); }
+          100% { top: -10%; left: -10%; transform: scale(1); }
+        }
       `}</style>
 
       <div className="bg-root">
-        <div className="bg-blob b1" aria-hidden="true" />
-        <div className="bg-blob b2" aria-hidden="true" />
-        <div className="bg-blob b3" aria-hidden="true" />
+        {/* Subtle geometric grid */}
+        <div className="bg-grid" aria-hidden="true" />
+        
+        {/* One large, slow, professional moving light */}
+        <div className="bg-glow" aria-hidden="true" />
+        
+        {/* Decorative noise texture (optional for high-end feel) */}
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          opacity: 0.02, 
+          pointerEvents: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` 
+        }} />
       </div>
     </>
   );
