@@ -10,15 +10,24 @@ import {
   Skeleton,
   Container,
   alpha,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  IconButton
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import CloseIcon from "@mui/icons-material/Close"; // ✅ New Import
 import { useNavigate } from "react-router-dom";
 
 import MainHeader from "../components/MainHeader";
@@ -27,7 +36,7 @@ import api from "../services/api";
 /* Charts & Components */
 import TopStocksBar from "../components/charts/TopStocksBar";
 import VolumePie from "../components/charts/VolumePie";
-import PortfolioCard from "../components/PortfolioCard"; // 🔥 New landscape card
+import PortfolioCard from "../components/PortfolioCard"; 
 import { getTopStocks, getVolumeData } from "../services/analyticsApi";
 import { useWatchlistStore } from "../store/useWatchlistStore";
 
@@ -35,8 +44,13 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [topStocks, setTopStocks] = useState([]);
   const [volumeData, setVolumeData] = useState([]);
-  const navigate = useNavigate();
   
+  // ✅ NEW: Deep-dive state for Stock Details
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [stockDetailData, setStockDetailData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const navigate = useNavigate();
   const { watchlist } = useWatchlistStore();
 
   useEffect(() => {
@@ -45,15 +59,10 @@ export default function Dashboard() {
       if (!rows.length) return setStats({});
 
       const sortedByPrice = [...rows].sort((a, b) => Number(b.close || 0) - Number(a.close || 0));
-      const highestPrice = sortedByPrice[0];
-      const lowestPrice = sortedByPrice[sortedByPrice.length - 1];
-      const highestVolume = [...rows].sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0))[0];
-
       setStats({
         total: rows.length,
-        highestPrice,
-        lowestPrice,
-        highestVolume,
+        highestPrice: sortedByPrice[0],
+        lowestPrice: sortedByPrice[sortedByPrice.length - 1],
       });
     });
 
@@ -61,11 +70,24 @@ export default function Dashboard() {
     getVolumeData().then((res) => setVolumeData(res.data || []));
   }, []);
 
+  // ✅ NEW: Fetch detailed CSV data for a specific stock
+  const handleChartClick = async (symbol) => {
+    if (!symbol) return;
+    try {
+      const res = await api.get(`/analytics/stock-details/${symbol}`);
+      setStockDetailData(res.data);
+      setSelectedStock(symbol);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error fetching stock details", err);
+    }
+  };
+
   return (
-    <Box sx={{ backgroundColor: "#fdfdff", minHeight: "100vh", pb: 10 }}>
+    <Box sx={{ backgroundColor: "#fdfdff", minHeight: "100vh", pb: 5 }}>
       <MainHeader title="AI Stock Screener" />
 
-      <Container maxWidth="xl" sx={{ pt: 4 }}>
+      <Container maxWidth={false} sx={{ pt: 4, px: { xs: 2, md: 8, lg:10, xl: 12 } }}>
         
         {/* HEADER SECTION */}
         <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
@@ -99,16 +121,15 @@ export default function Dashboard() {
           </Button>
         </Box>
 
-        {/* --- 1. COMPACT STATUS BAR (KPI + MARKET INSIGHTS) --- */}
-        <Grid container spacing={2} mb={6}>
+        {/* --- 1. COMPACT STATUS BAR --- */}
+        <Grid container spacing={2} mb={5}>
           <Grid item xs={12} sm={6} md={2}>
             <KpiCard title="Universe" value={stats?.total} icon={<AutoGraphIcon />} color="#6366f1" />
           </Grid>
-          <Grid item xs={12} sm={6} md={2.5}>
+          <Grid item xs={12} sm={6} md={2}>
             <KpiCard title="AI Signals" value="Optimal" icon={<AccountBalanceWalletIcon />} color="#ec4899" />
           </Grid>
-          
-          <Grid item xs={12} sm={6} md={3.75}>
+          <Grid item xs={12} sm={6} md={4}>
             <InsightItem 
               title="Global Market High" 
               stock={stats?.highestPrice} 
@@ -116,7 +137,7 @@ export default function Dashboard() {
               color="#10b981"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3.75}>
+          <Grid item xs={12} sm={6} md={4}>
             <InsightItem 
               title="Global Market Low" 
               stock={stats?.lowestPrice} 
@@ -126,88 +147,134 @@ export default function Dashboard() {
           </Grid>
         </Grid>
 
-        <Grid container spacing={4}>
-          {/* 2. TOP ROW: DUAL VISUALIZATIONS */}
-          <Grid item xs={12} lg={8.5}>
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 8, border: "1px solid #f1f5f9", bgcolor: '#fff', height: '100%' }}>
-              <Typography variant="h6" fontWeight={800} color="#0f172a" mb={4}>Price Leaders</Typography>
-              <Box sx={{ height: 420 }}><TopStocksBar data={topStocks} /></Box>
+        {/* --- 2. ENLARGED VISUALIZATION GRID --- */}
+        <Grid container spacing={4} mb={6}>
+          <Grid item xs={12} lg={8}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 4, borderRadius: 8, border: "1px solid #f1f5f9", 
+                bgcolor: '#fff', height: '100%', minHeight: 650 
+              }}
+            >
+              <Typography variant="h5" fontWeight={900} color="#0f172a" mb={4}>
+                Price Leaders
+              </Typography>
+              <Box sx={{ height: 550 }}>
+                {/* ✅ Pass click handler to Chart */}
+                <TopStocksBar data={topStocks} onBarClick={(symbol) => handleChartClick(symbol)} />
+              </Box>
             </Paper>
           </Grid>
 
-          <Grid item xs={12} lg={3.5}>
-            <Card sx={{ borderRadius: 8, border: "1px solid #f1f5f9", height: '100%' }}>
+          <Grid item xs={12} lg={4}>
+            <Card 
+              sx={{ 
+                borderRadius: 8, border: "1px solid #f1f5f9", 
+                height: '100%', minHeight: 650 
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
-                <Typography variant="h6" fontWeight={800} mb={3}>Volume Mix</Typography>
-                <Box sx={{ height: 420 }}><VolumePie data={volumeData} /></Box>
+                <Typography variant="h5" fontWeight={900} mb={4}>
+                  Volume Distribution
+                </Typography>
+                <Box sx={{ height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <VolumePie data={volumeData} />
+                </Box>
               </CardContent>
             </Card>
           </Grid>
-
-          {/* --- 3. BOTTOM ROW: LANDSCAPE WATCHLIST PORTFOLIO --- */}
-          <Grid item xs={12} sx={{ mt: 4 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-               <Typography variant="h5" fontWeight={900} color="#0f172a">Watchlist Portfolio</Typography>
-               <Button variant="text" sx={{ fontWeight: 800, textTransform: 'none' }}>Expand View</Button>
-            </Stack>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 3, 
-              overflowX: 'auto', 
-              pb: 4, 
-              px: 1,
-              '&::-webkit-scrollbar': { height: '6px' },
-              '&::-webkit-scrollbar-thumb': { bgcolor: alpha('#6366f1', 0.2), borderRadius: '10px' }
-            }}>
-              {watchlist.length === 0 ? (
-                <Box sx={{ p: 6, width: '100%', textAlign: 'center', border: '2px dashed #f1f5f9', borderRadius: 8 }}>
-                  <Typography variant="body1" color="text.secondary" fontWeight={600}>No assets currently tracked.</Typography>
-                </Box>
-              ) : (
-                watchlist.map((stock) => <PortfolioCard key={stock.symbol} stock={stock} />)
-              )}
-            </Box>
-          </Grid>
         </Grid>
 
-        <Button
-          variant="contained"
-          onClick={() => navigate("/chat")}
-          sx={fabStyle}
-          startIcon={<ChatBubbleIcon />}
-        >
+        {/* --- 4. LANDSCAPE WATCHLIST PORTFOLIO --- */}
+        <Box sx={{ mt: 2 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-end" mb={3}>
+            <Typography variant="h4" fontWeight={900} color="#0f172a">Watchlist Portfolio</Typography>
+            <Typography 
+              variant="body2" 
+              color="primary" 
+              fontWeight={800} 
+              sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' }}}
+              onClick={() => navigate('/watchlist-all')}
+            >
+              View All Assets →
+            </Typography>
+          </Stack>
+          <Box sx={{ display: 'flex', gap: 3, overflowX: 'auto', pb: 4 }}>
+            {watchlist.length === 0 ? (
+              <Box sx={{ p: 8, width: '100%', textAlign: 'center', border: '2px dashed #e2e8f0', borderRadius: 8 }}>
+                <Typography variant="body1" color="text.secondary">No assets being monitored.</Typography>
+              </Box>
+            ) : (
+              watchlist.map((stock) => <PortfolioCard key={stock.symbol} stock={stock} />)
+            )}
+          </Box>
+        </Box>
+
+        <Button variant="contained" onClick={() => navigate("/chat")} sx={fabStyle} startIcon={<ChatBubbleIcon />}>
           Ask AI Advisor
         </Button>
-      </Container>
 
-      <style>{`
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-          70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-      `}</style>
+        {/* --- ✅ NEW: DEEP DIVE MODAL --- */}
+        <StockDetailModal 
+          open={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          symbol={selectedStock} 
+          data={stockDetailData} 
+        />
+
+      </Container>
     </Box>
   );
 }
 
-/* ---------- COMPACT REUSABLE COMPONENTS ---------- */
+// ✅ NEW COMPONENT: Stock Detail Table Modal
+function StockDetailModal({ open, onClose, symbol, data }) {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 900 }}>
+        Dataset View: {symbol}
+        <IconButton onClick={onClose}><CloseIcon /></IconButton>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Table size="small">
+          <TableHead sx={{ bgcolor: '#f8fafc' }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 800 }}>Date</TableCell>
+              <TableCell sx={{ fontWeight: 800 }}>Close (₹)</TableCell>
+              <TableCell sx={{ fontWeight: 800 }}>Volume</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.slice(0, 20).map((row, idx) => (
+              <TableRow key={idx} hover>
+                <TableCell>{row.date || "N/A"}</TableCell>
+                <TableCell>₹{row.close?.toLocaleString()}</TableCell>
+                <TableCell>{row.volume?.toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
+/* --- REUSABLE COMPONENTS --- */
 function KpiCard({ title, value, color, icon }) {
   return (
-    <Card sx={{ borderRadius: 7, border: '1px solid #f1f5f9', height: '100%' }}>
-      <CardContent sx={{ p: 2.5 }}>
-        <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-           <Box sx={{ p: 0.8, borderRadius: 2, bgcolor: alpha(color, 0.1), color: color, display: 'flex' }}>
+    <Card sx={{ borderRadius: 8, border: '1px solid #f1f5f9', height: '100%' }}>
+      <CardContent sx={{ p: 3 }}>
+        <Stack direction="row" spacing={1.5} alignItems="center" mb={1.5}>
+           <Box sx={{ p: 1, borderRadius: 2.5, bgcolor: alpha(color, 0.1), color: color, display: 'flex' }}>
              {icon}
            </Box>
-           <Typography variant="caption" fontWeight={800} color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+           <Typography variant="caption" fontWeight={900} color="text.secondary" sx={{ textTransform: 'uppercase' }}>
              {title}
            </Typography>
         </Stack>
-        <Typography variant="h5" fontWeight={900} sx={{ color: '#0f172a' }}>
-           {value ?? <Skeleton width="40px" />}
+        <Typography variant="h4" fontWeight={900}>
+           {value ?? <Skeleton width="50px" />}
         </Typography>
       </CardContent>
     </Card>
@@ -216,20 +283,20 @@ function KpiCard({ title, value, color, icon }) {
 
 function InsightItem({ title, stock, icon, color }) {
   return (
-    <Card sx={{ borderRadius: 7, border: '1px solid #f1f5f9', height: '100%' }}>
-      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2.5 }}>
-        <Box sx={{ p: 1, borderRadius: 3, bgcolor: alpha(color, 0.1), display: 'flex' }}>
+    <Card sx={{ borderRadius: 8, border: '1px solid #f1f5f9', height: '100%' }}>
+      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 3, p: 3 }}>
+        <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: alpha(color, 0.1), display: 'flex' }}>
           {icon}
         </Box>
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="caption" fontWeight={800} color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+          <Typography variant="caption" fontWeight={900} color="text.secondary" sx={{ textTransform: 'uppercase' }}>
             {title}
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <Typography variant="h6" fontWeight={900} sx={{ color: '#0f172a' }}>
-              {stock ? stock.symbol : <Skeleton width="60px" />}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h5" fontWeight={900}>
+              {stock ? stock.symbol : <Skeleton width="80px" />}
             </Typography>
-            <Typography variant="subtitle2" fontWeight={800} sx={{ color: color }}>
+            <Typography variant="h6" fontWeight={900} sx={{ color: color }}>
               {stock ? `₹${stock.close}` : ""}
             </Typography>
           </Box>
@@ -240,7 +307,6 @@ function InsightItem({ title, stock, icon, color }) {
 }
 
 const fabStyle = {
-  position: 'fixed', bottom: 40, right: 40, borderRadius: 4, px: 3, py: 2,
-  boxShadow: '0 20px 40px rgba(79, 70, 229, 0.4)', textTransform: 'none',
-  fontSize: '1rem', fontWeight: 800, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)'
+  position: 'fixed', bottom: 40, right: 40, borderRadius: 5, px: 4, py: 2.5,
+  fontWeight: 900, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', zIndex: 1000
 };

@@ -9,7 +9,9 @@ import VerifyOtp from "./pages/VerifyOtp";
 import Dashboard from "./pages/Dashboard";
 import UploadCSV from "./pages/UploadCSV";
 import Chat from "./pages/Chat";
+import WatchlistAll from './pages/WatchlistAll'; 
 
+// Component to protect routes from unauthenticated access
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
 };
@@ -18,17 +20,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-
-        {/* 🔹 Background should NOT wrap Dashboard layout */}
+        {/* Global animated background for consistent branding */}
         <Background />
 
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
 
-          {/* ✅ ONLY ONE dashboard route */}
+          {/* Protected Dashboard Route */}
           <Route
             path="/dashboard"
             element={
@@ -38,6 +40,7 @@ export default function App() {
             }
           />
 
+          {/* Protected Data Upload Route */}
           <Route
             path="/upload"
             element={
@@ -47,6 +50,7 @@ export default function App() {
             }
           />
 
+          {/* Protected AI Chat Route */}
           <Route
             path="/chat"
             element={
@@ -55,6 +59,19 @@ export default function App() {
               </PrivateRoute>
             }
           />
+
+          {/* ✅ ADDED: Protected Full Watchlist View */}
+          <Route
+            path="/watchlist-all"
+            element={
+              <PrivateRoute>
+                <WatchlistAll />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Fallback redirect for undefined routes */}
+          <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </ToastProvider>
     </BrowserRouter>

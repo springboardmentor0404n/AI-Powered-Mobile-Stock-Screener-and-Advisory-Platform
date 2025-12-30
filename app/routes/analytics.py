@@ -92,7 +92,7 @@ def volume_distribution():
             print(f"[SKIPPED VOLUME] {symbol}: {e}")
             continue
 
-    # ✅ Top 5 by volume (best for pie chart)
+    # ✅ Top 20 by volume (best for pie chart)
     data = sorted(data, key=lambda x: x["volume"], reverse=True)[:5]
 
     return jsonify(data)

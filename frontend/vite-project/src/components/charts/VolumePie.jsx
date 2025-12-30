@@ -1,31 +1,28 @@
+// VolumePie.jsx
+
 import {
-  PieChart,
-  Pie,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  Cell,
+  PieChart, Pie, Tooltip, ResponsiveContainer, Legend, Cell
 } from "recharts";
 
-const COLORS = ["#14b8a6", "#6366f1", "#f59e0b", "#22c55e", "#ef4444"];
+const COLORS = ["#00b8d9", "#6366f1", "#ffab00", "#36b37e", "#ff5630"];
 
 export default function VolumePie({ data }) {
-  if (!data || !data.length) return null;
-
-  const total = data.reduce((sum, d) => sum + d.volume, 0);
+  if (!data?.length) return null;
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={350}>
       <PieChart>
         <Pie
           data={data}
           dataKey="volume"
           nameKey="symbol"
-          innerRadius="45%"   // 🔥 responsive
-          outerRadius="75%"   // 🔥 responsive
-          paddingAngle={3}
+          cx="50%"
+          cy="42%"
+          innerRadius="68%"
+          outerRadius="92%"
+          paddingAngle={4}
           label={({ percent }) =>
-            `${(percent * 100).toFixed(0)}%`
+            percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : ""
           }
         >
           {data.map((_, i) => (
@@ -33,14 +30,9 @@ export default function VolumePie({ data }) {
           ))}
         </Pie>
 
-        <Tooltip
-          formatter={(value) => [
-            `${value.toLocaleString()} (${((value / total) * 100).toFixed(1)}%)`,
-            "Volume",
-          ]}
-        />
+        <Tooltip formatter={(v) => `${v.toLocaleString()} units`} />
 
-        <Legend verticalAlign="bottom" />
+        <Legend verticalAlign="bottom" align="center" />
       </PieChart>
     </ResponsiveContainer>
   );
