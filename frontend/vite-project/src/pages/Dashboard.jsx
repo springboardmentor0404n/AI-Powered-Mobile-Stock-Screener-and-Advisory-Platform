@@ -27,7 +27,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import CloseIcon from "@mui/icons-material/Close"; // ✅ New Import
+import CloseIcon from "@mui/icons-material/Close"; 
 import { useNavigate } from "react-router-dom";
 
 import MainHeader from "../components/MainHeader";
@@ -45,7 +45,9 @@ export default function Dashboard() {
   const [topStocks, setTopStocks] = useState([]);
   const [volumeData, setVolumeData] = useState([]);
   
-  // ✅ NEW: Deep-dive state for Stock Details
+  // ✅ NEW: State for the dynamic Universe count from folder files
+  const [universeCount, setUniverseCount] = useState(null);
+  
   const [selectedStock, setSelectedStock] = useState(null);
   const [stockDetailData, setStockDetailData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,6 +56,7 @@ export default function Dashboard() {
   const { watchlist } = useWatchlistStore();
 
   useEffect(() => {
+    // 1. Fetch High/Low prices via Chat API
     api.post("/chat", { query: "all stocks" }).then((res) => {
       const rows = res.data?.data || [];
       if (!rows.length) return setStats({});
@@ -66,11 +69,15 @@ export default function Dashboard() {
       });
     });
 
+    // ✅ 2. NEW: Fetch dynamic Universe count from folder analytics
+    api.get("/analytics/stats").then((res) => {
+      setUniverseCount(res.data.universe_count);
+    });
+
     getTopStocks().then((res) => setTopStocks(res.data || []));
     getVolumeData().then((res) => setVolumeData(res.data || []));
   }, []);
 
-  // ✅ NEW: Fetch detailed CSV data for a specific stock
   const handleChartClick = async (symbol) => {
     if (!symbol) return;
     try {
@@ -124,7 +131,13 @@ export default function Dashboard() {
         {/* --- 1. COMPACT STATUS BAR --- */}
         <Grid container spacing={2} mb={5}>
           <Grid item xs={12} sm={6} md={2}>
-            <KpiCard title="Universe" value={stats?.total} icon={<AutoGraphIcon />} color="#6366f1" />
+            {/* ✅ UPDATED: KPI Card now uses universeCount from folder analytics stats */}
+            <KpiCard 
+              title="Universe" 
+              value={universeCount} 
+              icon={<AutoGraphIcon />} 
+              color="#6366f1" 
+            />
           </Grid>
           <Grid item xs={12} sm={6} md={2}>
             <KpiCard title="AI Signals" value="Optimal" icon={<AccountBalanceWalletIcon />} color="#ec4899" />
@@ -161,7 +174,6 @@ export default function Dashboard() {
                 Price Leaders
               </Typography>
               <Box sx={{ height: 550 }}>
-                {/* ✅ Pass click handler to Chart */}
                 <TopStocksBar data={topStocks} onBarClick={(symbol) => handleChartClick(symbol)} />
               </Box>
             </Paper>
@@ -215,7 +227,6 @@ export default function Dashboard() {
           Ask AI Advisor
         </Button>
 
-        {/* --- ✅ NEW: DEEP DIVE MODAL --- */}
         <StockDetailModal 
           open={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
@@ -228,7 +239,7 @@ export default function Dashboard() {
   );
 }
 
-// ✅ NEW COMPONENT: Stock Detail Table Modal
+// Stock Detail Table Modal
 function StockDetailModal({ open, onClose, symbol, data }) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -274,7 +285,8 @@ function KpiCard({ title, value, color, icon }) {
            </Typography>
         </Stack>
         <Typography variant="h4" fontWeight={900}>
-           {value ?? <Skeleton width="50px" />}
+           {/* If universeCount is 0, it still shows 0. If it's null, it shows the skeleton */}
+           {value !== null ? value : <Skeleton width="50px" />}
         </Typography>
       </CardContent>
     </Card>

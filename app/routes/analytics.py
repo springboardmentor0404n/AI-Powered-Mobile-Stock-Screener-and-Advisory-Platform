@@ -4,12 +4,11 @@ import os
 
 analytics_bp = Blueprint("analytics", __name__)
 
+# Ensure this path matches your VS Code explorer structure
 DATA_DIR = "app/data/uploads"
-
 
 def safe_to_numeric(series):
     return pd.to_numeric(series, errors="coerce")
-
 
 def clean_symbol(filename):
     return (
@@ -19,10 +18,32 @@ def clean_symbol(filename):
         .upper()
     )
 
+@analytics_bp.route("/analytics/stats", methods=["GET"])
+def get_market_stats():
+    """
+    Dynamically counts the number of cleaned CSV files for the Universe KPI.
+    """
+    try:
+        if not os.path.exists(DATA_DIR):
+            return jsonify({"universe_count": 0, "status": "No Data"})
+
+        # Count files that follow the cleaned_*.csv naming pattern
+        all_files = os.listdir(DATA_DIR)
+        cleaned_csv_count = len([f for f in all_files if f.startswith("cleaned_") and f.endswith(".csv")])
+        
+        return jsonify({
+            "universe_count": cleaned_csv_count,
+            "status": "Optimal"
+        })
+    except Exception as e:
+        print(f"[ERROR] Stats retrieval failed: {e}")
+        return jsonify({"universe_count": 0, "error": str(e)}), 500
 
 @analytics_bp.route("/analytics/top-stocks", methods=["GET"])
 def top_stocks():
     results = []
+    if not os.path.exists(DATA_DIR):
+        return jsonify([])
 
     for file in os.listdir(DATA_DIR):
         if not file.endswith(".csv"):
@@ -33,7 +54,6 @@ def top_stocks():
 
         try:
             df = pd.read_csv(path)
-
             if "close" not in df.columns:
                 continue
 
@@ -44,7 +64,6 @@ def top_stocks():
                 continue
 
             last_price = close_series.iloc[-1]
-
             results.append({
                 "symbol": symbol,
                 "price": float(last_price)
@@ -54,13 +73,15 @@ def top_stocks():
             print(f"[SKIPPED TOP-STOCK] {symbol}: {e}")
             continue
 
-    results = sorted(results, key=lambda x: x["price"], reverse=True)[:10]
+    # Limited to Top 6 for the enlarged "Neat and Clean" Dashboard view
+    results = sorted(results, key=lambda x: x["price"], reverse=True)[:6]
     return jsonify(results)
-
 
 @analytics_bp.route("/analytics/volume", methods=["GET"])
 def volume_distribution():
     data = []
+    if not os.path.exists(DATA_DIR):
+        return jsonify([])
 
     for file in os.listdir(DATA_DIR):
         if not file.endswith(".csv"):
@@ -71,7 +92,6 @@ def volume_distribution():
 
         try:
             df = pd.read_csv(path)
-
             if "volume" not in df.columns:
                 continue
 
@@ -82,7 +102,6 @@ def volume_distribution():
                 continue
 
             total_volume = volume_series.sum()
-
             data.append({
                 "symbol": symbol,
                 "volume": int(total_volume)
@@ -92,7 +111,6 @@ def volume_distribution():
             print(f"[SKIPPED VOLUME] {symbol}: {e}")
             continue
 
-    # ✅ Top 20 by volume (best for pie chart)
+    # Limited to Top 5 for high-fidelity donut chart clarity
     data = sorted(data, key=lambda x: x["volume"], reverse=True)[:5]
-
     return jsonify(data)

@@ -66,11 +66,17 @@ def run_screener(filters, symbols=None):
         if df.empty:
             continue
 
-        # ✅ Handle date column safely
+        # ✅ FIXED: Handle date column safely without warnings
         date_col = next((c for c in df.columns if c.lower() == "date"), None)
         if date_col:
-            df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+            # Added 'dayfirst=True' and 'format="ISO8601"' to prevent parsing ambiguity
+            # Use 'dayfirst=True' if your CSVs use DD-MM-YYYY format
+            df[date_col] = pd.to_datetime(df[date_col], errors="coerce", dayfirst=True, format='ISO8601')
+            df = df.dropna(subset=[date_col]) # Remove rows where dates failed to parse
             df = df.sort_values(date_col)
+
+        if df.empty:
+            continue
 
         latest = df.iloc[-1]
 
