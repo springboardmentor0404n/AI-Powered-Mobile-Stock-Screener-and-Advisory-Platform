@@ -6,6 +6,10 @@ NUMERIC_COLS = ["open", "high", "low", "close", "volume", "vwap", "turnover", "t
 INVALID_SYMBOLS = {"STOCKS", "ALL", "MARKET", "SHARES"}
 
 def run_screener(filters, symbols=None, quarters=None):
+    """
+    Core engine to process CSV data for both Dashboard summaries 
+    and detailed historical charts.
+    """
     results = []
 
     if not os.path.exists(UPLOAD_DIR):
@@ -26,72 +30,79 @@ def run_screener(filters, symbols=None, quarters=None):
         if symbols and symbol not in symbols:
             continue
 
-        df = pd.read_csv(os.path.join(UPLOAD_DIR, file))
+        try:
+            df = pd.read_csv(os.path.join(UPLOAD_DIR, file))
+        except Exception:
+            continue
 
         if df.empty:
             continue
 
-        # 🔒 Numeric normalization
+        # 🔒 Force Numeric Conversion
         for col in NUMERIC_COLS:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
-        # 📅 Date parsing
+        # 📅 Date Parsing & Sorting
         date_col = next((c for c in df.columns if c.lower() == "date"), None)
         if date_col:
             df[date_col] = pd.to_datetime(df[date_col], errors="coerce", dayfirst=True, format='mixed')
             df = df.dropna(subset=[date_col]) 
             df = df.sort_values(date_col)
 
-        # ✅ FIXED: Quarterly Aggregation Logic
+        # ✅ Quarterly Resampling Logic
         if quarters and date_col:
             df = df.set_index(date_col)
-            # QE = Quarter End. We take the 'last' price to represent the end of that quarter
+            # QE = Quarter End. We aggregate daily rows into 3-month summaries.
             df = df.resample('QE').agg({
-                'close': 'last',      
-                'open': 'first',      
-                'volume': 'sum',      
-                'high': 'max',        
-                'low': 'min',         
-                'turnover': 'sum',    
-                'trades': 'sum'       
+                'close': 'last',      # Closing price of the quarter
+                'open': 'first',       # Price at the start of the quarter
+                'volume': 'sum',      # Total quarterly volume
+                'high': 'max',        # Peak price in the period
+                'low': 'min',         # Lowest price in the period
+                'turnover': 'sum',    # Cumulative money flow
+                'trades': 'sum'       # Total trade count
             }).dropna()
             
-            # Take only the requested number of quarters
+            # Slice the specific history requested by the UI
             df = df.tail(quarters).reset_index()
             df = df.rename(columns={'index': date_col})
 
-        # Apply standard filters
+        # 🔍 Apply LLM-Detected Filters
         for f in filters:
             field, op, val = f["field"], f["operator"], f["value"]
             if field not in df.columns: continue
-            if op == "<": df = df[df[field] < val]
-            elif op == ">": df = df[df[field] > val]
-            elif op == "==": df = df[df[field] == val]
-            elif op == "<=": df = df[df[field] <= val]
-            elif op == ">=": df = df[df[field] >= val]
+            try:
+                if op == "<": df = df[df[field] < val]
+                elif op == ">": df = df[df[field] > val]
+                elif op == "==": df = df[df[field] == val]
+                elif op == "<=": df = df[df[field] <= val]
+                elif op == ">=": df = df[df[field] >= val]
+            except Exception:
+                continue
 
         if df.empty:
             continue
 
-        # ✅ DYNAMIC OUTPUT LOGIC
-        # If symbols are provided, we are on the StockDetail page and need ALL rows for the chart
+        # ✅ OUTPUT GENERATION
         if symbols and len(symbols) > 0:
+            # CHART MODE: Return the full historical array
             history_records = df.to_dict('records')
             for record in history_records:
                 record["symbol"] = symbol
                 if date_col in record:
-                    # Format date for frontend JS compatibility
                     record[date_col] = record[date_col].strftime('%Y-%m-%d')
             results.extend(history_records)
         else:
-            # DASHBOARD MODE: Return only the final aggregated row
+            # DASHBOARD MODE: Return only the latest aggregated point
             latest = df.iloc[-1].to_dict()
             latest["symbol"] = symbol
             
-            # Numeric cleanup for JSON stability
+            # Strict cleaning for JSON-ready numbers
             latest["close"] = float(latest.get("close", 0)) if pd.notna(latest.get("close")) else 0.0
             latest["volume"] = int(latest.get("volume", 0)) if pd.notna(latest.get("volume")) else 0
+            # Fallback for delivery column which is often null in custom CSVs
+            latest["%deliverble"] = float(latest.get("%deliverble", 0)) if pd.notna(latest.get("%deliverble")) else 0.0
             
             if latest["close"] > 0:
                 results.append(latest)

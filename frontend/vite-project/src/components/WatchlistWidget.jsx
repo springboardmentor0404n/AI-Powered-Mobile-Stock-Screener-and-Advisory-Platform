@@ -4,7 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import { LineChart, Line, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 import { useWatchlistStore } from '../store/useWatchlistStore';
 
 export default function WatchlistWidget() {
@@ -13,12 +13,9 @@ export default function WatchlistWidget() {
   return (
     <Stack spacing={1.5}>
       {watchlist.map((stock) => {
-        // ✅ Rule: Calculate trend based on period data from the dashboard
         const isPositive = (stock.close || 0) >= (stock.open || 0);
         const trendColor = isPositive ? '#10b981' : '#ef4444';
 
-        // ✅ Replace mockTrend with dynamic data from the 46-stock universe
-        // We use the OHLC values to create a high-fidelity 4-point trend line
         const trendData = [
           { p: stock.open || 0 },
           { p: stock.low || 0 },
@@ -39,18 +36,25 @@ export default function WatchlistWidget() {
               </Box>
             </Stack>
 
-            {/* Dynamic Trend Line Section */}
+            {/* --- CLEAN SPARKLINE SECTION --- */}
             <Box sx={{ width: '30%', height: 45 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
+                  {/* ✅ Explicitly hide axes to remove default horizontal baselines */}
+                  <XAxis hide axisLine={false} tickLine={false} />
+                  <YAxis hide axisLine={false} tickLine={false} />
+                  
+                  {/* ✅ Do NOT include <CartesianGrid /> here */}
+                  
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: trendColor, strokeWidth: 1 }} />
                   <Line 
                     type="monotone" 
                     dataKey="p" 
-                    stroke={trendColor} 
+                    stroke="none"
                     strokeWidth={2.5} 
                     dot={false} 
                     animationDuration={1000}
+                    isAnimationActive={true}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -95,19 +99,12 @@ export default function WatchlistWidget() {
   );
 }
 
-// ... (logoStyle and cardStyle remain identical to preserve your design)
-
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <Box sx={{ 
-        bgcolor: '#1e293b', 
-        color: '#fff', 
-        px: 1, 
-        py: 0.5, 
-        borderRadius: 1.5, 
-        fontSize: '10px', 
-        fontWeight: 700,
+        bgcolor: '#1e293b', color: '#fff', px: 1, py: 0.5, 
+        borderRadius: 1.5, fontSize: '10px', fontWeight: 700,
         boxShadow: '0 4px 12px rgba(0,0,0,0.2)' 
       }}>
         ₹{payload[0].value.toLocaleString()}
@@ -115,4 +112,32 @@ const CustomTooltip = ({ active, payload }) => {
     );
   }
   return null;
+};
+
+// Styles (Ensure these don't have borderBottom or borderTop lines)
+const cardStyle = {
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'space-between',
+  p: 2, 
+  borderRadius: 4, 
+  bgcolor: '#fff', 
+  border: '1px solid #f1f5f9',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+  transition: '0.2s',
+  '&:hover': { transform: 'translateX(5px)', borderColor: '#6366f1' }
+};
+
+const logoStyle = {
+  width: 40, 
+  height: 40, 
+  borderRadius: 2.5, 
+  bgcolor: '#f8fafc', 
+  color: '#64748b', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  fontWeight: 900, 
+  fontSize: '0.75rem',
+  border: '1px solid #e2e8f0'
 };

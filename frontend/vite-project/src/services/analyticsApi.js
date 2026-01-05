@@ -7,3 +7,6 @@ export const getTopStocks = () =>
 
 export const getVolumeData = () =>
   axios.get(`${API_BASE}/analytics/volume`);
+
+export const getSectorTrend = () =>
+  axios.get(`${API_BASE}/analytics/sector-trend`);
