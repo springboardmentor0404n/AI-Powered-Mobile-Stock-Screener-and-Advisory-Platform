@@ -10,3 +10,6 @@ export const getVolumeData = () =>
 
 export const getSectorTrend = () =>
   axios.get(`${API_BASE}/analytics/sector-trend`);
+
+export const getLiveTrend = (symbol) =>
+  axios.get(`${API_BASE}/analytics/live-trend/${symbol}`);  

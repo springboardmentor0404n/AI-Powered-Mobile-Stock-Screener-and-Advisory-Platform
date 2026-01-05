@@ -62,9 +62,27 @@
                 const [selectedStock, setSelectedStock] = useState(null);
                 const [stockDetailData, setStockDetailData] = useState([]);
                 const [isModalOpen, setIsModalOpen] = useState(false);
+                const [liveTrendData, setLiveTrendData] = useState([]);
                 
                 const navigate = useNavigate();
                 const { watchlist } = useWatchlistStore();
+                useEffect(() => {
+            const fetchLiveTrend = async () => {
+              try {
+                // Calls the new route in analytics.py. 
+                // Using RELIANCE.BSE as default example
+                const res = await api.get(`/analytics/live-trend/RELIANCE.BSE`);
+                setLiveTrendData(res.data);
+                console.log("Live Data Received:", res.data);
+              } catch (err) {
+                console.error("Error fetching live trend:", err);
+              }
+            };
+
+    fetchLiveTrend();
+    const interval = setInterval(fetchLiveTrend, 300000); // Refresh every 5 mins
+    return () => clearInterval(interval);
+  }, []);
 
                 useEffect(() => {
                   // 1. Fetch High/Low prices via Chat API
@@ -248,65 +266,67 @@
 
                   <Box sx={{ height: 350, width: '100%' }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={sectorTrendData}>
-                        <defs>
-                          <linearGradient id="sectorGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15}/>
-                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        
-                        {/* ✅ REMOVED: Horizontal lines by setting horizontal to false */}
-                        <CartesianGrid horizontal={false} vertical={false} stroke="none" />
-                        
-                        {/* ✅ UPDATED: Added axisLine and tickLine false to remove the bottom border line */}
-                        <XAxis 
-                          dataKey="index" 
-                          hide 
-                          axisLine={false} 
-                          tickLine={false} 
-                        />
-                        <YAxis 
-                          hide 
-                          domain={['auto', 'auto']} 
-                          axisLine={false} 
-                          tickLine={false} 
-                        />
-                        
-                        <Tooltip
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload?.length) return null;
-                          const index = label;
-                          const stock = sectorTrendData[index];
+  <AreaChart data={liveTrendData.length ? liveTrendData : sectorTrendData}>
+    <defs>
+      <linearGradient id="sectorGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+      </linearGradient>
+    </defs>
 
-                          return (
-                            <Box sx={{
-                              bgcolor: "#fff",
-                              p: 1.5,
-                              borderRadius: 2,
-                              boxShadow: "0 10px 25px rgba(0,0,0,0.15)"
-                            }}>
-                              <Typography fontWeight={900}>
-                                {stock?.symbol}
-                              </Typography>
-                              <Typography color="primary">
-                                Close: ₹{payload[0].value.toLocaleString()}
-                              </Typography>
-                            </Box>
-                          );
-                        }}
-                      />
-                        <Area 
-                          type="monotone" 
-                          dataKey="close" 
-                          stroke="#6366f1" 
-                          strokeWidth={3} 
-                          fillOpacity={1} 
-                          fill="url(#sectorGradient)" 
-                          animationDuration={2000}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+    <CartesianGrid horizontal={false} vertical={false} stroke="none" />
+
+    <XAxis
+      dataKey={liveTrendData.length ? "time" : "index"}
+      hide
+      axisLine={false}
+      tickLine={false}
+    />
+    <YAxis hide domain={['auto', 'auto']} />
+
+    <Tooltip
+      content={({ active, payload, label }) => {
+        if (!active || !payload?.length) return null;
+
+        const dataSource = liveTrendData.length ? liveTrendData : sectorTrendData;
+        const stock = dataSource[label];
+
+        return (
+          <Box
+            sx={{
+              bgcolor: "#fff",
+              p: 1.5,
+              borderRadius: 2,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.15)"
+            }}
+          >
+            <Typography fontWeight={900}>
+              {stock?.symbol}
+            </Typography>
+            <Typography color="primary">
+              Close: ₹{payload[0].value.toLocaleString()}
+            </Typography>
+            {stock?.time && (
+              <Typography variant="caption" color="text.secondary">
+                {stock.time}
+              </Typography>
+            )}
+          </Box>
+        );
+      }}
+    />
+
+    <Area
+      type="monotone"
+      dataKey="close"
+      stroke="#6366f1"
+      strokeWidth={3}
+      fill="url(#sectorGradient)"
+      animationDuration={2000}
+    />
+  </AreaChart>
+</ResponsiveContainer>
+
                   </Box>
                 </Paper>
               </Box>
