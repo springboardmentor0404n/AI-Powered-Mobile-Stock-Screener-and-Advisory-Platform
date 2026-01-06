@@ -10,7 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import UploadCSV from "./pages/UploadCSV";
 import Chat from "./pages/Chat";
 import WatchlistAll from './pages/WatchlistAll'; 
-import StockDetail from './pages/StockDetail'; // ✅ NEW: Import Detail Page
+// ✅ NEW: Importing the Hybrid Analysis Page
+import StockDetailPage from "./pages/StockDetailPage"; 
 
 // Component to protect routes from unauthenticated access
 const PrivateRoute = ({ children }) => {
@@ -71,13 +72,13 @@ export default function App() {
             }
           />
 
-          {/* ✅ ADDED: Protected Stock Detail Route */}
-          {/* The ':symbol' allows the page to load data for any of your 46 stocks */}
+          {/* ✅ UPDATED: Protected Hybrid Stock Detail Route */}
+          {/* Using StockDetailPage ensures the use of API Trend + CSV Historical data */}
           <Route
             path="/stock/:symbol"
             element={
               <PrivateRoute>
-                <StockDetail />
+                <StockDetailPage />
               </PrivateRoute>
             }
           />
