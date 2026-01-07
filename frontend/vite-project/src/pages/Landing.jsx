@@ -8,13 +8,17 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import InsightsIcon from '@mui/icons-material/Insights';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import Background from '../components/Background';
 
 export default function Landing() {
   const theme = useTheme();
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 10 }}>
+    <Box sx={{ minHeight: '100vh', pb: 10, bgcolor: '#f8fafc' }}>
       <Background />
 
       {/* --- GLASS NAVIGATION --- */}
@@ -23,126 +27,293 @@ export default function Landing() {
         display: 'flex', justifyContent: 'center', px: 2
       }}>
         <Box sx={{ 
-          width: '100%', maxWidth: '800px',
+          width: '100%', maxWidth: '1200px',
           backdropFilter: 'blur(12px)',
-          bgcolor: alpha('#fff', 0.7),
+          bgcolor: alpha('#fff', 0.9),
           border: '1px solid',
           borderColor: alpha('#e2e8f0', 0.8),
-          borderRadius: 8, px: 3, py: 1.5,
+          borderRadius: 8, px: 4, py: 1.5,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
         }}>
-          <Typography fontWeight={900} letterSpacing={-1} variant="h6">STOCK.AI</Typography>
-          <Stack direction="row" spacing={1}>
-            <Button component={RouterLink} to="/login" size="small" sx={{ color: '#64748b' }}>Login</Button>
-            <Button component={RouterLink} to="/register" variant="contained" size="small" sx={{ borderRadius: 4, px: 3 }}>Get Started</Button>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <TrendingUpIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+            <Typography fontWeight={900} letterSpacing={-1} variant="h6" color="#0f172a">STOCK.AI</Typography>
+          </Stack>
+          
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Button 
+              component={RouterLink} 
+              to="/dashboard" 
+              startIcon={<DashboardIcon />}
+              sx={{ color: '#475569', fontWeight: 600 }}
+            >
+              Dashboard
+            </Button>
+            <Button 
+              component={RouterLink} 
+              to="/analytics" 
+              startIcon={<AnalyticsIcon />}
+              sx={{ color: '#475569', fontWeight: 600 }}
+            >
+              Analytics
+            </Button>
+            <Button 
+              component={RouterLink} 
+              to="/market" 
+              startIcon={<TimelineIcon />}
+              sx={{ color: '#475569', fontWeight: 600 }}
+            >
+              Market Trends
+            </Button>
+            <Box sx={{ ml: 2 }}>
+              <Stack direction="row" spacing={1}>
+                <Button 
+                  component={RouterLink} 
+                  to="/login" 
+                  size="small" 
+                  sx={{ color: '#64748b', fontWeight: 600 }}
+                >
+                  Login
+                </Button>
+                <Button 
+                  component={RouterLink} 
+                  to="/register" 
+                  variant="contained" 
+                  size="small" 
+                  sx={{ 
+                    borderRadius: 4, 
+                    px: 3, 
+                    fontWeight: 600,
+                    background: 'linear-gradient(90deg, #4f46e5, #3b82f6)'
+                  }}
+                >
+                  Get Started
+                </Button>
+              </Stack>
+            </Box>
           </Stack>
         </Box>
       </Box>
 
       <Container maxWidth="lg">
         {/* --- HERO SECTION --- */}
-        <Box sx={{ pt: 12, pb: 10, textAlign: 'center' }}>
+        <Box sx={{ pt: 15, pb: 12, textAlign: 'center' }}>
           <Typography 
             variant="h1" 
             sx={{ 
               fontWeight: 900, 
               fontSize: { xs: '3rem', md: '4.5rem' },
               letterSpacing: '-0.04em',
-              mb: 2,
+              mb: 3,
               color: '#0f172a'
             }}
           >
-            Predict the market <br />
+            Intelligent Stock Market <br />
             <Box component="span" sx={{ 
-              color: 'primary.main',
-              background: 'linear-gradient(90deg, #4f46e5, #9333ea)',
+              background: 'linear-gradient(90deg, #4f46e5, #3b82f6)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
-              with AI precision.
+              Analytics Platform
             </Box>
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto', mb: 5, fontWeight: 400 }}>
-            Upload your CSVs, chat with our financial LLM, and get institutional-grade stock signals in seconds.
+          <Typography 
+            variant="h6" 
+            color="text.secondary" 
+            sx={{ 
+              maxWidth: 700, 
+              mx: 'auto', 
+              mb: 6, 
+              fontWeight: 400,
+              fontSize: '1.25rem'
+            }}
+          >
+            Real-time stock analysis, AI-powered predictions, and comprehensive market insights. 
+            Make data-driven investment decisions with institutional-grade tools.
           </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <Button variant="contained" size="large" sx={{ height: 56, px: 6, borderRadius: 3, fontWeight: 700 }}>Start Screening</Button>
-            <Button variant="outlined" size="large" sx={{ height: 56, px: 6, borderRadius: 3, fontWeight: 700, borderWidth: 2 }}>Learn More</Button>
+          <Stack direction="row" spacing={3} justifyContent="center">
+            <Button 
+              component={RouterLink}
+              to="/dashboard"
+              variant="contained" 
+              size="large" 
+              sx={{ 
+                height: 56, 
+                px: 6, 
+                borderRadius: 3, 
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                background: 'linear-gradient(90deg, #4f46e5, #3b82f6)'
+              }}
+            >
+              Launch Dashboard
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="large" 
+              sx={{ 
+                height: 56, 
+                px: 6, 
+                borderRadius: 3, 
+                fontWeight: 700, 
+                borderWidth: 2,
+                fontSize: '1.1rem'
+              }}
+            >
+              View Demo
+            </Button>
           </Stack>
         </Box>
 
-        {/* --- BENTO GRID SECTION --- */}
-        <Grid container spacing={3}>
-          {/* Big Feature: AI Analysis */}
-          <Grid item xs={12} md={8}>
-            <BentoCard 
-              title="Real-time AI Advisory" 
-              subtitle="Our AI analyzes 10,000+ data points per ticker to give you a 'Buy/Hold/Sell' conviction score."
-              icon={<AutoAwesomeIcon sx={{ color: '#fff' }} />}
-              bg="#4f46e5"
-              textColor="#fff"
-            />
-          </Grid>
+        {/* --- FEATURES GRID --- */}
+        <Typography 
+          variant="h3" 
+          sx={{ 
+            fontWeight: 800, 
+            textAlign: 'center', 
+            mb: 6,
+            color: '#0f172a'
+          }}
+        >
+          Powerful Features for Smart Investing
+        </Typography>
 
-          {/* Small Feature: Charts */}
-          <Grid item xs={12} md={4}>
-            <BentoCard 
-              title="Market Insights" 
-              subtitle="Interactive visualizations of price trends."
+        <Grid container spacing={4}>
+          {/* Feature 1: Live Analytics */}
+          <Grid item xs={12} md={6}>
+            <FeatureCard 
+              title="Live Market Analytics"
+              description="Real-time stock data with advanced technical indicators. Track price movements, volume trends, and market sentiment instantly."
               icon={<InsightsIcon />}
-              bg="#fff"
+              color="#4f46e5"
             />
           </Grid>
 
-          {/* Small Feature: CSV */}
-          <Grid item xs={12} md={4}>
-            <BentoCard 
-              title="Smart CSV Upload" 
-              subtitle="Drag & drop your trade history for instant analysis."
+          {/* Feature 2: AI Predictions */}
+          <Grid item xs={12} md={6}>
+            <FeatureCard 
+              title="AI-Powered Predictions"
+              description="Machine learning models analyze historical data to forecast price movements with high accuracy."
+              icon={<AutoAwesomeIcon />}
+              color="#3b82f6"
+            />
+          </Grid>
+
+          {/* Feature 3: Portfolio Analysis */}
+          <Grid item xs={12} md={6}>
+            <FeatureCard 
+              title="Portfolio Management"
+              description="Upload your trade history via CSV and get personalized insights on your investment performance."
               icon={<ReceiptLongIcon />}
-              bg="#fff"
+              color="#10b981"
             />
           </Grid>
 
-          {/* Big Feature: 24/7 Support */}
-          <Grid item xs={12} md={8}>
-            <BentoCard 
-              title="Intelligent Assistant" 
-              subtitle="Ask complex questions like 'Which IT stocks are undervalued relative to their 5-year average?' and get instant answers."
+          {/* Feature 4: Market Trends */}
+          <Grid item xs={12} md={6}>
+            <FeatureCard 
+              title="Market Trend Analysis"
+              description="Identify sector trends, volume spikes, and market patterns with interactive visualizations."
+              icon={<TimelineIcon />}
+              color="#f59e0b"
+            />
+          </Grid>
+
+          {/* Feature 5: Quarter Analysis */}
+          <Grid item xs={12} md={6}>
+            <FeatureCard 
+              title="Quarterly Performance"
+              description="Detailed quarter-by-quarter analysis with growth metrics, volatility scores, and trend indicators."
+              icon={<AnalyticsIcon />}
+              color="#8b5cf6"
+            />
+          </Grid>
+
+          {/* Feature 6: Smart Assistant */}
+          <Grid item xs={12} md={6}>
+            <FeatureCard 
+              title="24/7 Trading Assistant"
+              description="Ask complex financial questions and get instant answers backed by real-time market data."
               icon={<SupportAgentIcon />}
-              bg="#f1f5f9"
+              color="#ef4444"
             />
           </Grid>
         </Grid>
+
+        {/* --- CTA SECTION --- */}
+        <Box sx={{ 
+          mt: 12, 
+          p: 6, 
+          borderRadius: 6, 
+          bgcolor: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          <Typography variant="h3" sx={{ fontWeight: 900, mb: 2, color: '#0f172a' }}>
+            Ready to Transform Your Trading?
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+            Join thousands of investors who use our platform to make smarter decisions.
+          </Typography>
+          <Button 
+            component={RouterLink}
+            to="/register"
+            variant="contained" 
+            size="large" 
+            sx={{ 
+              height: 56, 
+              px: 8, 
+              borderRadius: 3, 
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              background: 'linear-gradient(90deg, #4f46e5, #3b82f6)'
+            }}
+          >
+            Start Free Trial
+          </Button>
+        </Box>
       </Container>
     </Box>
   );
 }
 
-/* --- BENTO CARD COMPONENT --- */
-function BentoCard({ title, subtitle, icon, bg, textColor = "#1e293b" }) {
+/* --- FEATURE CARD COMPONENT --- */
+function FeatureCard({ title, description, icon, color }) {
   return (
     <Card sx={{ 
       p: 4, 
       height: '100%', 
-      bgcolor: bg, 
-      color: textColor,
-      borderRadius: 6,
+      bgcolor: '#ffffff',
+      color: '#1e293b',
+      borderRadius: 4,
       border: '1px solid #e2e8f0',
-      boxShadow: 'none',
-      transition: 'transform 0.3s ease',
-      '&:hover': { transform: 'scale(1.02)' }
+      boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+      transition: 'all 0.3s ease',
+      '&:hover': { 
+        transform: 'translateY(-8px)',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.08)'
+      }
     }}>
       <Box sx={{ 
-        width: 48, height: 48, borderRadius: 2, 
-        bgcolor: textColor === "#fff" ? alpha('#fff', 0.2) : alpha('#4f46e5', 0.1),
-        display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 
+        width: 60, 
+        height: 60, 
+        borderRadius: 3, 
+        bgcolor: alpha(color, 0.1),
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        mb: 3 
       }}>
-        {icon}
+        {React.cloneElement(icon, { sx: { color: color, fontSize: 30 } })}
       </Box>
-      <Typography variant="h5" fontWeight={800} mb={1}>{title}</Typography>
-      <Typography variant="body1" sx={{ opacity: 0.8, lineHeight: 1.5 }}>{subtitle}</Typography>
+      <Typography variant="h5" fontWeight={800} mb={2} sx={{ color: '#0f172a' }}>
+        {title}
+      </Typography>
+      <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.6 }}>
+        {description}
+      </Typography>
     </Card>
   );
 }
