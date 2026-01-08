@@ -100,13 +100,34 @@ export default function Dashboard() {
   }, []);
 
   const processCandlestickData = (data) => {
-    return data.map(item => ({
+    // Ensure data is sorted chronologically (oldest to newest)
+    const sortedData = [...data].sort((a, b) => {
+      return new Date(a.date || a.time) - new Date(b.date || b.time);
+    });
+    
+    return sortedData.map(item => ({
       ...item,
-      time: item.date || item.time, // Standardize date key
+      time: item.date || item.time,
+      // Format date for display
+      displayDate: formatDateForDisplay(item.date || item.time),
       isUp: item.close >= item.open,
       color: item.close >= item.open ? COLORS.success.main : COLORS.danger.main,
       fill: item.close >= item.open ? COLORS.success.light : COLORS.danger.light
     }));
+  };
+
+  // Helper function to format date for display
+  const formatDateForDisplay = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-IN', { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   // 2. Fetch data for the selected CSV/Live stock
@@ -125,7 +146,7 @@ export default function Dashboard() {
         const today = res.data.today_data;
         setLiveStockInfo({
           symbol: res.data.symbol,
-          name: res.data.symbol, // Use symbol as name since CSVs don't always have full names
+          name: res.data.symbol,
           currentPrice: today.current_price,
           open: today.open_price,
           high: today.day_high,
@@ -135,10 +156,16 @@ export default function Dashboard() {
           volume: today.volume,
           source: res.data.data_source,
           realTime: res.data.data_source === "marketstack_api",
-          lastUpdated: new Date(res.data.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
+      } else {
+        // If no history data, clear the chart
+        setLiveTrendData([]);
       }
-    } catch (err) { console.error("Data Fetch Error:", err); } 
+    } catch (err) { 
+      console.error("Data Fetch Error:", err); 
+      setLiveTrendData([]);
+    } 
     finally { setIsLoadingLive(false); }
   }, [selectedLiveStock]);
 
@@ -171,6 +198,56 @@ export default function Dashboard() {
   const handleChartClick = (symbol) => navigate(`/stock/${symbol}`);
 
   const handleStockChange = (event) => setSelectedLiveStock(event.target.value);
+
+  // Custom XAxis tick formatter for proper date display
+  const formatXAxisTick = (value) => {
+    try {
+      const date = new Date(value);
+      return date.toLocaleDateString('en-IN', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+    } catch (e) {
+      return value;
+    }
+  };
+
+  // Custom tooltip formatter
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <Card sx={{ p: 2, background: 'rgba(255, 255, 255, 0.95)', border: `1px solid ${COLORS.primary.light}` }}>
+          <Typography variant="caption" fontWeight={900} color="text.secondary">
+            {formatDateForDisplay(label)}
+          </Typography>
+          <Stack spacing={0.5} mt={1}>
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="caption">Open:</Typography>
+              <Typography variant="caption" fontWeight={700}>₹{formatNumber(data.open)}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="caption">High:</Typography>
+              <Typography variant="caption" fontWeight={700} color={COLORS.success.main}>₹{formatNumber(data.high)}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="caption">Low:</Typography>
+              <Typography variant="caption" fontWeight={700} color={COLORS.danger.main}>₹{formatNumber(data.low)}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="caption">Close:</Typography>
+              <Typography variant="caption" fontWeight={700}>₹{formatNumber(data.close)}</Typography>
+            </Box>
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="caption">Volume:</Typography>
+              <Typography variant="caption" fontWeight={700}>{formatNumber(data.volume)}</Typography>
+            </Box>
+          </Stack>
+        </Card>
+      );
+    }
+    return null;
+  };
 
   return (
     <Box sx={{ backgroundColor: COLORS.background.light, minHeight: "100vh", pb: 5, background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)" }}>
@@ -279,24 +356,64 @@ export default function Dashboard() {
                       <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.info.main} stopOpacity={0.8}/><stop offset="95%" stopColor={COLORS.info.main} stopOpacity={0.1}/></linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha('#000', 0.1)} />
-                    <XAxis dataKey="time" tickFormatter={(v) => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} />
-                    <YAxis yAxisId="left" domain={['auto', 'auto']} tickFormatter={(v) => `₹${v.toLocaleString()}`} />
+                    <XAxis 
+                      dataKey="time" 
+                      tickFormatter={formatXAxisTick}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      yAxisId="left" 
+                      domain={['auto', 'auto']} 
+                      tickFormatter={(v) => `₹${formatNumber(v)}`}
+                      tick={{ fontSize: 12 }}
+                    />
                     <YAxis yAxisId="right" orientation="right" hide />
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />} />
                     <Bar yAxisId="right" dataKey="volume" fill="url(#volGrad)" radius={[2, 2, 0, 0]} />
                     {chartType === "candlestick" ? (
-                      <>
-                        {liveTrendData.map((entry, index) => (
-                          <Candlestick key={index} x={index * (100 / liveTrendData.length) * 0.8} y={entry.close} width={10} height={entry.close - entry.open} isUp={entry.isUp} />
-                        ))}
-                      </>
+                      // For candlestick chart, we need to calculate proper positions
+                      liveTrendData.map((entry, index) => {
+                        const xPos = (index / liveTrendData.length) * 100;
+                        return (
+                          <Candlestick 
+                            key={index} 
+                            x={xPos} 
+                            y={entry.close} 
+                            width={8} 
+                            height={entry.close - entry.open} 
+                            isUp={entry.isUp} 
+                          />
+                        );
+                      })
                     ) : (
-                      <Area yAxisId="left" type="monotone" dataKey="close" stroke={COLORS.primary.main} strokeWidth={3} fill={alpha(COLORS.primary.main, 0.1)} />
+                      <Area 
+                        yAxisId="left" 
+                        type="monotone" 
+                        dataKey="close" 
+                        stroke={COLORS.primary.main} 
+                        strokeWidth={3} 
+                        fill={alpha(COLORS.primary.main, 0.1)} 
+                        dot={{ stroke: COLORS.primary.main, strokeWidth: 2, r: 3 }}
+                      />
                     )}
-                    <Brush dataKey="time" height={25} stroke={COLORS.primary.main} />
+                    <Brush 
+                      dataKey="time" 
+                      height={25} 
+                      stroke={COLORS.primary.main}
+                      tickFormatter={formatXAxisTick}
+                    />
                   </ComposedChart>
                 </ResponsiveContainer>
-              ) : <Typography align="center" sx={{ mt: 10 }}>Select a stock to view history</Typography>}
+              ) : (
+                <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <Typography variant="h6" color="text.secondary" mb={2}>
+                    {isLoadingLive ? 'Loading data...' : 'Select a stock to view historical data'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Data will show from oldest to newest date (left to right)
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Paper>
         </Box>
@@ -360,7 +477,15 @@ function InsightItem({ title, stock, icon, color, gradient }) {
   );
 }
 
-const formatNumber = (num) => Number(num || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+const formatNumber = (num) => {
+  const n = Number(num || 0);
+  if (n >= 1000000) {
+    return (n / 1000000).toFixed(2) + 'M';
+  } else if (n >= 1000) {
+    return (n / 1000).toFixed(2) + 'K';
+  }
+  return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+};
 
 const fabStyle = {
   position: 'fixed', bottom: 40, right: 40, borderRadius: 4, px: 4, py: 2.5, fontWeight: 900,

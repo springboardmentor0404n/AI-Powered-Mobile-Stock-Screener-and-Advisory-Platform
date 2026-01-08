@@ -112,6 +112,7 @@ def process_api_data(api_response):
         if item:
             formatted_data.append({
                 "date": item.get("date", "")[:10],
+                "time": item.get("date", "")[:10],  # Added time field
                 "open": round(float(item.get("open") or 0), 2),
                 "high": round(float(item.get("high") or 0), 2),
                 "low": round(float(item.get("low") or 0), 2),
@@ -149,6 +150,7 @@ def get_csv_data(symbol, start_date=None, end_date=None):
         for _, row in df.iterrows():
             formatted_data.append({
                 "date": row['date'].strftime('%Y-%m-%d'),
+                "time": row['date'].strftime('%Y-%m-%d'),  # Added time field
                 "open": round(float(row.get('open', row['close'])), 2),
                 "high": round(float(row.get('high', row['close'])), 2),
                 "low": round(float(row.get('low', row['close'])), 2),
@@ -478,7 +480,7 @@ def get_quarter_data(symbol):
 
 @analytics_bp.route("/analytics/today-stock/<symbol>", methods=["GET"])
 def get_today_stock(symbol):
-    """Fetch today's data + last 30 days history"""
+    """Fetch today's data + last 30 days history - FIXED VERSION"""
     try:
         clean_sym = symbol.strip().upper()
         market_status = get_market_status()
@@ -495,51 +497,68 @@ def get_today_stock(symbol):
         api_response = fetch_marketstack_data(clean_sym, limit=31)
         if api_response and "data" in api_response:
             history_data = []
-            for i, item in enumerate(api_response["data"]):
-                history_data.append({
-                    "date": item.get("date", "")[:10],
-                    "open": round(float(item.get("open") or 0), 2),
-                    "high": round(float(item.get("high") or 0), 2),
-                    "low": round(float(item.get("low") or 0), 2),
-                    "close": round(float(item.get("close") or 0), 2),
-                    "volume": int(item.get("volume") or 0),
-                    "source": "API",
-                    "is_today": i == 0
-                })
+            api_data = api_response.get("data", [])
             
-            # Calculate daily changes
+            # Process API data - MarketStack returns latest first
+            for item in api_data:
+                if item and item.get("date"):
+                    history_data.append({
+                        "date": item.get("date", "")[:10],
+                        "time": item.get("date", "")[:10],  # Added time field
+                        "open": round(float(item.get("open") or 0), 2),
+                        "high": round(float(item.get("high") or 0), 2),
+                        "low": round(float(item.get("low") or 0), 2),
+                        "close": round(float(item.get("close") or 0), 2),
+                        "volume": int(item.get("volume") or 0),
+                        "source": "API"
+                    })
+            
+            # MarketStack returns newest to oldest, reverse to chronological
+            history_data.reverse()
+            
+            # Add change calculations
             for i in range(len(history_data)):
-                if i < len(history_data) - 1:
-                    prev_close = history_data[i + 1]["close"]
+                if i > 0:  # Skip first (oldest) record
+                    prev_close = history_data[i-1]["close"]
                     current_close = history_data[i]["close"]
                     history_data[i]["change"] = current_close - prev_close
                     history_data[i]["percent_change"] = ((current_close - prev_close) / prev_close * 100) if prev_close else 0
+                else:
+                    history_data[i]["change"] = 0
+                    history_data[i]["percent_change"] = 0
             
-            latest = history_data[0]
-            prev_close = history_data[1]["close"] if len(history_data) > 1 else latest["close"]
-            
-            response_data.update({
-                "today_data": {
-                    "current_price": latest["close"],
-                    "open_price": latest["open"],
-                    "day_high": latest["high"],
-                    "day_low": latest["low"],
-                    "volume": latest["volume"],
-                    "change": latest["change"] if "change" in latest else 0,
-                    "percent_change": latest["percent_change"] if "percent_change" in latest else 0,
-                    "previous_close": prev_close,
+            # Get latest (today's) data - last item after reversal
+            if history_data:
+                latest = history_data[-1]
+                prev_close = history_data[-2]["close"] if len(history_data) > 1 else latest["close"]
+                
+                response_data.update({
+                    "today_data": {
+                        "current_price": latest["close"],
+                        "open_price": latest["open"],
+                        "day_high": latest["high"],
+                        "day_low": latest["low"],
+                        "volume": latest["volume"],
+                        "change": latest["change"],
+                        "percent_change": latest["percent_change"],
+                        "previous_close": prev_close,
+                        "data_source": "marketstack_api"
+                    },
+                    "history_data": history_data,
                     "data_source": "marketstack_api"
-                },
-                "history_data": history_data[::-1],  # Reverse to chronological order
-                "data_source": "marketstack_api"
-            })
+                })
             return jsonify(response_data)
         
         # CSV Fallback
         csv_data = get_csv_data(clean_sym)
         if csv_data:
-            # Get last 31 days from CSV
+            # Get last 31 days from CSV - CSV is already chronological
             recent_data = csv_data[-31:] if len(csv_data) >= 31 else csv_data
+            
+            # Ensure time field exists for frontend compatibility
+            for item in recent_data:
+                if "time" not in item:
+                    item["time"] = item["date"]
             
             # Add change calculations
             for i in range(len(recent_data)):
@@ -552,28 +571,30 @@ def get_today_stock(symbol):
                     recent_data[i]["change"] = 0
                     recent_data[i]["percent_change"] = 0
             
-            latest = recent_data[-1]
-            prev_close = recent_data[-2]["close"] if len(recent_data) > 1 else latest["close"]
-            
-            response_data.update({
-                "today_data": {
-                    "current_price": latest["close"],
-                    "open_price": latest["open"],
-                    "day_high": latest["high"],
-                    "day_low": latest["low"],
-                    "volume": latest["volume"],
-                    "change": latest["change"],
-                    "percent_change": latest["percent_change"],
-                    "previous_close": prev_close,
+            if recent_data:
+                latest = recent_data[-1]
+                prev_close = recent_data[-2]["close"] if len(recent_data) > 1 else latest["close"]
+                
+                response_data.update({
+                    "today_data": {
+                        "current_price": latest["close"],
+                        "open_price": latest["open"],
+                        "day_high": latest["high"],
+                        "day_low": latest["low"],
+                        "volume": latest["volume"],
+                        "change": latest["change"],
+                        "percent_change": latest["percent_change"],
+                        "previous_close": prev_close,
+                        "data_source": "csv_fallback"
+                    },
+                    "history_data": recent_data,
                     "data_source": "csv_fallback"
-                },
-                "history_data": recent_data,
-                "data_source": "csv_fallback"
-            })
+                })
         
         return jsonify(response_data)
         
     except Exception as e:
+        print(f"Today stock error: {e}")
         return jsonify({"error": str(e)}), 500
 
 # --- COMPLETE THE MISSING ROUTES ---
