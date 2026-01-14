@@ -12,6 +12,7 @@ import Chat from "./pages/Chat";
 import WatchlistAll from './pages/WatchlistAll'; 
 // ✅ NEW: Importing the Hybrid Analysis Page
 import StockDetailPage from "./pages/StockDetailPage"; 
+import AlertManagement from './pages/AlertManagement';
 
 // Component to protect routes from unauthenticated access
 const PrivateRoute = ({ children }) => {
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/alerts" element={<AlertManagement />} />
 
           {/* Protected Dashboard Route */}
           <Route

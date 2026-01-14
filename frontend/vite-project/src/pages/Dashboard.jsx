@@ -19,6 +19,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CandlestickChartIcon from "@mui/icons-material/CandlestickChart";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
+import AddIcon from "@mui/icons-material/Add";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useNavigate } from "react-router-dom";
 
 import MainHeader from "../components/MainHeader";
@@ -27,6 +29,7 @@ import TopStocksBar from "../components/charts/TopStocksBar";
 import VolumePie from "../components/charts/VolumePie";
 import PortfolioCard from "../components/PortfolioCard"; 
 import { useWatchlistStore } from "../store/useWatchlistStore";
+import AlertModal from "../components/alerts/AlertModal"; // You'll need to create this
 
 // Color palette constant
 const COLORS = {
@@ -77,6 +80,12 @@ export default function Dashboard() {
   const [isLoadingLive, setIsLoadingLive] = useState(false);
   const [chartType, setChartType] = useState("candlestick");
   
+  // NEW: Alert State
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [userAlerts, setUserAlerts] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState(1); // Default user ID for demo
+  
   const [liveStockInfo, setLiveStockInfo] = useState({
     symbol: "", name: "", currentPrice: 0, open: 0, high: 0, low: 0, 
     change: 0, changePercent: 0, volume: 0, source: "", lastUpdated: "", realTime: false
@@ -98,6 +107,41 @@ export default function Dashboard() {
     };
     fetchSymbols();
   }, []);
+
+  // NEW: Fetch user alerts
+  useEffect(() => {
+    const fetchUserAlerts = async () => {
+      try {
+        const res = await api.get(`/alerts/active/${currentUserId}`);
+        if (res.data?.alerts) {
+          setUserAlerts(res.data.alerts);
+        }
+      } catch (err) { 
+        console.error("Error fetching alerts:", err); 
+        // If endpoint doesn't exist yet, set empty array
+        setUserAlerts([]);
+      }
+    };
+    
+    const fetchNotifications = async () => {
+      try {
+        const res = await api.get(`/notifications/${currentUserId}?unread_only=true&limit=5`);
+        if (res.data?.unread_count !== undefined) {
+          setUnreadNotifications(res.data.unread_count);
+        }
+      } catch (err) { 
+        console.error("Error fetching notifications:", err);
+        setUnreadNotifications(0);
+      }
+    };
+    
+    fetchUserAlerts();
+    fetchNotifications();
+    
+    // Poll for notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [currentUserId]);
 
   const processCandlestickData = (data) => {
     // Ensure data is sorted chronologically (oldest to newest)
@@ -199,6 +243,34 @@ export default function Dashboard() {
 
   const handleStockChange = (event) => setSelectedLiveStock(event.target.value);
 
+  // NEW: Handle alert creation
+  const handleAlertCreated = () => {
+    // Refresh alerts list
+    api.get(`/alerts/active/${currentUserId}`)
+      .then(res => {
+        if (res.data?.alerts) {
+          setUserAlerts(res.data.alerts);
+        }
+      })
+      .catch(err => console.error("Error refreshing alerts:", err));
+    
+    // Show success message
+    alert("Alert created successfully!");
+  };
+
+  // NEW: Check alerts for current stock
+  const checkCurrentStockAlerts = () => {
+    if (selectedLiveStock) {
+      api.get(`/alerts/check/${selectedLiveStock}`)
+        .then(res => {
+          if (res.data?.alerts_triggered > 0) {
+            console.log(`${res.data.alerts_triggered} alert(s) triggered for ${selectedLiveStock}`);
+          }
+        })
+        .catch(err => console.error("Error checking alerts:", err));
+    }
+  };
+
   // Custom XAxis tick formatter for proper date display
   const formatXAxisTick = (value) => {
     try {
@@ -271,9 +343,11 @@ export default function Dashboard() {
               Analyzing {universeCount} available stock datasets
             </Typography>
           </Box>
-          <Button variant="contained" onClick={() => navigate("/upload")} startIcon={<CloudUploadIcon />} sx={{ borderRadius: 4, px: 4, py: 1.5, fontWeight: 900, background: COLORS.purple.gradient, textTransform: 'none' }}>
-            Upload CSV Data
-          </Button>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Button variant="contained" onClick={() => navigate("/upload")} startIcon={<CloudUploadIcon />} sx={{ borderRadius: 4, px: 4, py: 1.5, fontWeight: 900, background: COLORS.purple.gradient, textTransform: 'none' }}>
+              Upload CSV Data
+            </Button>
+          </Box>
         </Box>
 
         {/* Status Bar */}
@@ -315,7 +389,54 @@ export default function Dashboard() {
                   </Typography>
                 </Box>
               </Stack>
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                {/* Alert Button */}
+                <Button 
+                  size="small" 
+                  variant="outlined"
+                  onClick={() => setShowAlertModal(true)}
+                  startIcon={<AddIcon />}
+                  sx={{ borderRadius: 3, fontWeight: 700 }}
+                >
+                  Create Alert
+                </Button>
+                
+                {/* Notifications Badge */}
+                {unreadNotifications > 0 && (
+                  <Box sx={{ position: 'relative' }}>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => navigate('/notifications')}
+                      sx={{ 
+                        bgcolor: alpha(COLORS.pink.main, 0.1), 
+                        color: COLORS.pink.main,
+                        '&:hover': { bgcolor: alpha(COLORS.pink.main, 0.2) }
+                      }}
+                    >
+                      <NotificationsIcon />
+                    </IconButton>
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -5,
+                        right: -5,
+                        bgcolor: COLORS.danger.main,
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: 18,
+                        height: 18,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </Box>
+                  </Box>
+                )}
+                
                 <Button size="small" variant={chartType === "candlestick" ? "contained" : "outlined"} onClick={() => setChartType(chartType === "candlestick" ? "line" : "candlestick")} startIcon={chartType === "candlestick" ? <ShowChartIcon /> : <CandlestickChartIcon />} sx={{ borderRadius: 3, fontWeight: 700 }}>
                   {chartType === "candlestick" ? "Line Chart" : "Candlestick"}
                 </Button>
@@ -330,6 +451,26 @@ export default function Dashboard() {
                 <IconButton onClick={() => fetchLiveTrend()} disabled={isLoadingLive} sx={{ bgcolor: alpha(COLORS.success.main, 0.1), color: COLORS.success.main }}><RefreshIcon /></IconButton>
               </Stack>
             </Stack>
+
+            {/* Active Alerts Summary */}
+            {userAlerts.length > 0 && userAlerts.some(alert => alert.symbol === selectedLiveStock) && (
+              <Box sx={{ mb: 3, p: 2, background: alpha(COLORS.info.main, 0.05), borderRadius: 2, border: `1px solid ${alpha(COLORS.info.main, 0.2)}` }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <NotificationsIcon sx={{ color: COLORS.info.main, fontSize: 20 }} />
+                  <Typography variant="body2" fontWeight={600}>
+                    You have {userAlerts.filter(alert => alert.symbol === selectedLiveStock && alert.is_active).length} active alert(s) for {selectedLiveStock}
+                  </Typography>
+                  <Button 
+                    size="small" 
+                    variant="text" 
+                    onClick={() => navigate('/alerts')}
+                    sx={{ ml: 'auto', fontSize: '0.75rem', fontWeight: 600 }}
+                  >
+                    Manage Alerts
+                  </Button>
+                </Stack>
+              </Box>
+            )}
 
             {/* Stock Detail Summary */}
             <Box sx={{ mb: 3, p: 3, background: alpha(COLORS.primary.main, 0.05), borderRadius: 3, border: `1px solid ${alpha(COLORS.primary.main, 0.1)}` }}>
@@ -441,6 +582,18 @@ export default function Dashboard() {
 
         <Button variant="contained" onClick={() => navigate("/chat")} sx={fabStyle} startIcon={<ChatBubbleIcon />}>Ask AI Advisor</Button>
       </Container>
+
+      {/* Alert Modal */}
+      {showAlertModal && (
+        <AlertModal
+          open={showAlertModal}
+          onClose={() => setShowAlertModal(false)}
+          symbol={selectedLiveStock}
+          currentPrice={liveStockInfo.currentPrice}
+          user_id={currentUserId}
+          onAlertCreated={handleAlertCreated}
+        />
+      )}
     </Box>
   );
 }

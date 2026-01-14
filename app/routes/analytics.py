@@ -888,3 +888,762 @@ def get_available_symbols():
     except Exception as e:
         print(f"Available symbols error: {e}")
         return jsonify({"error": str(e)}), 500
+
+# --- SPRINT 3: ALERT SYSTEM ENDPOINTS ---
+
+# Database connection helper for alerts
+def get_alert_db_connection():
+    """Get PostgreSQL database connection for alerts"""
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    
+    conn = psycopg2.connect(
+        host=os.getenv('DB_HOST', 'localhost'),
+        database=os.getenv('DB_NAME', 'stock_screener'),
+        user=os.getenv('DB_USER', 'postgres'),
+        password=os.getenv('DB_PASSWORD', ''),
+        port=os.getenv('DB_PORT', '5432')
+    )
+    return conn
+
+def get_average_volume(symbol):
+    """Helper function to get average volume for a symbol"""
+    try:
+        csv_data = get_csv_data(symbol)
+        if csv_data:
+            volumes = [item['volume'] for item in csv_data[-30:] if item.get('volume')]
+            if volumes:
+                return sum(volumes) / len(volumes)
+    except Exception as e:
+        print(f"Error getting average volume for {symbol}: {e}")
+    return None
+
+@analytics_bp.route("/alerts/create", methods=["POST"])
+def create_alert():
+    """Create a new stock alert"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['symbol', 'alert_type', 'condition', 'value', 'user_id']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        user_id = data['user_id']
+        symbol = data['symbol'].strip().upper()
+        alert_type = data['alert_type'].upper()
+        condition = data['condition'].upper()
+        value = float(data['value'])
+        
+        # Validate alert types
+        valid_alert_types = ['PRICE_THRESHOLD', 'PERCENT_CHANGE', 'VOLUME_SPIKE']
+        if alert_type not in valid_alert_types:
+            return jsonify({"error": f"Invalid alert type. Must be one of: {valid_alert_types}"}), 400
+        
+        # Validate conditions
+        valid_conditions = ['ABOVE', 'BELOW', 'EQUALS']
+        if condition not in valid_conditions:
+            return jsonify({"error": f"Invalid condition. Must be one of: {valid_conditions}"}), 400
+        
+        # Validate value based on type
+        if alert_type == 'PERCENT_CHANGE' and (value <= 0 or value > 100):
+            return jsonify({"error": "Percent change must be between 0.01 and 100"}), 400
+        
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if alert already exists
+        cur.execute("""
+            SELECT id FROM alerts 
+            WHERE user_id = %s AND symbol = %s AND alert_type = %s 
+            AND condition = %s AND value = %s AND is_active = true
+        """, (user_id, symbol, alert_type, condition, value))
+        
+        existing = cur.fetchone()
+        if existing:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Similar active alert already exists"}), 409
+        
+        # Insert alert
+        cur.execute("""
+            INSERT INTO alerts (user_id, symbol, alert_type, condition, value, is_active)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id, created_at
+        """, (user_id, symbol, alert_type, condition, value, True))
+        
+        alert = cur.fetchone()
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "message": "Alert created successfully",
+            "alert_id": alert['id'],
+            "created_at": alert['created_at'].isoformat() if alert['created_at'] else None
+        }), 201
+        
+    except Exception as e:
+        print(f"Create alert error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/alerts/user/<int:user_id>", methods=["GET"])
+def get_user_alerts(user_id):
+    """Get all alerts for a user"""
+    try:
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute("""
+            SELECT 
+                a.*,
+                COUNT(ta.id) as times_triggered,
+                MAX(ta.triggered_at) as last_triggered
+            FROM alerts a
+            LEFT JOIN triggered_alerts ta ON a.id = ta.alert_id
+            WHERE a.user_id = %s
+            GROUP BY a.id
+            ORDER BY a.created_at DESC
+        """, (user_id,))
+        
+        alerts = cur.fetchall()
+        
+        # Convert to list of dicts
+        alerts_list = []
+        for alert in alerts:
+            alert_dict = dict(alert)
+            alert_dict['created_at'] = alert['created_at'].isoformat() if alert['created_at'] else None
+            alert_dict['updated_at'] = alert['updated_at'].isoformat() if alert['updated_at'] else None
+            alert_dict['last_triggered'] = alert['last_triggered'].isoformat() if alert['last_triggered'] else None
+            alerts_list.append(alert_dict)
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "alerts": alerts_list,
+            "count": len(alerts_list)
+        })
+        
+    except Exception as e:
+        print(f"Get user alerts error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/alerts/active/<int:user_id>", methods=["GET"])
+def get_active_alerts(user_id):
+    """Get only active alerts for a user"""
+    try:
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute("""
+            SELECT * FROM alerts 
+            WHERE user_id = %s AND is_active = true
+            ORDER BY created_at DESC
+        """, (user_id,))
+        
+        alerts = cur.fetchall()
+        
+        # Convert to list of dicts
+        alerts_list = []
+        for alert in alerts:
+            alert_dict = dict(alert)
+            alert_dict['created_at'] = alert['created_at'].isoformat() if alert['created_at'] else None
+            alert_dict['updated_at'] = alert['updated_at'].isoformat() if alert['updated_at'] else None
+            alerts_list.append(alert_dict)
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "alerts": alerts_list,
+            "count": len(alerts_list)
+        })
+        
+    except Exception as e:
+        print(f"Get active alerts error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/alerts/<int:alert_id>", methods=["PUT"])
+def update_alert(alert_id):
+    """Update an existing alert"""
+    try:
+        data = request.get_json()
+        
+        if 'user_id' not in data:
+            return jsonify({"error": "user_id is required"}), 400
+        
+        user_id = data['user_id']
+        
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if alert exists and belongs to user
+        cur.execute("""
+            SELECT id FROM alerts 
+            WHERE id = %s AND user_id = %s
+        """, (alert_id, user_id))
+        
+        alert = cur.fetchone()
+        if not alert:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Alert not found or access denied"}), 404
+        
+        # Build update query
+        updates = []
+        params = []
+        
+        if 'is_active' in data:
+            updates.append("is_active = %s")
+            params.append(data['is_active'])
+        
+        if 'value' in data:
+            updates.append("value = %s")
+            params.append(float(data['value']))
+        
+        if 'condition' in data:
+            updates.append("condition = %s")
+            params.append(data['condition'].upper())
+        
+        if updates:
+            updates.append("updated_at = CURRENT_TIMESTAMP")
+            params.extend([alert_id, user_id])
+            
+            update_query = f"""
+                UPDATE alerts 
+                SET {', '.join(updates)}
+                WHERE id = %s AND user_id = %s
+                RETURNING *
+            """
+            
+            cur.execute(update_query, params)
+            updated_alert = cur.fetchone()
+            conn.commit()
+            
+            alert_dict = dict(updated_alert)
+            alert_dict['created_at'] = updated_alert['created_at'].isoformat() if updated_alert['created_at'] else None
+            alert_dict['updated_at'] = updated_alert['updated_at'].isoformat() if updated_alert['updated_at'] else None
+            
+            cur.close()
+            conn.close()
+            
+            return jsonify({
+                "message": "Alert updated successfully",
+                "alert": alert_dict
+            })
+        else:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "No fields to update"}), 400
+        
+    except Exception as e:
+        print(f"Update alert error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/alerts/<int:alert_id>", methods=["DELETE"])
+def delete_alert(alert_id):
+    """Delete an alert"""
+    try:
+        data = request.get_json()
+        
+        if 'user_id' not in data:
+            return jsonify({"error": "user_id is required"}), 400
+        
+        user_id = data['user_id']
+        
+        conn = get_alert_db_connection()
+        cur = conn.cursor()
+        
+        # Delete alert (cascade will delete triggered alerts)
+        cur.execute("""
+            DELETE FROM alerts 
+            WHERE id = %s AND user_id = %s
+            RETURNING id
+        """, (alert_id, user_id))
+        
+        deleted = cur.fetchone()
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        if deleted:
+            return jsonify({"message": "Alert deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Alert not found or access denied"}), 404
+        
+    except Exception as e:
+        print(f"Delete alert error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/alerts/check/<symbol>", methods=["GET"])
+def check_alerts_for_symbol(symbol):
+    """Check if any alerts should trigger for a symbol"""
+    try:
+        clean_sym = symbol.strip().upper()
+        
+        # Get current stock data using existing function
+        api_response = fetch_marketstack_data(clean_sym, limit=2)
+        
+        if not api_response or "data" not in api_response or len(api_response["data"]) < 2:
+            # Try CSV fallback
+            csv_data = get_csv_data(clean_sym)
+            if not csv_data or len(csv_data) < 2:
+                return jsonify({"error": "Could not fetch stock data"}), 400
+            
+            current_data = csv_data[-1]
+            previous_data = csv_data[-2] if len(csv_data) > 1 else csv_data[-1]
+            
+            current_price = current_data['close']
+            previous_price = previous_data['close']
+            current_volume = current_data.get('volume', 0)
+        else:
+            current_data = api_response["data"][0]
+            previous_data = api_response["data"][1]
+            
+            current_price = float(current_data.get("close") or 0)
+            previous_price = float(previous_data.get("close") or 0)
+            current_volume = int(current_data.get("volume") or 0)
+        
+        # Calculate changes
+        price_change = current_price - previous_price
+        percent_change = (price_change / previous_price * 100) if previous_price else 0
+        
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get active alerts for this symbol
+        cur.execute("""
+            SELECT a.* 
+            FROM alerts a
+            WHERE a.symbol = %s AND a.is_active = true
+        """, (clean_sym,))
+        
+        alerts = cur.fetchall()
+        triggered_alerts = []
+        
+        for alert in alerts:
+            should_trigger = False
+            condition_met = ""
+            
+            if alert['alert_type'] == 'PRICE_THRESHOLD':
+                if alert['condition'] == 'ABOVE' and current_price > alert['value']:
+                    should_trigger = True
+                    condition_met = f"Price {current_price} > {alert['value']}"
+                elif alert['condition'] == 'BELOW' and current_price < alert['value']:
+                    should_trigger = True
+                    condition_met = f"Price {current_price} < {alert['value']}"
+                elif alert['condition'] == 'EQUALS' and abs(current_price - alert['value']) < 0.01:
+                    should_trigger = True
+                    condition_met = f"Price {current_price} ≈ {alert['value']}"
+                    
+            elif alert['alert_type'] == 'PERCENT_CHANGE':
+                if alert['condition'] == 'ABOVE' and percent_change > alert['value']:
+                    should_trigger = True
+                    condition_met = f"Change {percent_change:.2f}% > {alert['value']}%"
+                elif alert['condition'] == 'BELOW' and percent_change < -alert['value']:
+                    should_trigger = True
+                    condition_met = f"Change {percent_change:.2f}% < -{alert['value']}%"
+                    
+            elif alert['alert_type'] == 'VOLUME_SPIKE':
+                avg_volume = get_average_volume(clean_sym)
+                if avg_volume and current_volume > avg_volume * 5:
+                    should_trigger = True
+                    condition_met = f"Volume spike: {current_volume} vs avg {int(avg_volume)}"
+            
+            if should_trigger:
+                import json
+                # Record triggered alert
+                cur.execute("""
+                    INSERT INTO triggered_alerts (alert_id, symbol, triggered_value, condition_met)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id
+                """, (alert['id'], clean_sym, current_price, condition_met))
+                
+                triggered_id = cur.fetchone()['id']
+                
+                # Create notification
+                title = f"Alert Triggered: {clean_sym}"
+                message = f"{alert['alert_type'].replace('_', ' ')} alert: {condition_met}"
+                
+                cur.execute("""
+                    INSERT INTO notifications (user_id, title, message, type, metadata)
+                    VALUES (%s, %s, %s, 'ALERT', %s)
+                """, (alert['user_id'], title, message, 
+                     json.dumps({'alert_id': alert['id'], 'symbol': clean_sym, 
+                                'triggered_value': current_price, 'condition': condition_met})))
+                
+                triggered_alerts.append({
+                    "alert_id": alert['id'],
+                    "triggered_id": triggered_id,
+                    "condition_met": condition_met,
+                    "current_price": current_price,
+                    "user_id": alert['user_id']
+                })
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "symbol": clean_sym,
+            "current_price": current_price,
+            "percent_change": percent_change,
+            "alerts_checked": len(alerts),
+            "alerts_triggered": len(triggered_alerts),
+            "triggered_alerts": triggered_alerts
+        })
+        
+    except Exception as e:
+        print(f"Check alerts error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/notifications/<int:user_id>", methods=["GET"])
+def get_notifications(user_id):
+    """Get notifications for a user"""
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+        
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        query = """
+            SELECT * FROM notifications 
+            WHERE user_id = %s
+        """
+        params = [user_id]
+        
+        if unread_only:
+            query += " AND is_read = false"
+        
+        query += " ORDER BY created_at DESC LIMIT %s"
+        params.append(limit)
+        
+        cur.execute(query, params)
+        notifications = cur.fetchall()
+        
+        # Convert to list of dicts
+        notifications_list = []
+        for notif in notifications:
+            notif_dict = dict(notif)
+            notif_dict['created_at'] = notif['created_at'].isoformat() if notif['created_at'] else None
+            if notif['metadata']:
+                notif_dict['metadata'] = notif['metadata']
+            notifications_list.append(notif_dict)
+        
+        # Get unread count
+        cur.execute("""
+            SELECT COUNT(*) as unread_count 
+            FROM notifications 
+            WHERE user_id = %s AND is_read = false
+        """, (user_id,))
+        
+        unread_count = cur.fetchone()['unread_count']
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "notifications": notifications_list,
+            "unread_count": unread_count,
+            "total": len(notifications_list)
+        })
+        
+    except Exception as e:
+        print(f"Get notifications error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/notifications/mark-read", methods=["POST"])
+def mark_notifications_read():
+    """Mark notifications as read"""
+    try:
+        data = request.get_json()
+        
+        if 'user_id' not in data:
+            return jsonify({"error": "user_id is required"}), 400
+        
+        user_id = data['user_id']
+        notification_ids = data.get('notification_ids', [])
+        mark_all = data.get('mark_all', False)
+        
+        conn = get_alert_db_connection()
+        cur = conn.cursor()
+        
+        if mark_all:
+            cur.execute("""
+                UPDATE notifications 
+                SET is_read = true 
+                WHERE user_id = %s AND is_read = false
+            """, (user_id,))
+        elif notification_ids:
+            # Convert list to tuple for SQL IN clause
+            ids_tuple = tuple(notification_ids)
+            cur.execute("""
+                UPDATE notifications 
+                SET is_read = true 
+                WHERE user_id = %s AND id IN %s
+            """, (user_id, ids_tuple))
+        else:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "No notification IDs provided"}), 400
+        
+        conn.commit()
+        updated_count = cur.rowcount
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "message": f"Marked {updated_count} notification(s) as read"
+        })
+        
+    except Exception as e:
+        print(f"Mark notifications read error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@analytics_bp.route("/notification-preferences/<int:user_id>", methods=["GET", "PUT"])
+def notification_preferences(user_id):
+    """Get or update notification preferences"""
+    try:
+        conn = get_alert_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        if request.method == 'GET':
+            cur.execute("""
+                SELECT * FROM notification_preferences 
+                WHERE user_id = %s
+            """, (user_id,))
+            
+            prefs = cur.fetchone()
+            
+            if not prefs:
+                # Return default preferences
+                default_prefs = {
+                    "user_id": user_id,
+                    "email_notifications": True,
+                    "in_app_notifications": True,
+                    "push_notifications": False,
+                    "frequency": "IMMEDIATE"
+                }
+                cur.close()
+                conn.close()
+                return jsonify(default_prefs)
+            
+            cur.close()
+            conn.close()
+            return jsonify(dict(prefs))
+            
+        elif request.method == 'PUT':
+            data = request.get_json()
+            
+            # Check if preferences exist
+            cur.execute("""
+                SELECT id FROM notification_preferences 
+                WHERE user_id = %s
+            """, (user_id,))
+            
+            prefs = cur.fetchone()
+            
+            updates = []
+            params = []
+            
+            if 'email_notifications' in data:
+                updates.append("email_notifications = %s")
+                params.append(data['email_notifications'])
+            
+            if 'in_app_notifications' in data:
+                updates.append("in_app_notifications = %s")
+                params.append(data['in_app_notifications'])
+            
+            if 'push_notifications' in data:
+                updates.append("push_notifications = %s")
+                params.append(data['push_notifications'])
+            
+            if 'frequency' in data:
+                updates.append("frequency = %s")
+                params.append(data['frequency'])
+            
+            if updates:
+                if prefs:
+                    params.append(user_id)
+                    update_query = f"""
+                        UPDATE notification_preferences 
+                        SET {', '.join(updates)}
+                        WHERE user_id = %s
+                        RETURNING *
+                    """
+                else:
+                    params.insert(0, user_id)
+                    update_query = f"""
+                        INSERT INTO notification_preferences 
+                        (user_id, {', '.join([u.split(' = ')[0] for u in updates])})
+                        VALUES (%s, {', '.join(['%s'] * len(updates))})
+                        RETURNING *
+                    """
+                
+                cur.execute(update_query, params)
+                updated_prefs = cur.fetchone()
+                conn.commit()
+                
+                cur.close()
+                conn.close()
+                
+                return jsonify(dict(updated_prefs))
+            else:
+                cur.close()
+                conn.close()
+                return jsonify({"error": "No preferences to update"}), 400
+        
+    except Exception as e:
+        print(f"Notification preferences error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# --- QUARTER CACHE ENDPOINTS (For "last N quarters" feature) ---
+
+@analytics_bp.route("/analytics/quarter-cache/<symbol>", methods=["GET"])
+def get_last_n_quarters(symbol):
+    """Get data for last N quarters"""
+    try:
+        clean_sym = symbol.strip().upper()
+        n_quarters = request.args.get('n', 4, type=int)  # Default: last 4 quarters
+        year = datetime.now().year
+        
+        all_quarter_data = []
+        
+        for i in range(n_quarters):
+            # Calculate quarter and year for this iteration
+            quarter_year = year
+            quarter = 3 - (i % 4)  # Q4, Q3, Q2, Q1 order
+            
+            # Adjust year if we go back quarters
+            if i >= 4:
+                quarter_year = year - (i // 4)
+            
+            # Get quarter data using existing function
+            quarter_data = get_quarter_data_internal(clean_sym, quarter, quarter_year)
+            if quarter_data:
+                quarter_data['quarter_label'] = f"Q{quarter+1} {quarter_year}"
+                all_quarter_data.append(quarter_data)
+        
+        return jsonify({
+            "symbol": clean_sym,
+            "quarters": all_quarter_data,
+            "count": len(all_quarter_data)
+        })
+        
+    except Exception as e:
+        print(f"Last N quarters error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+def get_quarter_data_internal(symbol, quarter, year):
+    """Internal helper to get quarter data"""
+    try:
+        # Reuse existing quarter data logic
+        quarter_months = {
+            0: (1, 3),   # Q1
+            1: (4, 6),   # Q2
+            2: (7, 9),   # Q3
+            3: (10, 12)  # Q4
+        }
+        
+        if quarter not in quarter_months:
+            return None
+        
+        start_month, end_month = quarter_months[quarter]
+        start_date = datetime(year, start_month, 1)
+        
+        if end_month == 12:
+            end_date = datetime(year + 1, 1, 1) - timedelta(seconds=1)
+        else:
+            end_date = datetime(year, end_month + 1, 1) - timedelta(seconds=1)
+        
+        # Try API first for 2022-2026
+        data = []
+        source = "unknown"
+        
+        if year >= 2022 and year <= 2026:
+            api_response = fetch_marketstack_data(
+                symbol,
+                date_from=start_date.strftime("%Y-%m-%d"),
+                date_to=end_date.strftime("%Y-%m-%d"),
+                limit=100
+            )
+            data = process_api_data(api_response)
+            if data:
+                source = "marketstack_api"
+        
+        # Fallback to CSV
+        if not data and year <= 2021:
+            csv_all = get_csv_data(symbol)
+            for item in csv_all:
+                item_date = datetime.strptime(item['date'], '%Y-%m-%d')
+                if start_date <= item_date <= end_date:
+                    data.append(item)
+            if data:
+                source = "csv_fallback"
+        
+        if data:
+            # Calculate basic stats
+            closes = [d['close'] for d in data]
+            start_close = closes[0] if closes else 0
+            end_close = closes[-1] if closes else 0
+            change = end_close - start_close
+            percent_change = (change / start_close * 100) if start_close else 0
+            
+            return {
+                "year": year,
+                "quarter": quarter,
+                "data": data,
+                "source": source,
+                "count": len(data),
+                "start_price": round(start_close, 2),
+                "end_price": round(end_close, 2),
+                "change": round(change, 2),
+                "percent_change": round(percent_change, 2),
+                "date_range": {
+                    "start": start_date.strftime("%Y-%m-%d"),
+                    "end": end_date.strftime("%Y-%m-%d")
+                }
+            }
+        
+        return None
+        
+    except Exception as e:
+        print(f"Internal quarter data error: {e}")
+        return None
+
+# --- VALIDATION ENDPOINTS ---
+
+@analytics_bp.route("/analytics/validate-symbol/<symbol>", methods=["GET"])
+def validate_symbol(symbol):
+    """Validate if a symbol exists and has data"""
+    try:
+        clean_sym = symbol.strip().upper()
+        
+        # Check CSV
+        csv_data = get_csv_data(clean_sym)
+        has_csv = len(csv_data) > 0
+        
+        # Check API (if available)
+        has_api = False
+        if MARKET_API_KEY:
+            api_response = fetch_marketstack_data(clean_sym, limit=1)
+            has_api = api_response and "data" in api_response and len(api_response["data"]) > 0
+        
+        return jsonify({
+            "symbol": clean_sym,
+            "valid": has_csv or has_api,
+            "has_csv": has_csv,
+            "has_api": has_api,
+            "csv_records": len(csv_data) if has_csv else 0,
+            "message": "Symbol found" if (has_csv or has_api) else "Symbol not found"
+        })
+        
+    except Exception as e:
+        print(f"Validate symbol error: {e}")
+        return jsonify({"error": str(e)}), 500
