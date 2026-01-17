@@ -13,7 +13,9 @@ load_dotenv()
 analytics_bp = Blueprint("analytics", __name__)
 
 # Constants
-DATA_DIR = "app/data/uploads"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data", "uploads")
+
 MARKET_API_KEY = os.getenv("MARKET_API_KEY")
 MARKETSTACK_BASE_URL = "http://api.marketstack.com/v1/eod"
 
@@ -122,36 +124,46 @@ def process_api_data(api_response):
                 "source": "API"
             })
     return formatted_data
-
 def get_csv_data(symbol, start_date=None, end_date=None):
-    """Get data from CSV with optional date filtering"""
-    csv_path = os.path.join(DATA_DIR, f"cleaned_{symbol.lower()}.csv")
-    if not os.path.exists(csv_path):
+    """Robust CSV loader with filename auto-detection"""
+    symbol = symbol.upper()
+    csv_path = None
+
+    if not os.path.exists(DATA_DIR):
+        print("CSV directory not found:", DATA_DIR)
         return []
-    
+
+    # 🔍 Auto-detect CSV file (case-insensitive)
+    for file in os.listdir(DATA_DIR):
+        if file.lower() == f"cleaned_{symbol.lower()}.csv":
+            csv_path = os.path.join(DATA_DIR, file)
+            break
+
+    if not csv_path:
+        print(f"CSV not found for symbol: {symbol}")
+        return []
+
     try:
         df = pd.read_csv(csv_path)
-        
-        # Check if required columns exist
-        if 'date' not in df.columns or 'close' not in df.columns:
-            print(f"Required columns missing in {csv_path}")
+
+        if df.empty or 'date' not in df.columns or 'close' not in df.columns:
+            print("Invalid CSV structure:", csv_path)
             return []
-        
+
         df['date'] = pd.to_datetime(df['date'])
-        
+
         if start_date:
-            start_ts = pd.Timestamp(start_date)
-            df = df[df['date'] >= start_ts]
+            df = df[df['date'] >= pd.Timestamp(start_date)]
         if end_date:
-            end_ts = pd.Timestamp(end_date)
-            df = df[df['date'] <= end_ts]
-        
+            df = df[df['date'] <= pd.Timestamp(end_date)]
+
         df = df.sort_values('date')
-        formatted_data = []
+
+        formatted = []
         for _, row in df.iterrows():
-            formatted_data.append({
+            formatted.append({
                 "date": row['date'].strftime('%Y-%m-%d'),
-                "time": row['date'].strftime('%Y-%m-%d'),  # Added time field
+                "time": row['date'].strftime('%Y-%m-%d'),
                 "open": round(float(row.get('open', row['close'])), 2),
                 "high": round(float(row.get('high', row['close'])), 2),
                 "low": round(float(row.get('low', row['close'])), 2),
@@ -159,10 +171,13 @@ def get_csv_data(symbol, start_date=None, end_date=None):
                 "volume": int(row.get('volume', 0)),
                 "source": "CSV"
             })
-        return formatted_data
+
+        return formatted
+
     except Exception as e:
-        print(f"CSV Read Error for {symbol}: {e}")
+        print(f"CSV read error for {symbol}: {e}")
         return []
+
 
 # --- NEW ENDPOINTS FOR FRONTEND ---
 
