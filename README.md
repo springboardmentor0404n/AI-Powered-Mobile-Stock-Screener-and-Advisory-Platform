@@ -269,4 +269,3 @@ For support and questions:
 ---
 
 **Note**: This application is for educational and research purposes. Always verify data accuracy and consult financial professionals before making investment decisions.</content>
-<parameter name="filePath">d:\Infosys MileStone-1\ai project\README.md
