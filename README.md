@@ -21,46 +21,19 @@ An intelligent stock screening and analysis platform built with Flask (backend) 
 - **RESTful API** 🌐: Well-structured Flask API with JWT authentication
 - **Database Integration** 🗄️: PostgreSQL for user data and alerts
 
-## Architecture 🏗️
+## Backend (Flask) ⚙️
 
-### Backend (Flask) ⚙️
-- **Authentication**: JWT-based auth with email OTP verification
-- **API Routes**:
-  - `/auth/*`: User registration, login, OTP verification
-  - `/chat`: AI-powered stock queries
-  - `/analytics/*`: Market data and analytics
-  - `/alerts/*`: Alert management
-  - `/upload`: CSV data upload with embedding generation
-- **Services**: Email notifications, stock resolution, chat intelligence
-- **Data Processing**: Pandas-based CSV processing and filtering
-
-### Frontend (React + Vite) 🎨
-- **UI Framework**: Material-UI for consistent design
-- **State Management**: Zustand for global state
-- **Charts**: Recharts for data visualization
-- **HTTP Client**: Axios for API communication
-
-## Prerequisites 📋
-
-### System Requirements 💻
+### Backend Prerequisites 📋
 - Python 3.8+
-- Node.js 16+
 - PostgreSQL 12+
 - Git
 
-### API Keys Required 🔑
+### Backend Dependencies 🔑
 - **Google AI API Key**: For natural language processing (Gemini AI)
 - **MarketStack API Key**: For real-time market data
+- **SMTP Configuration**: For email OTP verification
 
-## Installation 🚀
-
-### 1. Clone the Repository 📥
-```bash
-git clone <repository-url>
-cd "ai project"
-```
-
-### 2. Backend Setup ⚙️
+### Backend Installation 🚀
 
 #### Install Python Dependencies 🐍
 ```bash
@@ -91,7 +64,29 @@ SMTP_PASS=your-email-password
 FROM_EMAIL=noreply@yourdomain.com
 ```
 
-### 3. Frontend Setup 🎨
+### Backend Architecture 🏗️
+- **Authentication**: JWT-based auth with email OTP verification
+- **API Routes**:
+  - `/auth/*`: User registration, login, OTP verification
+  - `/chat`: AI-powered stock queries
+  - `/analytics/*`: Market data and analytics
+  - `/alerts/*`: Alert management
+  - `/upload`: CSV data upload with embedding generation
+- **Services** 🔧: Email notifications, stock resolution, chat intelligence, alert processing
+- **Data Processing**: Pandas-based CSV processing and filtering
+
+### Backend Configuration ⚙️
+- **Email Configuration** 📧: Update SMTP settings in `app/config.py` and `.env`
+- **Market Data** 📊: Ensure MarketStack API key is valid for NSE data
+- **Vector Database** 🤖: Uses FAISS for vector storage
+
+## Frontend (React + Vite) 🎨
+
+### Frontend Prerequisites 📋
+- Node.js 16+
+- Git
+
+### Frontend Installation 🚀
 
 #### Install Node Dependencies 📦
 ```bash
@@ -99,20 +94,13 @@ cd frontend/vite-project
 npm install
 ```
 
-## Configuration ⚙️
+### Frontend Architecture 🏗️
+- **UI Framework**: Material-UI for consistent design
+- **State Management**: Zustand for global state
+- **Charts**: Recharts for data visualization
+- **HTTP Client**: Axios for API communication
 
-### Email Configuration 📧
-Update SMTP settings in `app/config.py` and `.env` for email OTP functionality.
-
-### Market Data 📊
-- Ensure MarketStack API key is valid for NSE data
-- The app defaults to NSE (.XNSE) symbols
-
-### Vector Database 🤖
-- The app uses FAISS for vector storage (configured in `embeddings/vector_db.py`)
-- Embeddings are generated using sentence transformers
-
-## Running the Application ▶️
+## Commands ▶️
 
 ### Development Mode 🛠️
 
@@ -207,20 +195,62 @@ Upload CSV files with columns: date, open, high, low, close, volume, turnover, t
 
 ## Development
 
-### Project Structure
+### Project Structure 📁
 ```
 ├── app/
+│   ├── __init__.py      # Flask app factory
+│   ├── alert_service.py # Background alert monitoring service
+│   ├── app.py           # Main app file
+│   ├── config.py        # Configuration settings
+│   ├── db.py            # Database models and connections
+│   ├── extensions.py    # Flask extensions
 │   ├── routes/          # API endpoints
+│   │   ├── alerts.py    # Alert management routes
+│   │   ├── analytics.py # Market analytics routes
+│   │   ├── auth_routes.py # Authentication routes
+│   │   ├── chat.py      # Chat and stock queries
+│   │   ├── gateway_routes.py # API gateway routes
+│   │   └── upload.py    # File upload routes
 │   ├── models/          # Database models
+│   │   ├── api_key.py   # API key model
+│   │   ├── email_otp.py # OTP model
+│   │   └── email_user.py # User model
 │   ├── services/        # Business logic
+│   │   ├── chat_intelligence.py # Chat AI logic
+│   │   ├── emailer.py   # Email service
+│   │   ├── forwarder.py # Data forwarding service
+│   │   └── stock_resolver.py # Stock symbol resolution
 │   ├── embeddings/      # Vector processing
+│   │   ├── embedder.py  # Embedding generation
+│   │   └── vector_db.py # Vector database operations
 │   ├── llm/            # AI integration
+│   │   ├── parser.py    # Query parsing
+│   │   └── prompt.py    # AI prompts
 │   ├── screener/       # Stock screening logic
-│   └── config.py       # Configuration
-├── frontend/
-│   └── vite-project/   # React application
+│   │   └── runner.py    # Screener engine
+│   └── utils/          # Utility functions
+│       ├── hash_utils.py # Password hashing
+│       └── otp.py       # OTP generation
+├── data/               # Data storage
+│   ├── uploads/        # Uploaded CSV files
+│   ├── vector.index    # Vector database index
+│   └── cache/          # Cached data
+├── database/           # Database operations
+│   ├── embeddings_repo.py # Embedding repository
+│   └── postgres.py     # PostgreSQL connections
+├── frontend/           # React frontend
+│   └── vite-project/   # Vite React app
 ├── tests/              # Test suites
-└── requirements.txt    # Python dependencies
+│   ├── test_alert_processing.py
+│   ├── test_api_response_time.py
+│   ├── test_concurrent_requests.py
+│   ├── test_csv_processing.py
+│   ├── test_db_query_time.py
+│   ├── test_health_check.py
+│   └── test_notifications_time.py
+├── run.py              # Application entry point
+├── requirements.txt    # Python dependencies
+└── README.md           # This file
 ```
 
 ### Testing
