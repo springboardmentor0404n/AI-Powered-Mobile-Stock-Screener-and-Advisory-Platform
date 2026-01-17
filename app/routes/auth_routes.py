@@ -103,7 +103,16 @@ def verify_otp():
             identity=user.id,
             additional_claims={"username": user.username, "email": user.email}
         )
-        return jsonify({"access_token": token}), 200
+        
+        # Returns user object so React saves the session ID immediately
+        return jsonify({
+            "access_token": token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
+        }), 200
     finally:
         db.close()
 
@@ -162,6 +171,15 @@ def login():
             identity=user.id,
             additional_claims={"username": user.username, "email": user.email}
         )
-        return jsonify({"access_token": token}), 200
+
+        # Returns user object so React saves user.id in LocalStorage for Alerts
+        return jsonify({
+            "access_token": token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
+        }), 200
     finally:
         db.close()

@@ -34,7 +34,22 @@ export default function Login() {
     setError("");
     try {
       const res = await api.post("/auth/login", { email, password });
+      
+      // 1. Save the JWT Token
       saveToken(res.data.access_token);
+
+      // 2. ✅ NEW: Save user info to LocalStorage so AlertModal can find user.id
+      // We wrap it in JSON.stringify because localStorage only stores strings
+      if (res.data.user) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      } else if (res.data.user_id) {
+        // Fallback if your backend returns user_id directly instead of a user object
+        localStorage.setItem("user", JSON.stringify({ 
+          id: res.data.user_id, 
+          email: email 
+        }));
+      }
+
       toast?.showToast("Welcome back!", "success");
       navigate("/dashboard");
     } catch (e) {

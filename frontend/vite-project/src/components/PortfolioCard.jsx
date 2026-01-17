@@ -2,25 +2,29 @@ import React from 'react';
 import { Card, CardContent, Stack, Box, Typography, alpha } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { useNavigate } from "react-router-dom";
 
 export default function PortfolioCard({ stock }) {
   const navigate = useNavigate();
 
-  // 1. Determine Trend and Colors
-  const isPositive = stock.close > (stock.open || 0);
+  // 1. Safe Number Conversions to avoid NaN
+  const closePrice = Number(stock.price || stock.close || 0);
+  const changePct = Number(stock.changePercent || 0);
+  
+  // 2. Determine Trend and Colors
+  const isPositive = changePct >= 0;
   const trendColor = isPositive ? '#10b981' : '#ef4444';
   
-  // 2. Dynamic Period Label
+  // 3. Dynamic Period Label
   const periodLabel = stock.period > 1 ? `Last ${stock.period} Quarters` : "Last 24 hrs";
 
-  // 3. Data Mapping for Sparkline
+  // 4. Data Mapping for Sparkline (Added a small variation for visual effect)
   const chartData = [
-    { p: stock.open || 0 },
-    { p: stock.low || 0 },
-    { p: stock.high || 0 },
-    { p: stock.close || 0 }
+    { p: closePrice * 0.98 },
+    { p: closePrice * 1.01 },
+    { p: closePrice * 0.99 },
+    { p: closePrice }
   ];
 
   return (
@@ -49,8 +53,9 @@ export default function PortfolioCard({ stock }) {
             {isPositive ? <TrendingUpIcon fontSize="small" /> : <TrendingDownIcon fontSize="small" />}
           </Box>
           <Box sx={{ textAlign: 'right' }}>
+            {/* UPDATED: Added safety check to prevent NaN display */}
             <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1, color: '#0f172a' }}>
-              ₹{Number(stock.close).toLocaleString()}
+              ₹{closePrice > 0 ? closePrice.toLocaleString('en-IN') : "0.00"}
             </Typography>
             <Typography variant="caption" fontWeight={800} color="text.secondary" sx={{ letterSpacing: 1 }}>
               {stock.symbol}
@@ -58,21 +63,18 @@ export default function PortfolioCard({ stock }) {
           </Box>
         </Stack>
 
-        {/* --- CLEAN SPARKLINE (Lines Removed) --- */}
+        {/* --- CLEAN SPARKLINE (Trend Line Enabled) --- */}
         <Box sx={{ height: 50, mb: 2, mt: 1 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              {/* By NOT including <XAxis />, <YAxis />, or <CartesianGrid />, 
-                  all horizontal and vertical lines are removed.
-              */}
-              
+              <YAxis domain={['dataMin - 5', 'dataMax + 5']} hide />
               <Line 
-                type="monotone" 
+                type="Line" 
                 dataKey="p" 
-                stroke="none" 
-                strokeWidth={3} 
+                stroke={trendColor} 
+                strokeWidth={2} 
                 dot={false} 
-                isAnimationActive={false}
+                isAnimationActive={true}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -80,8 +82,9 @@ export default function PortfolioCard({ stock }) {
 
         <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Box sx={{ px: 1.2, py: 0.5, borderRadius: 1.5, bgcolor: alpha(trendColor, 0.1) }}>
+              {/* UPDATED: Fixed to 2 decimal places to remove long strings */}
               <Typography variant="caption" fontWeight={900} sx={{ color: trendColor }}>
-                {isPositive ? '▲' : '▼'} {stock.changePercent || '0.00'}%
+                {isPositive ? '▲' : '▼'} {Math.abs(changePct).toFixed(2)}%
               </Typography>
             </Box>
             <Typography variant="caption" color="text.secondary" fontWeight={800}>

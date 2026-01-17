@@ -1,29 +1,41 @@
 from flask import Blueprint, request, jsonify
-from app.db import SessionLocal
-from app.models.api_key import APIKey
-from app.services.forwarder import forward
-from app.config import SERVICES
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 gateway_bp = Blueprint("gateway", __name__)
 
-def validate_api_key():
-    key = request.headers.get("X-API-KEY")
-    if not key:
-        return False
+def get_db_connection():
+    return psycopg2.connect(
+        host="localhost",
+        database="ai_screener_db",
+        user="postgres",
+        password="12345",
+        port="5432"
+    )
 
-    db = SessionLocal()
-    valid = db.query(APIKey).filter_by(key=key).first()
-    db.close()
-    return valid is not None
+@gateway_bp.route("/watchlist/<int:user_id>", methods=["GET"])
+def get_watchlist(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("SELECT symbol FROM watchlist WHERE user_id = %s", (user_id,))
+        return jsonify({"watchlist": cur.fetchall()}), 200
+    finally:
+        cur.close()
+        conn.close()
 
-
-@gateway_bp.before_request
-def before():
-    if request.path.startswith("/gateway"):
-        if not validate_api_key():
-            return jsonify({"error": "Invalid API Key"}), 401
-
-
-@gateway_bp.route("/users/<path:path>")
-def users_proxy(path):
-    return forward(SERVICES["users"], path)
+@gateway_bp.route("/watchlist/add", methods=["POST"])
+def add_to_watchlist():
+    data = request.get_json()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO watchlist (user_id, symbol) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+            (data['user_id'], data['symbol'])
+        )
+        conn.commit()
+        return jsonify({"message": "Added"}), 201
+    finally:
+        cur.close()
+        conn.close()

@@ -6,6 +6,11 @@ export const useWatchlistStore = create(
     (set, get) => ({
       watchlist: [],
 
+      // NEW: Allows the dashboard to load stocks from the database
+      setWatchlist: (list) => {
+        set({ watchlist: list });
+      },
+
       addToWatchlist: (stock) => {
         const current = get().watchlist;
         const exists = current.some((s) => s.symbol === stock.symbol);

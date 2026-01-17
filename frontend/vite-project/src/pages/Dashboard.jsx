@@ -29,7 +29,9 @@ import TopStocksBar from "../components/charts/TopStocksBar";
 import VolumePie from "../components/charts/VolumePie";
 import PortfolioCard from "../components/PortfolioCard"; 
 import { useWatchlistStore } from "../store/useWatchlistStore";
-import AlertModal from "../components/alerts/AlertModal"; // You'll need to create this
+import AlertModal from "../components/alerts/AlertModal"; 
+// UPDATED: Import the new NotificationBell component
+import NotificationBell from "../components/NotificationBell";
 
 // Color palette constant
 const COLORS = {
@@ -63,7 +65,7 @@ const Candlestick = (props) => {
 export default function Dashboard() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { watchlist } = useWatchlistStore();
+  const { watchlist, setWatchlist } = useWatchlistStore();
 
   const [stats, setStats] = useState(null);
   const [topStocks, setTopStocks] = useState([]);
@@ -73,32 +75,83 @@ export default function Dashboard() {
   const [stockDetailData, setStockDetailData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // NEW: Dynamic CSV Stock List
   const [availableSymbols, setAvailableSymbols] = useState([]);
   const [selectedLiveStock, setSelectedLiveStock] = useState("");
   const [liveTrendData, setLiveTrendData] = useState([]);
   const [isLoadingLive, setIsLoadingLive] = useState(false);
   const [chartType, setChartType] = useState("candlestick");
   
-  // NEW: Alert State
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [userAlerts, setUserAlerts] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState(1); // Default user ID for demo
+
+  const [currentUserId, setCurrentUserId] = useState(() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData).id : 5; 
+  });
   
   const [liveStockInfo, setLiveStockInfo] = useState({
     symbol: "", name: "", currentPrice: 0, open: 0, high: 0, low: 0, 
     change: 0, changePercent: 0, volume: 0, source: "", lastUpdated: "", realTime: false
   });
 
-  // 1. Fetch available symbols from your 46 CSVs
+  // UPDATED: Fetch Watchlist with real price data
+  useEffect(() => {
+    const fetchUserWatchlist = async () => {
+      try {
+        const res = await api.get(`/gateway/watchlist/${currentUserId}`);
+        if (res.data?.watchlist) {
+          const watchlistWithPrices = await Promise.all(
+            res.data.watchlist.map(async (item) => {
+              try {
+                // Fetch latest price for each symbol to avoid showing 0
+                const priceRes = await api.get(`/analytics/today-stock/${item.symbol}`);
+                return {
+                  symbol: item.symbol,
+                  price: priceRes.data?.today_data?.current_price || 0,
+                  changePercent: priceRes.data?.today_data?.percent_change || 0
+                };
+              } catch {
+                return { symbol: item.symbol, price: 0, changePercent: 0 };
+              }
+            })
+          );
+          setWatchlist(watchlistWithPrices); 
+        }
+      } catch (err) {
+        console.error("Error fetching watchlist from DB:", err);
+      }
+    };
+    if (currentUserId) fetchUserWatchlist();
+  }, [currentUserId, setWatchlist]);
+
+  const handleAddToWatchlist = async (symbol) => {
+    try {
+      await api.post("/gateway/watchlist/add", {
+        user_id: currentUserId,
+        symbol: symbol
+      });
+      // Refresh logic
+      const res = await api.get(`/gateway/watchlist/${currentUserId}`);
+      if (res.data?.watchlist) {
+        setWatchlist(res.data.watchlist.map(item => ({
+          symbol: item.symbol,
+          price: 0,
+          changePercent: 0
+        })));
+      }
+      alert(`${symbol} added to watchlist!`);
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err);
+    }
+  };
+
   useEffect(() => {
     const fetchSymbols = async () => {
       try {
         const res = await api.get("/analytics/available-symbols");
         if (res.data?.symbols) {
           setAvailableSymbols(res.data.symbols);
-          // Set default selection to first available stock
           if (res.data.symbols.length > 0 && !selectedLiveStock) {
             setSelectedLiveStock(res.data.symbols[0].symbol);
           }
@@ -108,51 +161,26 @@ export default function Dashboard() {
     fetchSymbols();
   }, []);
 
-  // NEW: Fetch user alerts
   useEffect(() => {
     const fetchUserAlerts = async () => {
       try {
         const res = await api.get(`/alerts/active/${currentUserId}`);
-        if (res.data?.alerts) {
-          setUserAlerts(res.data.alerts);
-        }
+        if (res.data?.alerts) setUserAlerts(res.data.alerts);
       } catch (err) { 
         console.error("Error fetching alerts:", err); 
-        // If endpoint doesn't exist yet, set empty array
         setUserAlerts([]);
       }
     };
     
-    const fetchNotifications = async () => {
-      try {
-        const res = await api.get(`/notifications/${currentUserId}?unread_only=true&limit=5`);
-        if (res.data?.unread_count !== undefined) {
-          setUnreadNotifications(res.data.unread_count);
-        }
-      } catch (err) { 
-        console.error("Error fetching notifications:", err);
-        setUnreadNotifications(0);
-      }
-    };
-    
+    // Notifications now handled by NotificationBell component
     fetchUserAlerts();
-    fetchNotifications();
-    
-    // Poll for notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
   }, [currentUserId]);
 
   const processCandlestickData = (data) => {
-    // Ensure data is sorted chronologically (oldest to newest)
-    const sortedData = [...data].sort((a, b) => {
-      return new Date(a.date || a.time) - new Date(b.date || b.time);
-    });
-    
+    const sortedData = [...data].sort((a, b) => new Date(a.date || a.time) - new Date(b.date || b.time));
     return sortedData.map(item => ({
       ...item,
       time: item.date || item.time,
-      // Format date for display
       displayDate: formatDateForDisplay(item.date || item.time),
       isUp: item.close >= item.open,
       color: item.close >= item.open ? COLORS.success.main : COLORS.danger.main,
@@ -160,28 +188,18 @@ export default function Dashboard() {
     }));
   };
 
-  // Helper function to format date for display
   const formatDateForDisplay = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric' 
-      });
-    } catch (e) {
-      return dateString;
-    }
+      return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) { return dateString; }
   };
 
-  // 2. Fetch data for the selected CSV/Live stock
   const fetchLiveTrend = useCallback(async (stockSymbol = selectedLiveStock) => {
     if (!stockSymbol) return;
     setIsLoadingLive(true);
     try {
-      // Using today-stock which has the robust CSV fallback for your 46 stocks
       const res = await api.get(`/analytics/today-stock/${stockSymbol}`);
-      
       if (res.data?.history_data?.length > 0) {
         const history = res.data.history_data;
         const processedData = processCandlestickData(history);
@@ -202,22 +220,17 @@ export default function Dashboard() {
           realTime: res.data.data_source === "marketstack_api",
           lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
-      } else {
-        // If no history data, clear the chart
-        setLiveTrendData([]);
-      }
+      } else { setLiveTrendData([]); }
     } catch (err) { 
       console.error("Data Fetch Error:", err); 
       setLiveTrendData([]);
-    } 
-    finally { setIsLoadingLive(false); }
+    } finally { setIsLoadingLive(false); }
   }, [selectedLiveStock]);
 
   useEffect(() => {
     if (selectedLiveStock) fetchLiveTrend();
   }, [selectedLiveStock, fetchLiveTrend]);
 
-  // 3. Fetch general dashboard stats
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -240,80 +253,34 @@ export default function Dashboard() {
   }, []);
 
   const handleChartClick = (symbol) => navigate(`/stock/${symbol}`);
-
   const handleStockChange = (event) => setSelectedLiveStock(event.target.value);
 
-  // NEW: Handle alert creation
   const handleAlertCreated = () => {
-    // Refresh alerts list
-    api.get(`/alerts/active/${currentUserId}`)
-      .then(res => {
-        if (res.data?.alerts) {
-          setUserAlerts(res.data.alerts);
-        }
-      })
-      .catch(err => console.error("Error refreshing alerts:", err));
-    
-    // Show success message
+    api.get(`/alerts/active/${currentUserId}`).then(res => {
+      if (res.data?.alerts) setUserAlerts(res.data.alerts);
+    });
     alert("Alert created successfully!");
   };
 
-  // NEW: Check alerts for current stock
-  const checkCurrentStockAlerts = () => {
-    if (selectedLiveStock) {
-      api.get(`/alerts/check/${selectedLiveStock}`)
-        .then(res => {
-          if (res.data?.alerts_triggered > 0) {
-            console.log(`${res.data.alerts_triggered} alert(s) triggered for ${selectedLiveStock}`);
-          }
-        })
-        .catch(err => console.error("Error checking alerts:", err));
-    }
-  };
-
-  // Custom XAxis tick formatter for proper date display
   const formatXAxisTick = (value) => {
     try {
       const date = new Date(value);
-      return date.toLocaleDateString('en-IN', { 
-        day: 'numeric', 
-        month: 'short' 
-      });
-    } catch (e) {
-      return value;
-    }
+      return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    } catch (e) { return value; }
   };
 
-  // Custom tooltip formatter
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <Card sx={{ p: 2, background: 'rgba(255, 255, 255, 0.95)', border: `1px solid ${COLORS.primary.light}` }}>
-          <Typography variant="caption" fontWeight={900} color="text.secondary">
-            {formatDateForDisplay(label)}
-          </Typography>
+          <Typography variant="caption" fontWeight={900} color="text.secondary">{formatDateForDisplay(label)}</Typography>
           <Stack spacing={0.5} mt={1}>
-            <Box display="flex" justifyContent="space-between">
-              <Typography variant="caption">Open:</Typography>
-              <Typography variant="caption" fontWeight={700}>₹{formatNumber(data.open)}</Typography>
-            </Box>
-            <Box display="flex" justifyContent="space-between">
-              <Typography variant="caption">High:</Typography>
-              <Typography variant="caption" fontWeight={700} color={COLORS.success.main}>₹{formatNumber(data.high)}</Typography>
-            </Box>
-            <Box display="flex" justifyContent="space-between">
-              <Typography variant="caption">Low:</Typography>
-              <Typography variant="caption" fontWeight={700} color={COLORS.danger.main}>₹{formatNumber(data.low)}</Typography>
-            </Box>
-            <Box display="flex" justifyContent="space-between">
-              <Typography variant="caption">Close:</Typography>
-              <Typography variant="caption" fontWeight={700}>₹{formatNumber(data.close)}</Typography>
-            </Box>
-            <Box display="flex" justifyContent="space-between">
-              <Typography variant="caption">Volume:</Typography>
-              <Typography variant="caption" fontWeight={700}>{formatNumber(data.volume)}</Typography>
-            </Box>
+            <Box display="flex" justifyContent="space-between"><Typography variant="caption">Open:</Typography><Typography variant="caption" fontWeight={700}>₹{formatNumber(data.open)}</Typography></Box>
+            <Box display="flex" justifyContent="space-between"><Typography variant="caption">High:</Typography><Typography variant="caption" fontWeight={700} color={COLORS.success.main}>₹{formatNumber(data.high)}</Typography></Box>
+            <Box display="flex" justifyContent="space-between"><Typography variant="caption">Low:</Typography><Typography variant="caption" fontWeight={700} color={COLORS.danger.main}>₹{formatNumber(data.low)}</Typography></Box>
+            <Box display="flex" justifyContent="space-between"><Typography variant="caption">Close:</Typography><Typography variant="caption" fontWeight={700}>₹{formatNumber(data.close)}</Typography></Box>
+            <Box display="flex" justifyContent="space-between"><Typography variant="caption">Volume:</Typography><Typography variant="caption" fontWeight={700}>{formatNumber(data.volume)}</Typography></Box>
           </Stack>
         </Card>
       );
@@ -326,31 +293,21 @@ export default function Dashboard() {
       <MainHeader title="AI Stock Screener" />
       <Container maxWidth={false} sx={{ pt: 4, px: { xs: 2, md: 8, lg: 10, xl: 12 } }}>
         
-        {/* Header Section */}
         <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
           <Box>
             <Stack direction="row" spacing={2} alignItems="center">
-              <Typography variant="h3" fontWeight={900} sx={{ letterSpacing: '-1.5px', color: COLORS.background.dark }}>
-                Market Intelligence
-              </Typography>
-              <Chip 
-                label={liveStockInfo.realTime ? "REAL-TIME" : "CSV DATA"} 
-                size="small" 
-                sx={{ fontWeight: 900, background: liveStockInfo.realTime ? COLORS.primary.gradient : COLORS.warning.gradient, color: "white", px: 1 }} 
-              />
+              <Typography variant="h3" fontWeight={900} sx={{ letterSpacing: '-1.5px', color: COLORS.background.dark }}>Market Intelligence</Typography>
+              <Chip label={liveStockInfo.realTime ? "REAL-TIME" : "CSV DATA"} size="small" sx={{ fontWeight: 900, background: liveStockInfo.realTime ? COLORS.primary.gradient : COLORS.warning.gradient, color: "white", px: 1 }} />
             </Stack>
-            <Typography variant="body1" sx={{ color: '#64748b', mt: 0.5, fontWeight: 500 }}>
-              Analyzing {universeCount} available stock datasets
-            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b', mt: 0.5, fontWeight: 500 }}>Analyzing {universeCount} available stock datasets</Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={2}>
-            <Button variant="contained" onClick={() => navigate("/upload")} startIcon={<CloudUploadIcon />} sx={{ borderRadius: 4, px: 4, py: 1.5, fontWeight: 900, background: COLORS.purple.gradient, textTransform: 'none' }}>
-              Upload CSV Data
-            </Button>
+            {/* UPDATED: Replaced IconButton with NotificationBell */}
+            <NotificationBell />
+            <Button variant="contained" onClick={() => navigate("/upload")} startIcon={<CloudUploadIcon />} sx={{ borderRadius: 4, px: 4, py: 1.5, fontWeight: 900, background: COLORS.purple.gradient, textTransform: 'none' }}>Upload CSV Data</Button>
           </Box>
         </Box>
 
-        {/* Status Bar */}
         <Grid container spacing={2} mb={5}>
           <Grid item xs={12} sm={6} md={2}><KpiCard title="Universe" value={universeCount} icon={<AutoGraphIcon />} color={COLORS.primary.main} gradient={COLORS.primary.gradient} /></Grid>
           <Grid item xs={12} sm={6} md={2}><KpiCard title="AI Signals" value="Optimal" icon={<AccountBalanceWalletIcon />} color={COLORS.pink.main} gradient={COLORS.pink.gradient} /></Grid>
@@ -358,7 +315,6 @@ export default function Dashboard() {
           <Grid item xs={12} sm={6} md={4}><InsightItem title="Market Low (CSV)" stock={stats?.lowestPrice} icon={<TrendingDownIcon />} color={COLORS.danger.main} gradient={COLORS.danger.gradient} /></Grid>
         </Grid>
 
-        {/* Visualization Grid */}
         <Grid container spacing={4} mb={6}>
           <Grid item xs={12} lg={8}>
             <Paper sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0", minHeight: 650, background: COLORS.background.card, position: 'relative', '&:before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: COLORS.primary.gradient } }}>
@@ -376,7 +332,6 @@ export default function Dashboard() {
           </Grid>
         </Grid>
 
-        {/* Dynamic CSV Stock Chart Section */}
         <Box sx={{ mb: 6 }}>
           <Paper sx={{ p: 4, borderRadius: 4, border: "1px solid #e2e8f0", background: COLORS.background.card, position: 'relative', '&:before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: COLORS.warning.gradient } }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
@@ -384,62 +339,17 @@ export default function Dashboard() {
                 <CandlestickChartIcon sx={{ color: COLORS.warning.main, fontSize: 32, background: alpha(COLORS.warning.main, 0.1), padding: 1, borderRadius: 2 }} />
                 <Box>
                   <Typography variant="h5" fontWeight={900}>Trend Analysis Dashboard</Typography>
-                  <Typography variant="caption" sx={{ color: COLORS.primary.main, fontWeight: 700, background: alpha(COLORS.primary.main, 0.1), px: 1, py: 0.5, borderRadius: 1 }}>
-                    SOURCE: {liveStockInfo.source.replace('_', ' ').toUpperCase()}
-                  </Typography>
+                  <Typography variant="caption" sx={{ color: COLORS.primary.main, fontWeight: 700, background: alpha(COLORS.primary.main, 0.1), px: 1, py: 0.5, borderRadius: 1 }}>SOURCE: {liveStockInfo.source.replace('_', ' ').toUpperCase()}</Typography>
                 </Box>
               </Stack>
               <Stack direction="row" spacing={2} alignItems="center">
-                {/* Alert Button */}
-                <Button 
-                  size="small" 
-                  variant="outlined"
-                  onClick={() => setShowAlertModal(true)}
-                  startIcon={<AddIcon />}
-                  sx={{ borderRadius: 3, fontWeight: 700 }}
-                >
-                  Create Alert
-                </Button>
                 
-                {/* Notifications Badge */}
-                {unreadNotifications > 0 && (
-                  <Box sx={{ position: 'relative' }}>
-                    <IconButton 
-                      size="small" 
-                      onClick={() => navigate('/notifications')}
-                      sx={{ 
-                        bgcolor: alpha(COLORS.pink.main, 0.1), 
-                        color: COLORS.pink.main,
-                        '&:hover': { bgcolor: alpha(COLORS.pink.main, 0.2) }
-                      }}
-                    >
-                      <NotificationsIcon />
-                    </IconButton>
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: -5,
-                        right: -5,
-                        bgcolor: COLORS.danger.main,
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: 18,
-                        height: 18,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                    </Box>
-                  </Box>
-                )}
+                <Button size="small" variant="outlined" onClick={() => handleAddToWatchlist(selectedLiveStock)} startIcon={<AddIcon />} sx={{ borderRadius: 3, fontWeight: 700, borderColor: COLORS.success.main, color: COLORS.success.main }}>Watchlist</Button>
+
+                <Button size="small" variant="outlined" onClick={() => setShowAlertModal(true)} startIcon={<NotificationsIcon />} sx={{ borderRadius: 3, fontWeight: 700 }}>Create Alert</Button>
                 
-                <Button size="small" variant={chartType === "candlestick" ? "contained" : "outlined"} onClick={() => setChartType(chartType === "candlestick" ? "line" : "candlestick")} startIcon={chartType === "candlestick" ? <ShowChartIcon /> : <CandlestickChartIcon />} sx={{ borderRadius: 3, fontWeight: 700 }}>
-                  {chartType === "candlestick" ? "Line Chart" : "Candlestick"}
-                </Button>
+                <Button size="small" variant={chartType === "candlestick" ? "contained" : "outlined"} onClick={() => setChartType(chartType === "candlestick" ? "line" : "candlestick")} startIcon={chartType === "candlestick" ? <ShowChartIcon /> : <CandlestickChartIcon />} sx={{ borderRadius: 3, fontWeight: 700 }}>{chartType === "candlestick" ? "Line Chart" : "Candlestick"}</Button>
+                
                 <FormControl size="small" sx={{ minWidth: 220 }}>
                   <InputLabel>Select From 46 CSVs</InputLabel>
                   <Select value={selectedLiveStock} label="Select From 46 CSVs" onChange={handleStockChange}>
@@ -452,33 +362,9 @@ export default function Dashboard() {
               </Stack>
             </Stack>
 
-            {/* Active Alerts Summary */}
-            {userAlerts.length > 0 && userAlerts.some(alert => alert.symbol === selectedLiveStock) && (
-              <Box sx={{ mb: 3, p: 2, background: alpha(COLORS.info.main, 0.05), borderRadius: 2, border: `1px solid ${alpha(COLORS.info.main, 0.2)}` }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <NotificationsIcon sx={{ color: COLORS.info.main, fontSize: 20 }} />
-                  <Typography variant="body2" fontWeight={600}>
-                    You have {userAlerts.filter(alert => alert.symbol === selectedLiveStock && alert.is_active).length} active alert(s) for {selectedLiveStock}
-                  </Typography>
-                  <Button 
-                    size="small" 
-                    variant="text" 
-                    onClick={() => navigate('/alerts')}
-                    sx={{ ml: 'auto', fontSize: '0.75rem', fontWeight: 600 }}
-                  >
-                    Manage Alerts
-                  </Button>
-                </Stack>
-              </Box>
-            )}
-
-            {/* Stock Detail Summary */}
             <Box sx={{ mb: 3, p: 3, background: alpha(COLORS.primary.main, 0.05), borderRadius: 3, border: `1px solid ${alpha(COLORS.primary.main, 0.1)}` }}>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={3}>
-                  <Typography variant="h6" fontWeight={900}>{liveStockInfo.symbol}</Typography>
-                  <Typography variant="caption" color="text.secondary">Last Record: {liveStockInfo.lastUpdated}</Typography>
-                </Grid>
+                <Grid item xs={12} md={3}><Typography variant="h6" fontWeight={900}>{liveStockInfo.symbol}</Typography><Typography variant="caption" color="text.secondary">Last Record: {liveStockInfo.lastUpdated}</Typography></Grid>
                 <Grid item xs={6} md={2}><Typography variant="caption">Closing</Typography><Typography variant="h6" fontWeight={900}>₹{formatNumber(liveStockInfo.currentPrice)}</Typography></Grid>
                 <Grid item xs={6} md={2}><Typography variant="caption">Change</Typography><Typography variant="h6" fontWeight={900} color={liveStockInfo.change >= 0 ? COLORS.success.main : COLORS.danger.main}>{liveStockInfo.changePercent.toFixed(2)}%</Typography></Grid>
                 <Grid item xs={6} md={2}><Typography variant="caption">High</Typography><Typography variant="h6" fontWeight={900} color={COLORS.success.main}>₹{formatNumber(liveStockInfo.high)}</Typography></Grid>
@@ -488,78 +374,36 @@ export default function Dashboard() {
 
             {isLoadingLive && <LinearProgress sx={{ mb: 3, height: 6, borderRadius: 3 }} />}
 
-            {/* Charts Area */}
             <Box sx={{ height: 500, width: '100%' }}>
               {liveTrendData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={liveTrendData}>
-                    <defs>
-                      <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.info.main} stopOpacity={0.8}/><stop offset="95%" stopColor={COLORS.info.main} stopOpacity={0.1}/></linearGradient>
-                    </defs>
+                    <defs><linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.info.main} stopOpacity={0.8}/><stop offset="95%" stopColor={COLORS.info.main} stopOpacity={0.1}/></linearGradient></defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha('#000', 0.1)} />
-                    <XAxis 
-                      dataKey="time" 
-                      tickFormatter={formatXAxisTick}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis 
-                      yAxisId="left" 
-                      domain={['auto', 'auto']} 
-                      tickFormatter={(v) => `₹${formatNumber(v)}`}
-                      tick={{ fontSize: 12 }}
-                    />
+                    <XAxis dataKey="time" tickFormatter={formatXAxisTick} tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="left" domain={['auto', 'auto']} tickFormatter={(v) => `₹${formatNumber(v)}`} tick={{ fontSize: 12 }} />
                     <YAxis yAxisId="right" orientation="right" hide />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar yAxisId="right" dataKey="volume" fill="url(#volGrad)" radius={[2, 2, 0, 0]} />
                     {chartType === "candlestick" ? (
-                      // For candlestick chart, we need to calculate proper positions
-                      liveTrendData.map((entry, index) => {
-                        const xPos = (index / liveTrendData.length) * 100;
-                        return (
-                          <Candlestick 
-                            key={index} 
-                            x={xPos} 
-                            y={entry.close} 
-                            width={8} 
-                            height={entry.close - entry.open} 
-                            isUp={entry.isUp} 
-                          />
-                        );
-                      })
+                      liveTrendData.map((entry, index) => (
+                        <Candlestick key={index} x={(index / liveTrendData.length) * 100} y={entry.close} width={8} height={entry.close - entry.open} isUp={entry.isUp} />
+                      ))
                     ) : (
-                      <Area 
-                        yAxisId="left" 
-                        type="monotone" 
-                        dataKey="close" 
-                        stroke={COLORS.primary.main} 
-                        strokeWidth={3} 
-                        fill={alpha(COLORS.primary.main, 0.1)} 
-                        dot={{ stroke: COLORS.primary.main, strokeWidth: 2, r: 3 }}
-                      />
+                      <Area yAxisId="left" type="monotone" dataKey="close" stroke={COLORS.primary.main} strokeWidth={3} fill={alpha(COLORS.primary.main, 0.1)} dot={{ stroke: COLORS.primary.main, strokeWidth: 2, r: 3 }} />
                     )}
-                    <Brush 
-                      dataKey="time" 
-                      height={25} 
-                      stroke={COLORS.primary.main}
-                      tickFormatter={formatXAxisTick}
-                    />
+                    <Brush dataKey="time" height={25} stroke={COLORS.primary.main} tickFormatter={formatXAxisTick} />
                   </ComposedChart>
                 </ResponsiveContainer>
               ) : (
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                  <Typography variant="h6" color="text.secondary" mb={2}>
-                    {isLoadingLive ? 'Loading data...' : 'Select a stock to view historical data'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Data will show from oldest to newest date (left to right)
-                  </Typography>
+                  <Typography variant="h6" color="text.secondary" mb={2}>{isLoadingLive ? 'Loading data...' : 'Select a stock to view historical data'}</Typography>
                 </Box>
               )}
             </Box>
           </Paper>
         </Box>
 
-        {/* Watchlist Section */}
         <Box sx={{ mt: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h4" fontWeight={900}>📈 Your Watchlist</Typography>
@@ -580,19 +424,51 @@ export default function Dashboard() {
           </Box>
         </Box>
 
+        {/* UPDATED: Added a Triggered Alerts History Table for Sprint 3 visibility */}
+        <Box sx={{ mt: 6, mb: 4 }}>
+          <Typography variant="h5" fontWeight={900} mb={3}>🔔 Recent Triggered Alerts</Typography>
+          <Paper sx={{ p: 0, borderRadius: 4, overflow: 'hidden', border: "1px solid #e2e8f0", background: COLORS.background.card }}>
+            <Table>
+              <TableHead sx={{ bgcolor: alpha(COLORS.primary.main, 0.05) }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 900 }}>Symbol</TableCell>
+                  <TableCell sx={{ fontWeight: 900 }}>Details</TableCell>
+                  <TableCell sx={{ fontWeight: 900 }}>Triggered Price</TableCell>
+                  <TableCell sx={{ fontWeight: 900 }}>Time</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {userAlerts.length === 0 ? (
+                  <TableRow><TableCell colSpan={4} align="center" sx={{ py: 3 }}>No alerts currently active or triggered</TableCell></TableRow>
+                ) : (
+                  userAlerts.slice(0, 5).map((alert) => (
+                    <TableRow key={alert.id} sx={{ '&:hover': { bgcolor: alpha(COLORS.primary.main, 0.02) } }}>
+                      <TableCell sx={{ fontWeight: 800 }}>{alert.symbol}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={`${alert.condition} ${alert.value}`} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ fontWeight: 700, borderColor: COLORS.warning.main, color: COLORS.warning.main }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>₹{formatNumber(alert.value)}</TableCell>
+                      <TableCell sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                        {new Date(alert.created_at).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Paper>
+        </Box>
+
         <Button variant="contained" onClick={() => navigate("/chat")} sx={fabStyle} startIcon={<ChatBubbleIcon />}>Ask AI Advisor</Button>
       </Container>
 
-      {/* Alert Modal */}
       {showAlertModal && (
-        <AlertModal
-          open={showAlertModal}
-          onClose={() => setShowAlertModal(false)}
-          symbol={selectedLiveStock}
-          currentPrice={liveStockInfo.currentPrice}
-          user_id={currentUserId}
-          onAlertCreated={handleAlertCreated}
-        />
+        <AlertModal open={showAlertModal} onClose={() => setShowAlertModal(false)} symbol={selectedLiveStock} currentPrice={liveStockInfo.currentPrice} user_id={currentUserId} onAlertCreated={handleAlertCreated} />
       )}
     </Box>
   );
@@ -632,11 +508,8 @@ function InsightItem({ title, stock, icon, color, gradient }) {
 
 const formatNumber = (num) => {
   const n = Number(num || 0);
-  if (n >= 1000000) {
-    return (n / 1000000).toFixed(2) + 'M';
-  } else if (n >= 1000) {
-    return (n / 1000).toFixed(2) + 'K';
-  }
+  if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(2) + 'K';
   return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
 };
 

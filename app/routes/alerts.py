@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 import json
 from datetime import datetime, timedelta
 from app.database.postgres import get_connection
+from psycopg2.extras import RealDictCursor # Added for the notification routes
 
 alerts_bp = Blueprint("alerts", __name__)
 
@@ -570,8 +571,7 @@ def check_alerts_for_symbol(symbol):
         
         # Get active alerts for this symbol
         cur.execute("""
-            SELECT a.* 
-            FROM alerts a
+            SELECT a.* FROM alerts a
             WHERE a.symbol = %s AND a.is_active = true
         """, (clean_sym,))
         
@@ -902,4 +902,63 @@ def get_alert_stats(user_id):
 
     except Exception as e:
         print(f"Get alert stats error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ---------------- GET NOTIFICATIONS ----------------
+@alerts_bp.route("/notifications/<int:user_id>", methods=["GET"])
+def get_notifications(user_id):
+    """Fetch unread alert notifications for a specific user"""
+    try:
+        unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+        limit = int(request.args.get('limit', 10))
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        query = "SELECT * FROM notifications WHERE user_id = %s"
+        if unread_only:
+            query += " AND is_read = false"
+        query += " ORDER BY created_at DESC LIMIT %s"
+        
+        cur.execute(query, (user_id, limit))
+        notifications = cur.fetchall()
+        
+        # Get count for the badge
+        cur.execute("SELECT COUNT(*) FROM notifications WHERE user_id = %s AND is_read = false", (user_id,))
+        unread_count = cur.fetchone()['count']
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "notifications": notifications,
+            "unread_count": unread_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ---------------- MARK NOTIFICATIONS AS READ ----------------
+@alerts_bp.route("/notifications/mark-read", methods=["POST"])
+def mark_notifications_read():
+    """Mark specific or all notifications as read"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        notification_ids = data.get('notification_ids', [])
+        mark_all = data.get('mark_all', False)
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        if mark_all:
+            cur.execute("UPDATE notifications SET is_read = true WHERE user_id = %s", (user_id,))
+        else:
+            cur.execute("UPDATE notifications SET is_read = true WHERE id = ANY(%s)", (notification_ids,))
+            
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"message": "Notifications updated"}), 200
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
