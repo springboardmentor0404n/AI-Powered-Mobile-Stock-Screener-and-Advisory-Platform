@@ -110,6 +110,12 @@ python run.py
 ```
 The backend will run on `http://localhost:5000`
 
+#### Start Alert Monitoring Service 🔔 (Optional - Run in separate terminal)
+```bash
+python app\alert_service.py
+```
+This service runs continuously in the background, checking stock alerts every minute and sending notifications when conditions are met.
+
 #### Start Frontend 🎯
 ```bash
 cd frontend/vite-project
