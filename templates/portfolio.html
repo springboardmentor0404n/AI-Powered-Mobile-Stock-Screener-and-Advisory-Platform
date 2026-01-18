@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+body { background:#020617; }
+
+/* SAME SIDEBAR COLLAPSE AS WATCHLIST */
+.wrapper.sidebar-collapsed .main-sidebar { width:64px; }
+.wrapper.sidebar-collapsed .nav-sidebar p { display:none; }
+.wrapper.sidebar-collapsed .content-wrapper { margin-left:64px; }
+
+.main-sidebar { transition:width .25s ease; }
+.content-wrapper { transition:margin-left .25s ease; }
+
+.sidebar-toggle {
+  width:100%;
+  padding:12px 16px;
+  background:none;
+  border:none;
+  color:#e5e7eb;
+  font-size:18px;
+  text-align:left;
+}
+.sidebar-toggle:hover { background:rgba(255,255,255,.05); }
+
+.topbar {
+  height:56px;
+  display:flex;
+  align-items:center;
+  padding-left:16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:#020617;
+  color:#e5e7eb;
+  font-weight:600;
+}
+
+.content-wrapper { background:#020617; padding:16px; }
+.card {
+  background:#020617;
+  color:#e5e7eb;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.table td, .table th { border-color:rgba(255,255,255,.1); }
+
+.badge-buy { background:#16a34a; }
+.badge-hold { background:#facc15; color:#000; }
+.badge-sell { background:#dc2626; }
+
+.metric { font-size:13px; color:#94a3b8; }
+.value { font-size:20px; font-weight:700; }
+</style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+
+<div class="wrapper" id="appWrapper">
+
+<!-- SIDEBAR -->
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <div class="sidebar">
+    <button class="sidebar-toggle" id="toggleBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <nav>
+      <ul class="nav nav-pills nav-sidebar flex-column">
+        <li class="nav-item"><a href="/watchlist" class="nav-link"><i class="fas fa-list nav-icon"></i><p>Watchlist</p></a></li>
+        <li class="nav-item"><a href="/portfolio" class="nav-link active"><i class="fas fa-briefcase nav-icon"></i><p>Portfolio</p></a></li>
+        <li class="nav-item"><a href="/market" class="nav-link"><i class="fas fa-chart-line nav-icon"></i><p>Market</p></a></li>
+        <li class="nav-item"><a href="/chat" class="nav-link"><i class="fas fa-robot nav-icon"></i><p>Chat</p></a></li>
+        <li class="nav-item"><a href="/login" class="nav-link"><i class="fas fa-sign-out-alt nav-icon"></i><p>Logout</p></a></li>
+      </ul>
+    </nav>
+  </div>
+</aside>
+
+<!-- CONTENT -->
+<div class="content-wrapper">
+  <div class="topbar">StockMind AI</div>
+  <div id="app"></div>
+</div>
+
+</div>
+
+<script>
+document.getElementById("toggleBtn").onclick = () => {
+  document.getElementById("appWrapper").classList.toggle("sidebar-collapsed");
+};
+</script>
+
+<script type="text/babel">
+const {useState,useEffect} = React;
+
+/* PORTFOLIO LOGIC UNCHANGED */
+function Portfolio(){
+  const [rows,setRows]=useState([]);
+  const [qty,setQty]=useState({});
+
+  useEffect(()=>{
+    fetch("/api/watchlist-data?company=All")
+    .then(r=>r.json())
+    .then(d=>{
+      setRows(d.symbols.map((s,i)=>({
+        symbol:s,
+        open:d.open_price[i],
+        pe:d.trailing_pe[i],
+        peg:d.peg_ratio[i],
+        eg:d.earnings_growth[i],
+        rg:d.revenue_growth[i],
+        de:d.debt_to_equity[i]
+      })));
+    });
+  },[]);
+
+  const total=rows.reduce((s,r)=>s+(qty[r.symbol]||0)*r.open,0);
+  const signal=s=>s>70?"BUY":s>45?"HOLD":"SELL";
+
+  return(
+  <>
+    <div className="card p-3 mb-3">
+      <div className="metric">Total Investment</div>
+      <div className="value">₹ {total.toFixed(2)}</div>
+    </div>
+
+    <div className="card p-3">
+      <table className="table table-dark table-sm">
+        <thead>
+          <tr><th>Symbol</th><th>Price</th><th>Qty</th><th>Value</th><th>Signal</th></tr>
+        </thead>
+        <tbody>
+        {rows.map(r=>{
+          const q=qty[r.symbol]||0;
+          const v=q*r.open;
+          const s=signal(v);
+          return(
+            <tr key={r.symbol}>
+              <td>{r.symbol}</td>
+              <td>{r.open}</td>
+              <td><input type="number" className="form-control form-control-sm"
+                value={q} onChange={e=>setQty({...qty,[r.symbol]:+e.target.value})}/></td>
+              <td>{v.toFixed(2)}</td>
+              <td><span className={`badge ${s==="BUY"?"badge-buy":s==="HOLD"?"badge-hold":"badge-sell"}`}>{s}</span></td>
+            </tr>
+          );
+        })}
+        </tbody>
+      </table>
+    </div>
+  </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<Portfolio/>);
+</script>
+
+</body>
+</html>

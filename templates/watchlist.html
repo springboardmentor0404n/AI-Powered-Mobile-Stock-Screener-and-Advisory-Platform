@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watchlist</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+  /* ===== ALERT BELL UPGRADE ===== */
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-bell:hover {
+  transform: scale(1.1) rotate(10deg);
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.6));
+}
+
+.notification-bell i {
+  font-size: 20px;
+  color: #ffffff !important;  /* WHITE BELL ICON */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.notification-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(45deg, #ef4444, #f87171);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.notification-panel {
+  position: absolute;
+  right: 0;
+  top: 35px;
+  width: 360px;
+  max-height: 400px;
+  background: linear-gradient(145deg, #1e1b4b, #0f0f23);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  z-index: 9999;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notification-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #ffffff !important;  /* WHITE TEXT */
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.notification-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.green { 
+  color: #22c55e !important; 
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.red { 
+  color: #ef4444 !important; 
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+b {
+  color: #f8fafc !important;  /* BRIGHT WHITE COMPANY NAMES */
+  font-weight: 700;
+}
+
+
+.green { color: #22c55e; }
+.red { color: #ef4444; }
+
+body { background:#020617; }
+
+.wrapper.sidebar-collapsed .main-sidebar { width:64px; }
+.wrapper.sidebar-collapsed .nav-sidebar p { display:none; }
+.wrapper.sidebar-collapsed .content-wrapper { margin-left:64px; }
+
+.main-sidebar { transition:width .25s ease; }
+.content-wrapper { transition:margin-left .25s ease; }
+
+.sidebar-toggle {
+  width:100%;
+  padding:12px 16px;
+  background:none;
+  border:none;
+  color:#e5e7eb;
+  font-size:18px;
+  text-align:left;
+}
+
+.topbar {
+  height:56px;
+  display:flex;
+  align-items:center;
+  padding-left:16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:#020617;
+  color:#e5e7eb;
+  font-weight:600;
+}
+
+.content-wrapper { background:#020617; padding:16px; }
+
+.card {
+  background:#020617;
+  color:#e5e7eb;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.metric-title { font-weight:600; margin-bottom:6px; }
+
+svg { width:100%; height:260px; }
+.axis { stroke:#94a3b8; stroke-width:1; }
+.bar { fill:#38bdf8; }
+.line { fill:none; stroke:#22c55e; stroke-width:2; }
+.area { fill:rgba(34,197,94,.35); stroke:#22c55e; stroke-width:2; }
+.dot { fill:#facc15; }
+.area-dot { fill:#facc15; }
+
+.selector {
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:6px;
+  padding:6px;
+  margin-bottom:10px;
+}
+.selector-header { cursor:pointer; }
+.selector-body { max-height:180px; overflow-y:auto; }
+label { display:block; font-size:13px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</head>
+<!-- ===== ALERT POPUP MODAL ===== -->
+<div class="modal fade" id="alertModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: linear-gradient(145deg, #1e1b4b, #0f0f23); border: 1px solid rgba(255,255,255,0.2); color: white;">
+      <div class="modal-header border-0" style="background: linear-gradient(90deg, #3b82f6, #8b5cf6);">
+        <h5 class="modal-title fw-bold">
+          <i class="fas fa-bell me-2"></i>🚨 LIVE ALERT
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"  aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 text-center" id="alertModalBody">
+        <div class="alert-icon mb-3">
+          <i class="fas fa-chart-line fa-3x" id="alertIcon"></i>
+        </div>
+        <h4 id="alertTitle" class="fw-bold mb-2"></h4>
+        <p id="alertDetails" class="mb-0 opacity-90"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+
+<div class="wrapper" id="appWrapper">
+
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <div class="sidebar">
+    <button class="sidebar-toggle" id="toggleBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav>
+      <ul class="nav nav-pills nav-sidebar flex-column">
+        <li class="nav-item"><a href="/watchlist" class="nav-link active"><i class="fas fa-list nav-icon"></i><p>Watchlist</p></a></li>
+        <li class="nav-item"><a href="/portfolio" class="nav-link"><i class="fas fa-briefcase nav-icon"></i><p>Portfolio</p></a></li>
+        <li class="nav-item"><a href="/market" class="nav-link"><i class="fas fa-chart-line nav-icon"></i><p>Market</p></a></li>
+        <li class="nav-item"><a href="/chat" class="nav-link"><i class="fas fa-robot nav-icon"></i><p>Chat</p></a></li>
+        <li class="nav-item"><a href="/login" class="nav-link"><i class="fas fa-sign-out-alt nav-icon"></i><p>Logout</p></a></li>
+      </ul>
+    </nav>
+  </div>
+</aside>
+
+<div class="content-wrapper">
+  <div class="topbar">StockMind AI</div>
+  <div id="root"></div>
+</div>
+
+</div>
+
+<script>
+document.getElementById("toggleBtn").onclick = () => {
+  document.getElementById("appWrapper").classList.toggle("sidebar-collapsed");
+};
+</script>
+
+{% raw %}
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+
+/* ---------- AXES ---------- */
+const Axes = ({labels,w,h}) => (
+<>
+<line x1="45" y1={h-35} x2={w+35} y2={h-35} className="axis"/>
+<line x1="45" y1="15" x2="45" y2={h-35} className="axis"/>
+{labels.map((l,i)=>(
+<text key={i}
+x={45 + ((w-70)/(labels.length-1||1)) * (i + 0.5)}
+y={h-12}
+fontSize="10"
+fill="#cbd5f5"
+textAnchor="middle">{l}</text>
+))}
+</>
+);
+
+/* ---------- CHARTS (UNCHANGED) ---------- */
+const BarChart=({data,labels})=>{
+const w=380,h=260,max=Math.max(...data,1),bw=40;
+const step=(w-70)/(data.length-1||1);
+return(
+<svg viewBox={`0 0 ${w} ${h}`}>
+<Axes labels={labels} w={w} h={h}/>
+{data.map((v,i)=>(
+<rect key={i}
+x={45+step*(i+0.5)-bw/2}
+y={h-35-(v/max)*(h-60)}
+width={bw}
+height={(v/max)*(h-60)}
+className="bar">
+<title>{labels[i]} : {v}</title>
+</rect>
+))}
+</svg>
+);
+};
+
+const LineChart=({data,labels})=>{
+const w=380,h=260,max=Math.max(...data,1);
+const step=(w-70)/(data.length-1||1);
+const pts=data.map((v,i)=>`${45+step*i},${h-35-(v/max)*(h-60)}`).join(" ");
+return(
+<svg viewBox={`0 0 ${w} ${h}`}>
+<Axes labels={labels} w={w} h={h}/>
+<polyline points={pts} className="line"/>
+{data.map((v,i)=>(
+<circle key={i} cx={45+step*i} cy={h-35-(v/max)*(h-60)} r="4" className="dot">
+<title>{labels[i]} : {v}</title>
+</circle>
+))}
+</svg>
+);
+};
+
+const Scatter=({data,labels})=>{
+const w=380,h=260,max=Math.max(...data.map(Math.abs),1);
+const step=(w-70)/(data.length-1||1);
+return(
+<svg viewBox={`0 0 ${w} ${h}`}>
+<Axes labels={labels} w={w} h={h}/>
+{data.map((v,i)=>(
+<circle key={i} cx={45+step*i} cy={h-35-(Math.abs(v)/max)*(h-60)} r="4" className="dot">
+<title>{labels[i]} : {v}</title>
+</circle>
+))}
+</svg>
+);
+};
+
+const AreaChart=({data,labels})=>{
+const w=380,h=260,max=Math.max(...data,1);
+const step=(w-70)/(data.length-1||1);
+const pts=data.map((v,i)=>`${45+step*i},${h-35-(v/max)*(h-60)}`).join(" ");
+return(
+<svg viewBox={`0 0 ${w} ${h}`}>
+<Axes labels={labels} w={w} h={h}/>
+<polygon points={`45,${h-35} ${pts} ${w-25},${h-35}`} className="area"/>
+{data.map((v,i)=>(
+<circle key={i} cx={45+step*i} cy={h-35-(v/max)*(h-60)} r="4" className="area-dot">
+<title>{labels[i]} : {v}</title>
+</circle>
+))}
+</svg>
+);
+};
+
+const Doughnut=({data,labels})=>{
+const total=data.reduce((a,b)=>a+b,0)||1;
+let angle=0;
+return(
+<>
+<svg viewBox="0 0 200 200">
+{data.map((v,i)=>{
+const a=(v/total)*360;
+const r=70;
+const x1=100+r*Math.cos(angle*Math.PI/180);
+const y1=100+r*Math.sin(angle*Math.PI/180);
+angle+=a;
+const x2=100+r*Math.cos(angle*Math.PI/180);
+const y2=100+r*Math.sin(angle*Math.PI/180);
+return(
+<path key={i}
+d={`M100,100 L${x1},${y1} A${r},${r} 0 ${a>180?1:0} 1 ${x2},${y2} Z`}
+fill={`hsl(${i*60},70%,55%)`}>
+<title>{labels[i]} : {v}</title>
+</path>
+);
+})}
+<circle cx="100" cy="100" r="35" fill="#020617"/>
+</svg>
+{/* ---- DOUGHNUT LEGEND ---- */}
+<div style={{
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "center",
+  marginTop: "10px",
+  gap: "12px"
+}}>
+{labels.map((company, i) => (
+  <div key={company}
+       style={{display:"flex",alignItems:"center",fontSize:"12px"}}>
+    <span style={{
+      width:"10px",
+      height:"10px",
+      borderRadius:"2px",
+      backgroundColor:`hsl(${i*60},70%,55%)`,
+      display:"inline-block",
+      marginRight:"6px"
+    }}></span>
+    {company}
+  </div>
+))}
+</div>
+
+</>
+);
+};
+
+/* ---------- SELECTOR ---------- */
+const Selector=({companies,selected,setSelected})=>{
+  const [open,setOpen]=useState(false);
+  
+  const toggle = (e) => {
+    e.stopPropagation();
+    setOpen(!open);
+  };
+  
+  const ordered=[...selected,...companies.filter(c=>!selected.includes(c))];
+  
+  return(
+    <div className="selector" style={{position: 'relative'}}>
+      <div 
+        className="selector-header" 
+        onClick={toggle}
+        style={{padding: '6px 10px', cursor: 'pointer'}}
+      >
+        Selected {selected.length}/5 ▾
+      </div>
+      {open && (
+        <div 
+          className="selector-body" 
+          style={{position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#1a1a2e', maxHeight: '400px', overflowY: 'auto'}}
+        >
+          {ordered.map(c=>(
+            <label key={c} style={{display: 'block', padding: '4px 8px', cursor: 'pointer'}}>
+              <input 
+                type="checkbox" 
+                checked={selected.includes(c)}
+                onChange={(e)=>{
+                  e.stopPropagation();
+                  if(selected.includes(c)) setSelected(selected.filter(x=>x!==c));
+                  else if(selected.length<5) setSelected([c,...selected]);
+                }}
+              /> {c}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ---------- APP ---------- */
+function App(){
+  const { useState, useEffect, useRef } = React;
+  const [rows,setRows]=useState([]);
+  const [companies,setCompanies]=useState([]);
+  const [sel,setSel]=useState({open:[],prev:[],gap:[],pe:[],peg:[],eg:[],rg:[],de:[]});
+  const [alerts,setAlerts]=useState([]);
+  const [unseen,setUnseen]=useState(false);
+  const [openBell,setOpenBell]=useState(false);
+
+  // LOAD DATA
+  useEffect(() => {
+    fetch('/api/companies').then(r=>r.json()).then(setCompanies);
+    fetch('/api/watchlist-data').then(r=>r.json()).then(data => {
+      const rowData = data.symbols.map((s,i) => ({
+        symbol: s,
+        open: data.open_price[i],
+        prev: data.previous_close[i],
+        pe: data.trailing_pe[i],
+        peg: data.peg_ratio[i],
+        eg: data.earnings_growth[i],
+        rg: data.revenue_growth[i],
+        de: data.debt_to_equity[i]
+      }));
+      setRows(rowData);
+     
+
+      // DEFAULT: Select first 5 companies
+      if (data.symbols.length >= 5) {
+      const first5 = data.symbols.slice(0, 5);
+      setSel({
+        open: first5, prev: first5, gap: first5, pe: first5, 
+        peg: first5, eg: first5, rg: first5, de: first5
+      });
+    }
+    });
+  }, []);
+
+  // ALERTS (keep existing)
+  useEffect(() => {
+    const es = new EventSource("/api/alerts");
+    const seenAlerts = new Set();
+
+    es.onmessage = e => {
+      const data = JSON.parse(e.data);
+      const alertId = `${data.type}_${data.symbol}_${data.metric || ''}_${Date.now()}`;
+      
+      //if (seenAlerts.has(alertId)) return;
+      seenAlerts.add(alertId);
+      
+      setAlerts(a => [data, ...a.slice(0, 50)]);
+      setUnseen(true);
+      
+      const modalEl = document.getElementById('alertModal');
+      const modalTitle = document.getElementById('alertTitle');
+      const modalDetails = document.getElementById('alertDetails');
+      const iconEl = document.getElementById('alertIcon');
+      
+      if (data.type === 'new_company') {
+        modalTitle.textContent = '🆕 New Stocks';
+        modalDetails.textContent = 'New stocks have been added to your watchlist.';
+        iconEl.className = 'fas fa-plus-circle fa-3x text-info';
+        modalTitle.style.color = '#3b82f6';
+      } 
+      else if (data.type === 'company_deleted') {
+        modalTitle.textContent = '🗑️ Stocks Deleted';
+        modalDetails.textContent = 'Some stocks have been removed from your watchlist.';
+        iconEl.className = 'fas fa-trash-alt fa-3x text-warning';
+        modalTitle.style.color = '#f59e0b';
+      }
+      else {
+         modalTitle.textContent = '📊 Stock Update';
+          modalDetails.textContent = 'There is an update in your watchlist data.';
+          iconEl.className = 'fas fa-chart-line fa-3x text-success';
+          modalTitle.style.color = '#22c55e';
+      }
+      
+      const modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+      modal.show();
+      setTimeout(() => modal.hide(), 3000);
+    };
+
+    return () => es.close();
+  }, []);
+
+  const f=k=>rows.filter(r=>sel[k].includes(r.symbol));
+  const v=k=>f(k).map(r=>r[k]);
+  const l=k=>f(k).map(r=>r.symbol);
+
+  // REST OF RETURN STATEMENT (keep exactly same)
+
+
+return(
+<>
+{/* TOP RIGHT BELL */}
+<div style={{position:"absolute",top:"12px",right:"20px"}}>
+  <div className="notification-bell" onClick={()=>{
+    setOpenBell(!openBell);
+    setUnseen(false);
+  }}>
+    <i className="fas fa-bell" style={{fontSize:"18px"}}></i>
+    {unseen && <span className="notification-dot"></span>}
+  </div>
+
+  {openBell && (
+    <div className="notification-panel">
+      {alerts.length === 0 && (
+        <div className="notification-item">No notifications</div>
+      )}
+
+      {alerts.slice(0,6).map((a,i)=>(
+        <div key={i} className="notification-item">
+          {a.type === "new_company" && (
+            <>🆕 <b>{a.symbol}</b> added</>
+          )}
+          {a.type === "company_deleted" && (
+          <>🗑️ <b>{a.symbol}</b> deleted</>
+          )}
+
+          {a.type === "metric_update" && (
+            <>
+              <b>{a.symbol}</b> {a.metric}<br/>
+              <span className={a.new > a.old ? "green" : "red"}>
+                {a.old} → {a.new}
+              </span>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
+<div className="row">
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Open Price</div><Selector companies={companies} selected={sel.open} setSelected={v=>setSel({...sel,open:v})}/><LineChart data={v("open")} labels={l("open")}/></div></div>
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Previous Close</div><Selector companies={companies} selected={sel.prev} setSelected={v=>setSel({...sel,prev:v})}/><BarChart data={v("prev")} labels={l("prev")}/></div></div>
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Gap</div><Selector companies={companies} selected={sel.gap} setSelected={v=>setSel({...sel,gap:v})}/><Scatter data={f("gap").map(r=>r.open-r.prev)} labels={l("gap")}/></div></div>
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Trailing PE</div><Selector companies={companies} selected={sel.pe} setSelected={v=>setSel({...sel,pe:v})}/><BarChart data={v("pe")} labels={l("pe")}/></div></div>
+<div className="col-md-12"><div className="card p-3"><div className="metric-title">PEG Ratio</div><Selector companies={companies} selected={sel.peg} setSelected={v=>setSel({...sel,peg:v})}/><Doughnut data={v("peg")} labels={l("peg")}/></div></div>
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Earnings Growth</div><Selector companies={companies} selected={sel.eg} setSelected={v=>setSel({...sel,eg:v})}/><AreaChart data={v("eg")} labels={l("eg")}/></div></div>
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Revenue Growth</div><Selector companies={companies} selected={sel.rg} setSelected={v=>setSel({...sel,rg:v})}/><LineChart data={v("rg")} labels={l("rg")}/></div></div>
+<div className="col-md-6"><div className="card p-3"><div className="metric-title">Debt to Equity</div><Selector companies={companies} selected={sel.de} setSelected={v=>setSel({...sel,de:v})}/><BarChart data={v("de")} labels={l("de")}/></div></div>
+</div>
+</>
+);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+{% endraw %}
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    background: #f1f5f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Inter", Arial, sans-serif;
+}
+
+.login-container {
+    background: #ffffff;
+    padding: 42px;
+    width: 380px;
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+h2 {
+    text-align: center;
+    color: #0f172a;
+    margin-bottom: 26px;
+    font-weight: 600;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    margin-top: 14px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 22px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.oauth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #f8fafc;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    margin-top: 12px;
+}
+
+.oauth-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.divider {
+    margin: 22px 0;
+    text-align: center;
+    font-size: 13px;
+    color: #64748b;
+}
+
+#token_display, #error_display {
+    margin-top: 16px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: none;
+    text-align: center;
+}
+
+#token_display {
+    background: #ecfeff;
+    color: #0369a1;
+}
+
+#error_display {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+a {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+<div class="login-container">
+<h2>Sign in to your account</h2>
+
+<form id="loginForm">
+<input type="email" id="email" placeholder="Email address" required>
+<input type="password" id="password" placeholder="Password" required>
+<button type="submit">Sign In</button>
+</form>
+
+<div class="divider">or continue with</div>
+
+<button class="oauth-btn" onclick="googleLogin()">
+<!-- Google icon -->
+<svg viewBox="0 0 48 48">
+<path fill="#EA4335" d="M24 9.5c3.3 0 6.3 1.1 8.7 3.2l6.5-6.5C35.1 2.4 29.8 0 24 0 14.6 0 6.4 5.3 2.4 13l7.7 6C12.2 13.1 17.7 9.5 24 9.5z"/>
+<path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.7h12.7c-.5 3-2.1 5.6-4.6 7.3l7.1 5.5c4.2-3.9 6.9-9.6 6.9-16.4z"/>
+<path fill="#FBBC05" d="M10.1 28.9c-.6-1.8-.9-3.7-.9-5.6s.3-3.8.9-5.6l-7.7-6c-1.6 3.2-2.4 6.7-2.4 11.6s.8 8.4 2.4 11.6l7.7-6z"/>
+<path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.1-5.5c-2 1.4-4.6 2.2-8.9 2.2-6.3 0-11.8-3.6-14-8.5l-7.7 6C6.4 42.7 14.6 48 24 48z"/>
+</svg>
+Continue with Google
+</button>
+
+<button class="oauth-btn" onclick="githubLogin()">
+<!-- GitHub icon -->
+<svg viewBox="0 0 24 24" fill="#000">
+<path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2.2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.9 1.3 3.6 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C16.3 4.5 17.3 4.8 17.3 4.8c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.2 0 4.6-2.7 5.6-5.3 5.9.4.4.8 1 .8 2v3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/>
+</svg>
+Continue with GitHub
+</button>
+
+<p id="token_display"></p>
+<p id="error_display"></p>
+
+<a href="/signup">Create a new account</a>
+</div>
+
+<script>
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const token_display = document.getElementById("token_display");
+const error_display = document.getElementById("error_display");
+
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    let fd = new FormData();
+    fd.append("email", email.value);
+    fd.append("password", password.value);
+
+    let res = await fetch("/login", { method: "POST", body: fd });
+    let data = await res.json();
+
+    if (res.ok) {
+        token_display.style.display = "block";
+        token_display.innerText = "Login successful. Redirecting...";
+        error_display.style.display = "none";
+        setTimeout(() => window.location.href = "/watchlist", 600);
+    } else {
+        error_display.style.display = "block";
+        error_display.innerText = data.message;
+    }
+});
+
+// Google OAuth
+async function googleLogin() {
+    try {
+        // Redirect to your Flask Google OAuth endpoint
+        window.location.href = "/auth/google";
+    } catch (e) {
+        error_display.style.display = "block";
+        error_display.innerText = "Google login failed. Please try again.";
+    }
+}
+
+// GitHub OAuth
+async function githubLogin() {
+    try {
+        // Redirect to your Flask GitHub OAuth endpoint
+        window.location.href = "/auth/github";
+    } catch (e) {
+        error_display.style.display = "block";
+        error_display.innerText = "GitHub login failed. Please try again.";
+    }
+}
+</script>
+
+</body>
+</html>
