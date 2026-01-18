@@ -1,0 +1,3593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UpStock Dashboard - RAG Chat App</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="./static/chart.js-4.5.1/package/dist/chart.umd.min.js"></script>
+    <style>
+        /* UpStock Dashboard Styles */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #0ea5e9;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --card-bg: #ffffff;
+            --sidebar-bg: #1e293b;
+            --header-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --text-color: #1e293b;
+            --bg-color: #f8fafc;
+        }
+        
+        /* Dark Mode Variables */
+        .dark-mode {
+            --card-bg: #1e293b;
+            --text-color: #e2e8f0;
+            --bg-color: #0f172a;
+            --gray-100: #111827;
+            --gray-200: #1f2937;
+            --gray-300: #374151;
+            --gray-400: #6b7280;
+            --gray-500: #9ca3af;
+            --gray-600: #d1d5db;
+            --gray-700: #e5e7eb;
+            --gray-800: #f3f4f6;
+            --gray-900: #f9fafb;
+            --sidebar-bg: #111827;
+            --border-color: #374151;
+        }
+        
+        /* Apply theme colors to elements */
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        .card {
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .sidebar {
+            background: var(--sidebar-bg);
+            color: white;
+        }
+        
+        .dashboard-header {
+            background: var(--header-bg);
+            color: white;
+        }
+        
+        th, td {
+            color: var(--text-color);
+        }
+        
+        /* Theme Toggle Button */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+        }
+        
+        .theme-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        /* Ensure proper contrast in dark mode */
+        .dark-mode .stat-card {
+            border: 1px solid var(--border-color);
+        }
+        
+        .dark-mode .card {
+            border: 1px solid var(--border-color);
+        }
+        
+        .dark-mode table {
+            border-color: var(--border-color);
+        }
+        
+        .dark-mode th {
+            background: var(--gray-300);
+            color: white;
+        }
+        
+        .dark-mode tr:nth-child(even) {
+            background: var(--gray-200);
+        }
+        
+        .dark-mode tr:nth-child(odd) {
+            background: var(--gray-100);
+        }
+        
+        .dark-mode .sidebar-menu a {
+            color: var(--gray-400);
+        }
+        
+        .dark-mode .sidebar-menu a:hover, .dark-mode .sidebar-menu a.active {
+            background: rgba(37, 99, 235, 0.3);
+            color: white;
+        }
+        
+        .dark-mode .positive {
+            color: #10b981;
+        }
+        
+        .dark-mode .negative {
+            color: #ef4444;
+        }
+        
+        .dark-mode .stat-change {
+            color: var(--gray-500);
+        }
+        
+        .dark-mode .action-btn {
+            background: var(--gray-300);
+            color: white;
+            border: 1px solid var(--border-color);
+        }
+        
+        .dark-mode .action-btn:hover {
+            background: var(--gray-400);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--gray-100) 0%, var(--light-color) 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--card-bg);
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-700);
+        }
+        
+        .sidebar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-menu a {
+            color: var(--gray-300);
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: rgba(37, 99, 235, 0.2);
+            color: white;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        /* Search Containers */
+        .portfolio-search-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .global-search-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-right: 1rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-400);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .search-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .search-btn:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .portfolio-search-container,
+            .global-search-container {
+                flex-direction: column;
+            }
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--header-bg);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .dashboard-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .stat-icon.blue {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .stat-icon.green {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-icon.red {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stat-icon.yellow {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-icon.purple {
+            background: rgba(147, 51, 234, 0.1);
+            color: #9333ea;
+        }
+        
+        .stat-icon.orange {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
+        
+        .stat-icon.gray {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-change {
+            font-size: 0.9rem;
+            color: var(--success-color);
+        }
+        
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-200);
+            height: 100%;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin: 0;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .positive {
+            color: var(--success-color);
+        }
+        
+        .negative {
+            color: var(--danger-color);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin: 1rem 0;
+            position: relative;
+        }
+        
+        .watchlist-item, .portfolio-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .stock-symbol {
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: 1.1rem;
+        }
+        
+        .stock-info {
+            text-align: right;
+        }
+        
+        .stock-price {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .stock-change {
+            font-size: 0.9rem;
+        }
+        
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        
+        .add-btn {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .remove-btn {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .add-to-portfolio {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .details {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        
+        .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--header-bg);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            z-index: 1000;
+        }
+        
+        .chat-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 70vh;
+            max-width: 90vw;
+            max-height: 90vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1001;
+        }
+        
+        .chat-modal.active {
+            display: flex;
+        }
+        
+        .chat-header {
+            background: var(--header-bg);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-chat {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chat-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 60vh;
+        }
+        
+        .chat-input-area {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 1rem;
+            border-radius: 16px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background: var(--header-bg);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .bot-message {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-200);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-header {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .user-message .message-header {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .bot-message .message-header {
+            color: var(--primary-color);
+        }
+        
+        .dashboard-section {
+            display: block;
+        }
+        
+        .dashboard-section.hidden {
+            display: none;
+        }
+        
+        /* Modal styles to prevent overlap with sidebar */
+        .modal {
+            z-index: 1050;
+        }
+        
+        .modal-content {
+            max-width: calc(100% - 280px - 40px); /* Full width minus sidebar width (280px) and margin (40px) */
+            width: 85%;
+            max-width: 800px; /* Maximum width for large screens */
+            margin: 5vh auto;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .modal .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1051;
+        }
+        
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-menu span {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .sidebar-menu {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            
+            .sidebar-menu span {
+                display: inline;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .chat-modal {
+                width: 95vw;
+                height: 80vh;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                margin: 0;
+                right: auto;
+                left: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">UpStock</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" onclick="showSection('dashboard')"><i>📊</i> <span>Dashboard</span></a></li>
+                <li><a href="#" onclick="showSection('portfolio')"><i>💼</i> <span>Portfolio</span></a></li>
+                <li><a href="#" onclick="showSection('watchlist')"><i>🔍</i> <span>Watchlist</span></a></li>
+                <li><a href="#" onclick="showSection('alerts')"><i>🔔</i> <span>Alerts</span></a></li>
+                <li><a href="#" onclick="showSection('analytics')"><i>📊</i> <span>Analytics</span></a></li>
+                <li><a href="/login.html"><i>🚪</i> <span>Logout</span></a></li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div id="sections-container">
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="dashboard-section">
+                    <div class="dashboard-header">
+                        <h1 class="dashboard-title">Market Dashboard</h1>
+                        <div class="header-controls">
+                            <div class="global-search-container">
+                                <input type="text" id="global-search" placeholder="Search stocks (e.g. RELIANCE, TCS)..." class="search-input">
+                                <button id="global-search-btn" class="search-btn" onclick="searchGlobalStock()">Search</button>
+                            </div>
+                            <div class="theme-toggle">
+                                <button id="themeToggle" class="theme-btn" onclick="toggleTheme()">
+                                    <span id="themeIcon">🌙</span>
+                                    <span id="themeText">Dark Mode</span>
+                                </button>
+                            </div>
+                            <div class="user-info">
+                                <span id="username-display">Welcome</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Total Stocks</div>
+                                    <div class="stat-value" id="total-stocks">1,250</div>
+                                </div>
+                                <div class="stat-icon blue">📊</div>
+                            </div>
+                            <div class="stat-change">+2.5% from yesterday</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Avg P/E Ratio</div>
+                                    <div class="stat-value" id="avg-pe">22.45</div>
+                                </div>
+                                <div class="stat-icon green">📊</div>
+                            </div>
+                            <div class="stat-change">+0.2% from last week</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Avg Dividend Yield</div>
+                                    <div class="stat-value" id="avg-dividend">1.24%</div>
+                                </div>
+                                <div class="stat-icon yellow">💰</div>
+                            </div>
+                            <div class="stat-change">+0.1% from last month</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Market Trend</div>
+                                    <div class="stat-value" id="market-trend">+1.8%</div>
+                                </div>
+                                <div class="stat-icon red">📈</div>
+                            </div>
+                            <div class="stat-change positive">Bullish market</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Avg Market Cap</div>
+                                    <div class="stat-value" id="avg-market-cap">₹8.5T</div>
+                                </div>
+                                <div class="stat-icon blue">💼</div>
+                            </div>
+                            <div class="stat-change">+1.5% from last quarter</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Avg ROE</div>
+                                    <div class="stat-value" id="avg-roe">15.2%</div>
+                                </div>
+                                <div class="stat-icon purple">🎯</div>
+                            </div>
+                            <div class="stat-change">-0.3% from last year</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Avg Revenue Growth</div>
+                                    <div class="stat-value" id="avg-revenue-growth">8.7%</div>
+                                </div>
+                                <div class="stat-icon orange">📈</div>
+                            </div>
+                            <div class="stat-change positive">+2.1% from last year</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Avg Debt/Equity</div>
+                                    <div class="stat-value" id="avg-debt-equity">0.45</div>
+                                </div>
+                                <div class="stat-icon gray">⚖️</div>
+                            </div>
+                            <div class="stat-change">-0.05 from last quarter</div>
+                        </div>
+                    </div>
+
+                    <!-- Market Overview Section -->
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Market Indices</h2>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Index</th>
+                                            <th>Value</th>
+                                            <th>Change</th>
+                                            <th>Change %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>NIFTY 50</td>
+                                            <td>22,450.25</td>
+                                            <td class="positive">+125.30</td>
+                                            <td class="positive">+0.56%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>SENSEX</td>
+                                            <td>74,890.45</td>
+                                            <td class="positive">+380.15</td>
+                                            <td class="positive">+0.51%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>NIFTY BANK</td>
+                                            <td>52,340.75</td>
+                                            <td class="positive">+210.50</td>
+                                            <td class="positive">+0.40%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>NIFTY IT</td>
+                                            <td>38,920.30</td>
+                                            <td class="negative">-180.25</td>
+                                            <td class="negative">-0.46%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Market Trends</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="marketTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Top Performers</h2>
+                                <div class="filters">
+                                    <button class="filter-btn active">All</button>
+                                    <button class="filter-btn">Nifty 50</button>
+                                    <button class="filter-btn">IT</button>
+                                    <button class="filter-btn">Banking</button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="stocks-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Company</th>
+                                            <th>Price</th>
+                                            <th>Change</th>
+                                            <th>Volume</th>
+                                            <th>Market Cap</th>
+                                            <th>P/E</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stocks-body">
+                                        <tr>
+                                            <td>RELIANCE</td>
+                                            <td>Reliance Industries Ltd.</td>
+                                            <td>₹2,150.50</td>
+                                            <td class="positive">+2.5%</td>
+                                            <td>2.5M</td>
+                                            <td>₹13.5T</td>
+                                            <td>22.5</td>
+                                            <td>
+                                                <button class="action-btn add-btn" onclick="handleWatchButtonClick('RELIANCE'); event.stopPropagation();">Watch</button>
+                                                <button class="action-btn add-to-portfolio">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>TCS</td>
+                                            <td>Tata Consultancy Services</td>
+                                            <td>₹3,200.25</td>
+                                            <td class="negative">-1.2%</td>
+                                            <td>1.8M</td>
+                                            <td>₹15.2T</td>
+                                            <td>28.3</td>
+                                            <td>
+                                                <button class="action-btn add-btn" onclick="handleWatchButtonClick('TCS'); event.stopPropagation();">Watch</button>
+                                                <button class="action-btn add-to-portfolio">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>INFY</td>
+                                            <td>Infosys Ltd.</td>
+                                            <td>₹1,500.00</td>
+                                            <td class="positive">+5.3%</td>
+                                            <td>1.2M</td>
+                                            <td>₹8.9T</td>
+                                            <td>25.1</td>
+                                            <td>
+                                                <button class="action-btn add-btn" onclick="handleWatchButtonClick('INFY'); event.stopPropagation();">Watch</button>
+                                                <button class="action-btn add-to-portfolio">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>HDFCBANK</td>
+                                            <td>HDFC Bank Ltd.</td>
+                                            <td>₹1,850.75</td>
+                                            <td class="positive">+3.1%</td>
+                                            <td>0.9M</td>
+                                            <td>₹12.8T</td>
+                                            <td>18.7</td>
+                                            <td>
+                                                <button class="action-btn add-btn" onclick="handleWatchButtonClick('HDFCBANK'); event.stopPropagation();">Watch</button>
+                                                <button class="action-btn add-to-portfolio">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ICICIBANK</td>
+                                            <td>ICICI Bank Ltd.</td>
+                                            <td>₹950.25</td>
+                                            <td class="positive">+1.8%</td>
+                                            <td>1.5M</td>
+                                            <td>₹7.2T</td>
+                                            <td>16.4</td>
+                                            <td>
+                                                <button class="action-btn add-btn" onclick="handleWatchButtonClick('ICICIBANK'); event.stopPropagation();">Watch</button>
+                                                <button class="action-btn add-to-portfolio">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Market Trends</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                            
+                            <div class="card-header" style="margin-top: 1.5rem;">
+                                <h2 class="card-title">Sector Performance</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="sectorChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!-- Markets Section -->
+                <div id="markets-section" class="dashboard-section hidden">
+                    <div class="dashboard-header">
+                        <h1 class="dashboard-title">Market Overview</h1>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Market Indices</h2>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Index</th>
+                                            <th>Value</th>
+                                            <th>Change</th>
+                                            <th>Change %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>NIFTY 50</td>
+                                            <td>22,450.25</td>
+                                            <td class="positive">+125.30</td>
+                                            <td class="positive">+0.56%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>SENSEX</td>
+                                            <td>74,890.45</td>
+                                            <td class="positive">+380.15</td>
+                                            <td class="positive">+0.51%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>NIFTY BANK</td>
+                                            <td>52,340.75</td>
+                                            <td class="positive">+210.50</td>
+                                            <td class="positive">+0.40%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>NIFTY IT</td>
+                                            <td>38,920.30</td>
+                                            <td class="negative">-180.25</td>
+                                            <td class="negative">-0.46%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Market Trends</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="marketTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Section -->
+                <div id="portfolio-section" class="dashboard-section hidden">
+                    <div class="dashboard-header">
+                        <h1 class="dashboard-title">My Portfolio</h1>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Portfolio Summary</h2>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">Total Value</div>
+                                            <div class="stat-value">₹2,850,450</div>
+                                        </div>
+                                        <div class="stat-icon blue">💼</div>
+                                    </div>
+                                    <div class="stat-change positive">+₹125,300 (4.6%) this month</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">Total Gain/Loss</div>
+                                            <div class="stat-value">+₹425,600</div>
+                                        </div>
+                                        <div class="stat-icon green">💰</div>
+                                    </div>
+                                    <div class="stat-change positive">+17.8% return</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">Day Change</div>
+                                            <div class="stat-value">+₹28,450</div>
+                                        </div>
+                                        <div class="stat-icon orange">📊</div>
+                                    </div>
+                                    <div class="stat-change positive">+1.01%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Holdings</h2>
+                                <div class="portfolio-search-container">
+                                    <input type="text" id="portfolio-search" placeholder="Search stocks (e.g. RELIANCE, TCS)..." class="search-input">
+                                    <button id="search-stock-btn" class="search-btn" onclick="searchStockForPortfolio()">Search</button>
+                                </div>
+                                <div class="filters">
+                                    <button class="filter-btn active" data-category="all">All</button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Category</th>
+                                            <th>Quantity</th>
+                                            <th>Avg Price</th>
+                                            <th>Current Price</th>
+                                            <th>Gain/Loss</th>
+                                            <th>Allocation</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr onclick="showStockDetails('RELIANCE')" style="cursor: pointer;" data-category="growth">
+                                            <td>RELIANCE</td>
+                                            <td>Growth</td>
+                                            <td>50</td>
+                                            <td>₹2,050.25</td>
+                                            <td>₹2,150.50</td>
+                                            <td class="positive">+₹5,012.50</td>
+                                            <td>25.4%</td>
+                                            <td>
+                                                <button class="action-btn small-btn buy" onclick="handleTradeAction('RELIANCE', 'Buy'); event.stopPropagation();">Buy</button>
+                                                <button class="action-btn small-btn sell" onclick="handleTradeAction('RELIANCE', 'Sell'); event.stopPropagation();">Sell</button>
+                                                <button class="action-btn small-btn details" onclick="showStockDetails('RELIANCE'); event.stopPropagation();">View Details</button>
+                                            </td>
+                                        </tr>
+                                        <tr onclick="showStockDetails('HDFCBANK')" style="cursor: pointer;" data-category="bluechip">
+                                            <td>HDFCBANK</td>
+                                            <td>Blue-chip</td>
+                                            <td>100</td>
+                                            <td>₹1,780.75</td>
+                                            <td>₹1,850.75</td>
+                                            <td class="positive">+₹7,000.00</td>
+                                            <td>18.2%</td>
+                                            <td>
+                                                <button class="action-btn small-btn buy" onclick="handleTradeAction('HDFCBANK', 'Buy'); event.stopPropagation();">Buy</button>
+                                                <button class="action-btn small-btn sell" onclick="handleTradeAction('HDFCBANK', 'Sell'); event.stopPropagation();">Sell</button>
+                                                <button class="action-btn small-btn details" onclick="showStockDetails('HDFCBANK'); event.stopPropagation();">View Details</button>
+                                            </td>
+                                        </tr>
+                                        <tr onclick="showStockDetails('INFY')" style="cursor: pointer;" data-category="growth">
+                                            <td>INFY</td>
+                                            <td>Growth</td>
+                                            <td>75</td>
+                                            <td>₹1,420.50</td>
+                                            <td>₹1,500.00</td>
+                                            <td class="positive">+₹5,962.50</td>
+                                            <td>15.8%</td>
+                                            <td>
+                                                <button class="action-btn small-btn buy" onclick="handleTradeAction('INFY', 'Buy'); event.stopPropagation();">Buy</button>
+                                                <button class="action-btn small-btn sell" onclick="handleTradeAction('INFY', 'Sell'); event.stopPropagation();">Sell</button>
+                                                <button class="action-btn small-btn details" onclick="showStockDetails('INFY'); event.stopPropagation();">View Details</button>
+                                            </td>
+                                        </tr>
+                                        <tr onclick="showStockDetails('TCS')" style="cursor: pointer;" data-category="bluechip">
+                                            <td>TCS</td>
+                                            <td>Blue-chip</td>
+                                            <td>60</td>
+                                            <td>₹3,100.25</td>
+                                            <td>₹3,200.25</td>
+                                            <td class="positive">+₹6,000.00</td>
+                                            <td>12.3%</td>
+                                            <td>
+                                                <button class="action-btn small-btn buy" onclick="handleTradeAction('TCS', 'Buy'); event.stopPropagation();">Buy</button>
+                                                <button class="action-btn small-btn sell" onclick="handleTradeAction('TCS', 'Sell'); event.stopPropagation();">Sell</button>
+                                                <button class="action-btn small-btn details" onclick="showStockDetails('TCS'); event.stopPropagation();">View Details</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Portfolio Allocation Chart -->
+                        <div class="card" style="display: block;">
+                            <div class="card-header">
+                                <h2 class="card-title">Portfolio Allocation</h2>
+                            </div>
+                            <div class="chart-container" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+                                <canvas id="portfolioAllocationChart" width="300" height="300" style="display: block;"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Transaction History -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Transaction History</h2>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Symbol</th>
+                                            <th>Type</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transaction-history">
+                                        <tr>
+                                            <td>2024-01-15</td>
+                                            <td>RELIANCE</td>
+                                            <td class="positive">Buy</td>
+                                            <td>50</td>
+                                            <td>₹2,050.25</td>
+                                            <td>₹1,02,512.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-02-20</td>
+                                            <td>HDFCBANK</td>
+                                            <td class="positive">Buy</td>
+                                            <td>100</td>
+                                            <td>₹1,780.75</td>
+                                            <td>₹1,78,075.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-03-10</td>
+                                            <td>INFY</td>
+                                            <td class="positive">Buy</td>
+                                            <td>75</td>
+                                            <td>₹1,420.50</td>
+                                            <td>₹1,06,537.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-04-05</td>
+                                            <td>TCS</td>
+                                            <td class="positive">Buy</td>
+                                            <td>60</td>
+                                            <td>₹3,100.25</td>
+                                            <td>₹1,86,015.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Portfolio Performance -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Portfolio Performance</h2>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">Total Return</div>
+                                            <div class="stat-value" id="portfolio-total-return">+17.8%</div>
+                                        </div>
+                                        <div class="stat-icon green">📈</div>
+                                    </div>
+                                    <div class="stat-change">+₹425,600</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">CAGR</div>
+                                            <div class="stat-value" id="portfolio-cagr">12.5%</div>
+                                        </div>
+                                        <div class="stat-icon blue">📊</div>
+                                    </div>
+                                    <div class="stat-change">Annualized return</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">Volatility</div>
+                                            <div class="stat-value" id="portfolio-volatility">18.2%</div>
+                                        </div>
+                                        <div class="stat-icon yellow">⚖️</div>
+                                    </div>
+                                    <div class="stat-change">Standard deviation</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header">
+                                        <div>
+                                            <div class="stat-title">Sharpe Ratio</div>
+                                            <div class="stat-value" id="portfolio-sharpe">0.69</div>
+                                        </div>
+                                        <div class="stat-icon purple">🎯</div>
+                                    </div>
+                                    <div class="stat-change">Risk-adjusted return</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Portfolio Value Over Time -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Portfolio Value Over Time</h2>
+                            </div>
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="portfolioValueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Analytics Section -->
+                <div id="analytics-section" class="dashboard-section hidden">
+                    <div class="dashboard-header">
+                        <h1 class="dashboard-title">Analytics & Insights</h1>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Sector Analysis</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="sectorAnalysisChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Top Gainers & Losers</h2>
+                            </div>
+                            <div style="padding: 1rem;">
+                                <h3 style="margin: 1rem 0 0.5rem 0; color: var(--success-color);">Top Gainers</h3>
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                                        <span>ADANIPORTS</span>
+                                        <span class="positive">+8.5%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                                        <span>RELIANCE</span>
+                                        <span class="positive">+5.2%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                                        <span>ONGC</span>
+                                        <span class="positive">+4.8%</span>
+                                    </div>
+                                </div>
+                                <h3 style="margin: 1rem 0 0.5rem 0; color: var(--danger-color);">Top Losers</h3>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                                        <span>BAJAJFINSV</span>
+                                        <span class="negative">-3.2%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                                        <span>HEROMOTOCO</span>
+                                        <span class="negative">-2.8%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--gray-200);">
+                                        <span>AXISBANK</span>
+                                        <span class="negative">-2.1%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Technical Indicators</h2>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Stock</th>
+                                            <th>RSI</th>
+                                            <th>MACD</th>
+                                            <th>Support</th>
+                                            <th>Resistance</th>
+                                            <th>Signal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>RELIANCE</td>
+                                            <td>62.4</td>
+                                            <td>Positive</td>
+                                            <td>₹2,100</td>
+                                            <td>₹2,200</td>
+                                            <td class="positive">Buy</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TCS</td>
+                                            <td>48.7</td>
+                                            <td>Negative</td>
+                                            <td>₹3,150</td>
+                                            <td>₹3,250</td>
+                                            <td class="negative">Sell</td>
+                                        </tr>
+                                        <tr>
+                                            <td>INFY</td>
+                                            <td>58.3</td>
+                                            <td>Positive</td>
+                                            <td>₹1,450</td>
+                                            <td>₹1,550</td>
+                                            <td class="positive">Buy</td>
+                                        </tr>
+                                        <tr>
+                                            <td>HDFCBANK</td>
+                                            <td>55.1</td>
+                                            <td>Neutral</td>
+                                            <td>₹1,800</td>
+                                            <td>₹1,900</td>
+                                            <td>Hold</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Market Sentiment</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="sentimentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+
+                <!-- Watchlist Section -->
+                <div id="watchlist-section" class="dashboard-section hidden">
+                    <div class="dashboard-header">
+                        <h1 class="dashboard-title">Watchlist</h1>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Watchlist</h2>
+                            </div>
+                            <input type="text" class="search-box" placeholder="Search stocks to add to watchlist..." id="watchlist-search">
+                            <button onclick="searchStocksForWatchlist(document.getElementById('watchlist-search').value)" class="action-btn add-btn" style="margin-bottom: 1rem; width: 100%;">Add to Watchlist</button>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Company</th>
+                                            <th>Price</th>
+                                            <th>Change</th>
+                                            <th>Volume</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="watchlist-body">
+                                        <tr>
+                                            <td>RELIANCE</td>
+                                            <td>Reliance Industries Ltd.</td>
+                                            <td>₹2,150.50</td>
+                                            <td class="positive">+2.5%</td>
+                                            <td>2.5M</td>
+                                            <td>
+                                                <button class="action-btn remove-btn" onclick="removeFromWatchlist('RELIANCE')">Remove</button>
+                                                <button class="action-btn add-to-portfolio" onclick="addToPortfolio('RELIANCE')">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>TCS</td>
+                                            <td>Tata Consultancy Services</td>
+                                            <td>₹3,200.25</td>
+                                            <td class="negative">-1.2%</td>
+                                            <td>1.8M</td>
+                                            <td>
+                                                <button class="action-btn remove-btn" onclick="removeFromWatchlist('TCS')">Remove</button>
+                                                <button class="action-btn add-to-portfolio" onclick="addToPortfolio('TCS')">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>INFY</td>
+                                            <td>Infosys Ltd.</td>
+                                            <td>₹1,500.00</td>
+                                            <td class="positive">+5.3%</td>
+                                            <td>1.2M</td>
+                                            <td>
+                                                <button class="action-btn remove-btn" onclick="removeFromWatchlist('INFY')">Remove</button>
+                                                <button class="action-btn add-to-portfolio" onclick="addToPortfolio('INFY')">Portfolio</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Watchlist Performance</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="watchlistPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div id="alerts-section" class="dashboard-section hidden">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Price Alerts</h1>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Create New Alert</h2>
+                    </div>
+                    <div class="alert-form">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label for="alert-symbol" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Stock Symbol</label>
+                                <input type="text" id="alert-symbol" placeholder="e.g. RELIANCE" class="search-input" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label for="alert-type" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Alert Type</label>
+                                <select id="alert-type" class="search-input" style="width: 100%;">
+                                    <option value="above">Price Above</option>
+                                    <option value="below">Price Below</option>
+                                    <option value="percent_change">Percent Change</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="alert-target" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Target Value</label>
+                                <input type="number" id="alert-target" placeholder="Enter value" class="search-input" style="width: 100%;">
+                            </div>
+                        </div>
+                        <button id="create-alert-btn" class="search-btn" onclick="createAlert()" style="padding: 0.75rem 1.5rem;">Create Alert</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">My Alerts</h2>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Type</th>
+                                    <th>Target</th>
+                                    <th>Status</th>
+                                    <th>Triggers</th>
+                                    <th>Last Triggered</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alerts-table-body">
+                                <!-- Alerts will be loaded here -->
+                                <tr id="no-alerts-placeholder">
+                                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                            <div style="font-size: 2rem; margin-bottom: 1rem;">🔔</div>
+                                            <h3>No Alerts Yet</h3>
+                                            <p>Create your first alert using the form above</p>
+                                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Alerts help you monitor price movements and stay informed about your investments</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="chat-toggle" onclick="toggleChat()">💬</button>
+
+    <div class="chat-modal" id="chatModal">
+        <div class="chat-header">
+            <h3>Ask Questions</h3>
+            <button class="close-chat" onclick="toggleChat()">×</button>
+        </div>
+        <div class="chat-content" id="chatBox">
+            <div class="message bot-message">
+                <div class="message-header">Assistant</div>
+                <div>Hello! I'm your stock market assistant. Ask me about any stocks, market trends, or financial metrics.</div>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="question" placeholder="Ask about stocks..." style="flex: 1; padding: 1rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 1rem;">
+            <button onclick="sendQuestion()" style="padding: 1rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Define API_BASE constant
+        const API_BASE = "http://127.0.0.1:8001";
+        
+        // Function to format the RAG response
+        function formatResponse(response) {
+            // Convert newlines to <br> tags for proper HTML display
+            return response.replace(/\n/g, '<br>');
+        }
+        
+        // Section navigation functionality
+        function showSection(sectionName) {
+            event.preventDefault(); // Prevent default anchor behavior
+            
+            // Update active class in sidebar
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show the requested section
+            const sectionToShow = document.getElementById(sectionName + '-section');
+            if (sectionToShow) {
+                sectionToShow.classList.remove('hidden');
+            }
+            
+            // Initialize charts for the section if needed
+            setTimeout(() => {
+                if (sectionName === 'markets') {
+                    initMarketTrendChart();
+                } else if (sectionName === 'analytics') {
+                    initSectorAnalysisChart();
+                    initSentimentChart();
+                } else if (sectionName === 'dashboard') {
+                    initCharts();
+                } else if (sectionName === 'portfolio') {
+                    // Remove the hidden class first to ensure the section is visible
+                    const portfolioSection = document.getElementById('portfolio-section');
+                    if (portfolioSection) {
+                        portfolioSection.classList.remove('hidden');
+                        // Use a slight delay to ensure the portfolio section is visible before initializing the chart
+                        setTimeout(() => {
+                            // Force a redraw after making section visible
+                            initPortfolioAllocationChart();
+                            initPortfolioFilters();
+                            initPortfolioValueChart();
+                            
+                            // Additional delay to ensure chart renders properly
+                            setTimeout(() => {
+                                if (window.portfolioAllocationChart && typeof window.portfolioAllocationChart.resize === 'function') {
+                                    window.portfolioAllocationChart.resize();
+                                    console.log('Chart resized after section visibility');
+                                }
+                            }, 300);
+                        }, 200);
+                    }
+                } else if (sectionName === 'watchlist') {
+                    // Initialize watchlist section
+                    const watchlistSection = document.getElementById('watchlist-section');
+                    if (watchlistSection) {
+                        watchlistSection.classList.remove('hidden');
+                        // Initialize watchlist charts and data
+                        setTimeout(() => {
+                            initWatchlistPerformanceChart();
+                            loadWatchlistData();
+                        }, 100);
+                    }
+                }
+            }, 100);
+        }
+        
+        // Check if user is authenticated
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = '/login.html';
+            } else {
+                // Get username from token or use default
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    document.getElementById('username-display').textContent = `Welcome, ${payload.username || 'User'}`;
+                } catch (e) {
+                    document.getElementById('username-display').textContent = 'Welcome, User';
+                }
+            }
+            
+            // Initialize the dashboard charts
+            initCharts();
+            loadStockData();
+            
+            // Initialize charts for other sections
+            setTimeout(() => {
+                initMarketTrendChart();
+                initSectorAnalysisChart();
+                initSentimentChart();
+                
+                // Initialize portfolio chart in case the portfolio section is the default view
+                // Only initialize after a delay to ensure DOM is ready
+                setTimeout(() => {
+                    initPortfolioAllocationChart();
+                    initPortfolioFilters();
+                }, 300);
+            }, 100);
+        });
+        
+        function initCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+            if (trendCtx) {
+                new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Nifty Index',
+                            data: [18000, 18200, 18500, 18300, 18700, 19000, 19200, 19500, 19300, 19700, 20000, 20200],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Sector Chart
+            const sectorCtx = document.getElementById('sectorChart')?.getContext('2d');
+            if (sectorCtx) {
+                new Chart(sectorCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['IT', 'Banking', 'Energy', 'Consumer', 'Pharma', 'Auto'],
+                        datasets: [{
+                            label: 'Performance %',
+                            data: [15.2, 12.8, 10.5, 8.7, 7.3, 6.9],
+                            backgroundColor: [
+                                '#2563eb', '#1e40af', '#0ea5e9', '#10b981', '#ef4444', '#f59e0b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Initialize charts for other sections
+        function initMarketTrendChart() {
+            const ctx = document.getElementById('marketTrendChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Nifty 50',
+                            data: [18000, 18200, 18500, 18300, 18700, 19000, 19200, 19500, 19300, 19700, 20000, 20200],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Bank Nifty',
+                            data: [45000, 45500, 46000, 45800, 46200, 46500, 46800, 47200, 47000, 47500, 48000, 48500],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initSectorAnalysisChart() {
+            const ctx = document.getElementById('sectorAnalysisChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['IT', 'Banking', 'Energy', 'Consumer', 'Pharma', 'Auto', 'Metals', 'FMCG'],
+                        datasets: [{
+                            label: 'Performance %',
+                            data: [15.2, 12.8, 10.5, 8.7, 7.3, 6.9, 5.4, 4.8],
+                            backgroundColor: [
+                                '#2563eb', '#1e40af', '#0ea5e9', '#10b981', 
+                                '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initSentimentChart() {
+            const ctx = document.getElementById('sentimentChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Bullish', 'Bearish', 'Neutral'],
+                        datasets: [{
+                            data: [65, 15, 20],
+                            backgroundColor: [
+                                '#10b981', '#ef4444', '#f59e0b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Load stock data and calculate averages
+        function loadStockData() {
+            // Calculate averages based on the table data
+            const rows = document.querySelectorAll('#stocks-body tr');
+            let totalPe = 0;
+            let totalMarketCap = 0;
+            let totalChange = 0;
+            let count = 0;
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 7) { // Ensure we have all required columns
+                    const peText = cells[6].textContent;
+                    const marketCapText = cells[5].textContent.replace(/[₹T]/g, '');
+                    const changeText = cells[3].textContent.replace(/[+%]/g, '');
+                    
+                    const pe = parseFloat(peText);
+                    const marketCap = parseFloat(marketCapText);
+                    const change = parseFloat(changeText);
+                    
+                    if (!isNaN(pe) && !isNaN(marketCap) && !isNaN(change)) {
+                        totalPe += pe;
+                        totalMarketCap += marketCap;
+                        totalChange += change;
+                        count++;
+                    }
+                }
+            });
+            
+            if (count > 0) {
+                const avgPe = totalPe / count;
+                const avgMarketCap = totalMarketCap / count;
+                const avgChange = totalChange / count;
+                
+                // Calculate mock values for other metrics
+                const avgDividend = 1.24 + (Math.random() * 0.2 - 0.1); // Mock dividend yield
+                const avgRoe = 15.2 + (Math.random() * 2 - 1); // Mock ROE
+                const avgRevenueGrowth = 8.7 + (Math.random() * 1.5 - 0.75); // Mock revenue growth
+                const avgDebtEquity = 0.45 + (Math.random() * 0.1 - 0.05); // Mock debt/equity
+                
+                document.getElementById('avg-pe').textContent = avgPe.toFixed(2);
+                document.getElementById('avg-market-cap').textContent = `₹${avgMarketCap.toFixed(1)}T`;
+                document.getElementById('market-trend').textContent = `${avgChange >= 0 ? '+' : ''}${avgChange.toFixed(2)}%`;
+                document.getElementById('total-stocks').textContent = count;
+                document.getElementById('avg-dividend').textContent = avgDividend.toFixed(2) + '%';
+                document.getElementById('avg-roe').textContent = avgRoe.toFixed(2) + '%';
+                document.getElementById('avg-revenue-growth').textContent = avgRevenueGrowth.toFixed(2) + '%';
+                document.getElementById('avg-debt-equity').textContent = avgDebtEquity.toFixed(2);
+            }
+        }
+        
+        function toggleChat() {
+            const modal = document.getElementById('chatModal');
+            modal.classList.toggle('active');
+        }
+        
+        // Chat functionality
+        async function sendQuestion() {
+            const token = localStorage.getItem("access_token");
+            const questionInput = document.getElementById("question");
+            const question = questionInput.value;
+            
+            if (!question.trim()) return alert("Please enter a question");
+            
+            const chatBox = document.getElementById("chatBox");
+            
+            // Show user message
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.innerHTML = `
+                <div class="message-header">You</div>
+                <div>${question}</div>
+            `;
+            chatBox.appendChild(userMessage);
+            
+            // Show loading indicator
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'message bot-message loading';
+            loadingMessage.id = 'loading-message';
+            loadingMessage.innerHTML = `
+                <div class="message-header">Assistant</div>
+                <div>Thinking...</div>
+            `;
+            chatBox.appendChild(loadingMessage);
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+            questionInput.value = "";
+            
+            try {
+                const res = await fetch(`${API_BASE}/ask`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ question })
+                });
+                
+                // Remove loading message
+                const loadingMsg = document.getElementById('loading-message');
+                if (loadingMsg) loadingMsg.remove();
+                
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.detail || "Request failed");
+                }
+                
+                const data = await res.json();
+
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                botMessage.innerHTML = `
+                    <div class="message-header">Assistant</div>
+                    <div>${formatResponse(data.answer)}</div>
+                `;
+                chatBox.appendChild(botMessage);
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                // Remove loading message
+                const loadingMsg = document.getElementById('loading-message');
+                if (loadingMsg) loadingMsg.remove();
+
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'message bot-message';
+                errorMessage.innerHTML = `
+                    <div class="message-header">Assistant</div>
+                    <div>Error: ${error.message}</div>
+                `;
+                chatBox.appendChild(errorMessage);
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+        
+        // Initialize portfolio allocation chart
+        function initPortfolioAllocationChart() {
+            console.log('initPortfolioAllocationChart called');
+            
+            // Use a more robust approach to ensure the canvas is rendered and visible
+            const canvas = document.getElementById('portfolioAllocationChart');
+            console.log('Canvas element found:', canvas);
+            
+            if (canvas) {
+                // Wait for the next tick to ensure DOM is fully rendered
+                setTimeout(() => {
+                    // Make sure the canvas is visible and has dimensions
+                    canvas.style.display = 'block';
+                    canvas.width = canvas.offsetWidth || 400;
+                    canvas.height = canvas.offsetHeight || 400;
+                    
+                    console.log('Canvas dimensions set:', canvas.width, canvas.height);
+                    
+                    const ctx = canvas.getContext('2d');
+                    console.log('Canvas context obtained:', ctx);
+                    
+                    if (ctx) {
+                        // Destroy existing chart if it exists
+                        if (window.portfolioAllocationChart && typeof window.portfolioAllocationChart.destroy === 'function') {
+                            console.log('Destroying existing chart');
+                            window.portfolioAllocationChart.destroy();
+                        }
+                        
+                        // Portfolio allocation data
+                        const data = {
+                            labels: ['RELIANCE', 'HDFCBANK', 'INFY', 'TCS', 'Others'],
+                            datasets: [{
+                                data: [25.4, 18.2, 15.8, 12.3, 28.3],
+                                backgroundColor: [
+                                    '#2563eb',
+                                    '#10b981',
+                                    '#f59e0b',
+                                    '#8b5cf6',
+                                    '#64748b'
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        };
+                        
+                        console.log('Creating new chart with data:', data);
+                        
+                        try {
+                            window.portfolioAllocationChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: data,
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'right',
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return `${context.label}: ${context.parsed}%`;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            console.log('Chart successfully created');
+                        } catch (error) {
+                            console.error('Error creating chart:', error);
+                        }
+                    } else {
+                        console.error('Failed to get canvas context');
+                    }
+                }, 50);
+            } else {
+                console.error('Portfolio allocation chart canvas not found');
+                // If canvas is not found, try again after a short delay
+                setTimeout(initPortfolioAllocationChart, 100);
+            }
+        }
+        
+        // Initialize portfolio filters
+        function initPortfolioFilters() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get the category to filter by
+                    const category = this.getAttribute('data-category');
+                    filterPortfolioByCategory(category);
+                });
+            });
+        }
+        
+        // Filter portfolio by category
+        function filterPortfolioByCategory(category) {
+            const rows = document.querySelectorAll('#portfolio-section tbody tr');
+            
+            rows.forEach(row => {
+                const rowCategory = row.getAttribute('data-category');
+                
+                if (category === 'all' || rowCategory === category) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Function to handle buy/sell actions
+        function handleTradeAction(symbol, action) {
+            alert(`${action} action for ${symbol} clicked. In a real application, this would open a trading interface.`);
+            
+            // In a real application, this would:
+            // 1. Open a trade modal
+            // 2. Fetch current price
+            // 3. Allow quantity input
+            // 4. Process the trade through an API
+        }
+        
+        // Add Enter key functionality for question input
+        document.addEventListener('DOMContentLoaded', function() {
+            const questionInput = document.getElementById('question');
+            if (questionInput) {
+                questionInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendQuestion();
+                    }
+                });
+            }
+        });
+        
+        // Stock details functionality
+        function showStockDetails(symbol) {
+            const modal = document.getElementById('stockModal');
+            if (modal) {
+                document.getElementById('modalStockSymbol').textContent = symbol;
+                
+                // Set mock data based on symbol
+                let currentPrice = 0;
+                let dayChange = 0;
+                let overallReturn = 0;
+                let sector = '';
+                let marketCap = '';
+                let peRatio = 0;
+                let dividendYield = 0;
+                let high52W = 0;
+                let low52W = 0;
+                
+                if (symbol === 'RELIANCE') {
+                    currentPrice = 2150.50;
+                    dayChange = 2.5;
+                    overallReturn = 15.2;
+                    sector = 'Energy';
+                    marketCap = '₹15.2T';
+                    peRatio = 24.5;
+                    dividendYield = 0.65;
+                    high52W = 2450.25;
+                    low52W = 1950.75;
+                } else if (symbol === 'HDFCBANK') {
+                    currentPrice = 1850.75;
+                    dayChange = 3.1;
+                    overallReturn = 12.8;
+                    sector = 'Banking';
+                    marketCap = '₹12.1T';
+                    peRatio = 18.2;
+                    dividendYield = 1.25;
+                    high52W = 1980.50;
+                    low52W = 1580.25;
+                } else if (symbol === 'INFY') {
+                    currentPrice = 1500.00;
+                    dayChange = 5.3;
+                    overallReturn = 18.5;
+                    sector = 'IT';
+                    marketCap = '₹8.7T';
+                    peRatio = 22.1;
+                    dividendYield = 2.15;
+                    high52W = 1680.25;
+                    low52W = 1250.50;
+                } else if (symbol === 'TCS') {
+                    currentPrice = 3200.25;
+                    dayChange = 3.2;
+                    overallReturn = 14.7;
+                    sector = 'IT';
+                    marketCap = '₹14.3T';
+                    peRatio = 20.8;
+                    dividendYield = 1.85;
+                    high52W = 3500.75;
+                    low52W = 2800.25;
+                } else {
+                    currentPrice = 1000 + Math.random() * 2000;
+                    dayChange = (Math.random() * 10 - 5).toFixed(2);
+                    overallReturn = (Math.random() * 30 - 10).toFixed(2);
+                    sector = 'Technology';
+                    marketCap = '₹' + (Math.random() * 20 + 1).toFixed(1) + 'T';
+                    peRatio = (Math.random() * 30 + 10).toFixed(2);
+                    dividendYield = (Math.random() * 3 + 0.5).toFixed(2);
+                    high52W = currentPrice * 1.15;
+                    low52W = currentPrice * 0.85;
+                }
+                
+                document.getElementById('modalCurrentPrice').textContent = `₹${currentPrice.toFixed(2)}`;
+                document.getElementById('modalDayChange').textContent = `${dayChange >= 0 ? '+' : ''}${dayChange.toFixed(2)}%`;
+                document.getElementById('modalOverallReturn').textContent = `${overallReturn >= 0 ? '+' : ''}${overallReturn.toFixed(2)}%`;
+                document.getElementById('modalSector').textContent = sector;
+                document.getElementById('modalMarketCap').textContent = marketCap;
+                document.getElementById('modalPERatio').textContent = peRatio;
+                document.getElementById('modalDividendYield').textContent = `${dividendYield}%`;
+                document.getElementById('modal52WHigh').textContent = `₹${high52W.toFixed(2)}`;
+                document.getElementById('modal52WLow').textContent = `₹${low52W.toFixed(2)}`;
+                
+                modal.style.display = 'block';
+                
+                // Initialize charts
+                setTimeout(() => {
+                    initStockChart(symbol);
+                    initVolumeChart(symbol);
+                }, 100);
+            }
+        }
+        
+        function closeStockModal() {
+            document.getElementById('stockModal').style.display = 'none';
+        }
+        
+        function setTimeFilter(filter, evt) {
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to the clicked button
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            } else {
+                // Fallback: find button by text content
+                const buttons = document.querySelectorAll('.filter-btn');
+                for (let i = 0; i < buttons.length; i++) {
+                    const button = buttons[i];
+                    if (button.textContent.includes(filter)) {
+                        button.classList.add('active');
+                        break;
+                    }
+                }
+            }
+            
+            // In a real implementation, this would fetch data for the selected time period
+            // For now, we'll update the chart with mock data for the selected time period
+            const currentSymbol = document.getElementById('modalStockSymbol').textContent.split(' - ')[0];
+            if (currentSymbol) {
+                updateChartsForTimePeriod(currentSymbol, filter);
+            }
+        }
+        
+        // Update charts for selected time period
+        function updateChartsForTimePeriod(symbol, period) {
+            // In a real implementation, this would fetch data based on the time period
+            // For now, we'll update the chart with different mock data based on the period
+            initStockChart(symbol, period);
+            initVolumeChart(symbol, period);
+            
+            // Log the time period change for debugging
+            console.log(`Updated charts for ${symbol} with ${period} time period`);
+        }
+        
+        // Initialize stock-specific chart
+        function initStockChart(symbol, period = '1Y') {
+            const ctx = document.getElementById('stockChart')?.getContext('2d');
+            if (ctx) {
+                // Clear any existing chart
+                if (window.currentStockChart && typeof window.currentStockChart.destroy === 'function') {
+                    window.currentStockChart.destroy();
+                }
+                
+                // Generate data based on symbol and time period
+                let data = [];
+                let labels = [];
+                
+                if (symbol === 'RELIANCE') {
+                    if (period === '1D') {
+                        data = [2140, 2142, 2145, 2143, 2148, 2150, 2149, 2152, 2151, 2153, 2155, 2150];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        data = [2100, 2110, 2120, 2115, 2130, 2140, 2150];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        data = [2000, 2020, 2040, 2030, 2060, 2080, 2100, 2120, 2130, 2140, 2145, 2150];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        data = [1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        data = [1900, 1950, 2000, 2030, 2060, 2090, 2120, 2150];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else if (symbol === 'TCS') {
+                    if (period === '1D') {
+                        data = [3190, 3192, 3195, 3193, 3198, 3200, 3199, 3202, 3201, 3203, 3205, 3200];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        data = [3150, 3160, 3170, 3165, 3180, 3190, 3200];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        data = [3000, 3050, 3100, 3080, 3120, 3150, 3180, 3200];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        data = [2500, 2700, 2900, 3100, 3200];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        data = [2800, 2900, 3000, 3050, 3100, 3150, 3200];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else if (symbol === 'INFY') {
+                    if (period === '1D') {
+                        data = [1490, 1492, 1495, 1493, 1498, 1500, 1499, 1502, 1501, 1503, 1505, 1500];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        data = [1450, 1460, 1470, 1465, 1480, 1490, 1500];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        data = [1300, 1350, 1400, 1380, 1420, 1450, 1480, 1500];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        data = [1000, 1100, 1200, 1300, 1400, 1500];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        data = [1200, 1300, 1400, 1450, 1500];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else if (symbol === 'HDFCBANK') {
+                    if (period === '1D') {
+                        data = [1840, 1842, 1845, 1843, 1848, 1850, 1849, 1852, 1851, 1853, 1855, 1850];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        data = [1800, 1810, 1820, 1815, 1830, 1840, 1850];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        data = [1700, 1750, 1800, 1780, 1820, 1840, 1850];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        data = [1400, 1500, 1600, 1700, 1800, 1850];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        data = [1600, 1700, 1800, 1850];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else {
+                    // Default data if symbol not matched
+                    if (period === '1D') {
+                        data = [generateRandomData(12, 10)]; // 12 data points for intraday
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        data = generateRandomData(7, 20); // 7 data points for weekly
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        data = generateRandomData(5, 30); // 5 data points for monthly
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        data = generateRandomData(5, 50); // 5 data points for max
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        data = generateRandomData(7, 40); // 7 data points for yearly
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                }
+                
+                window.currentStockChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `${symbol} Price Trend`,
+                            data: data,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Helper function to generate random data
+        function generateRandomData(count, variance) {
+            const result = [];
+            let current = 1000 + Math.random() * 1000; // Starting value
+            for (let i = 0; i < count; i++) {
+                current += (Math.random() - 0.5) * variance;
+                if (current < 100) current = 100; // Minimum value
+                result.push(parseFloat(current.toFixed(2)));
+            }
+            return result;
+        }
+        
+        // Initialize volume chart
+        function initVolumeChart(symbol, period = '1Y') {
+            const ctx = document.getElementById('volumeChart')?.getContext('2d');
+            if (ctx) {
+                // Clear any existing chart
+                if (window.currentVolumeChart && typeof window.currentVolumeChart.destroy === 'function') {
+                    window.currentVolumeChart.destroy();
+                }
+                
+                // Generate volume data based on symbol and time period
+                let volumeData = [];
+                let labels = [];
+                
+                if (symbol === 'RELIANCE') {
+                    if (period === '1D') {
+                        volumeData = [2.1, 2.3, 2.2, 2.4, 2.3, 2.5, 2.4, 2.6, 2.5, 2.7, 2.6, 2.5];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        volumeData = [2.5, 2.3, 2.7, 2.4, 2.6, 2.5, 2.8];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        volumeData = [2.0, 2.2, 2.1, 2.4, 2.3, 2.5, 2.4, 2.6];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        volumeData = [1.8, 2.0, 2.2, 2.4, 2.5];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        volumeData = [2.2, 2.4, 2.3, 2.5, 2.4, 2.6, 2.5];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else if (symbol === 'TCS') {
+                    if (period === '1D') {
+                        volumeData = [1.6, 1.7, 1.6, 1.8, 1.7, 1.9, 1.8, 2.0, 1.9, 2.1, 2.0, 1.8];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        volumeData = [1.8, 1.7, 1.9, 1.6, 1.8, 1.7, 2.0];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        volumeData = [1.5, 1.7, 1.6, 1.8, 1.7, 1.9, 1.8, 2.0];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        volumeData = [1.2, 1.4, 1.6, 1.8, 2.0];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        volumeData = [1.6, 1.8, 1.7, 1.9, 1.8, 2.0, 1.9];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else if (symbol === 'INFY') {
+                    if (period === '1D') {
+                        volumeData = [1.0, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4, 1.3, 1.5, 1.4, 1.2];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        volumeData = [1.2, 1.1, 1.3, 1.0, 1.2, 1.1, 1.4];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        volumeData = [0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        volumeData = [0.7, 0.9, 1.1, 1.3, 1.2];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        volumeData = [1.0, 1.2, 1.1, 1.3, 1.2, 1.4, 1.3];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else if (symbol === 'HDFCBANK') {
+                    if (period === '1D') {
+                        volumeData = [0.7, 0.8, 0.7, 0.9, 0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 0.9];
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        volumeData = [0.9, 0.8, 1.0, 0.7, 0.9, 0.8, 1.1];
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        volumeData = [0.6, 0.8, 0.7, 0.9, 0.8, 1.0, 0.9, 1.1];
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        volumeData = [0.5, 0.7, 0.9, 1.1, 0.9];
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        volumeData = [0.7, 0.9, 0.8, 1.0, 0.9, 1.1, 1.0];
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                } else {
+                    // Default data if symbol not matched
+                    if (period === '1D') {
+                        volumeData = generateRandomVolumeData(12, 0.5);
+                        labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                    } else if (period === '1W') {
+                        volumeData = generateRandomVolumeData(7, 0.4);
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                    } else if (period === '1M') {
+                        volumeData = generateRandomVolumeData(5, 0.3);
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    } else if (period === 'MAX') {
+                        volumeData = generateRandomVolumeData(5, 0.2);
+                        labels = ['2020', '2021', '2022', '2023', '2024'];
+                    } else { // 1Y
+                        volumeData = generateRandomVolumeData(7, 0.3);
+                        labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                    }
+                }
+                
+                window.currentVolumeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `${symbol} Volume (Million)`,
+                            data: volumeData,
+                            backgroundColor: 'rgba(107, 114, 128, 0.6)',
+                            borderColor: 'rgba(107, 114, 128, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Volume (Million)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Helper function to generate random volume data
+        function generateRandomVolumeData(count, variance) {
+            const result = [];
+            for (let i = 0; i < count; i++) {
+                const base = 1.0 + Math.random();
+                const variation = (Math.random() - 0.5) * variance * 2;
+                const value = base + variation;
+                result.push(parseFloat(value.toFixed(2)));
+            }
+            return result;
+        }
+        
+        // Initialize portfolio value over time chart
+        function initPortfolioValueChart() {
+            const ctx = document.getElementById('portfolioValueChart')?.getContext('2d');
+            if (ctx) {
+                // Clear any existing chart
+                if (window.portfolioValueChart && typeof window.portfolioValueChart.destroy === 'function') {
+                    window.portfolioValueChart.destroy();
+                }
+                
+                // Generate portfolio value data
+                const portfolioValueData = [2200000, 2300000, 2450000, 2400000, 2500000, 2650000, 2700000, 2800000, 2750000, 2850000, 2900000, 2850450];
+                
+                window.portfolioValueChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Portfolio Value',
+                            data: portfolioValueData,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Initialize watchlist performance chart
+        function initWatchlistPerformanceChart() {
+            const ctx = document.getElementById('watchlistPerformanceChart')?.getContext('2d');
+            if (ctx) {
+                // Clear any existing chart
+                if (window.watchlistPerformanceChart && typeof window.watchlistPerformanceChart.destroy === 'function') {
+                    window.watchlistPerformanceChart.destroy();
+                }
+                
+                // Generate watchlist performance data
+                const watchlistData = [100, 105, 103, 107, 110, 108, 112, 115, 113, 117, 120, 118];
+                
+                window.watchlistPerformanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Watchlist Performance Index',
+                            data: watchlistData,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Add to watchlist function
+        function addToWatchlist(symbol) {
+            // In a real implementation, this would add the stock to the user's watchlist in the database
+            
+            // Check if the stock is already in the watchlist
+            const watchlistBody = document.getElementById('watchlist-body');
+            if (!watchlistBody) {
+                alert('Could not find watchlist table');
+                return;
+            }
+            
+            // Check if the symbol already exists in the watchlist
+            const existingRows = watchlistBody.querySelectorAll('tr');
+            for (let row of existingRows) {
+                const symbolCell = row.querySelector('td:first-child');
+                if (symbolCell && symbolCell.textContent === symbol) {
+                    alert(`${symbol} is already in your watchlist!`);
+                    return;
+                }
+            }
+            
+            // Generate mock data for the new stock
+            const mockPrice = (1000 + Math.random() * 3000).toFixed(2);
+            const mockChange = (Math.random() * 10 - 5).toFixed(2);
+            const mockVolume = (Math.random() * 3 + 0.5).toFixed(1) + 'M';
+            
+            // Create a new row for the watchlist
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${symbol}</td>
+                <td>${symbol} Company Ltd.</td>
+                <td>₹${mockPrice}</td>
+                <td class="${mockChange >= 0 ? 'positive' : 'negative'}">${mockChange >= 0 ? '+' : ''}${mockChange}%</td>
+                <td>${mockVolume}</td>
+                <td>
+                    <button class="action-btn remove-btn" onclick="removeFromWatchlist('${symbol}'); event.stopPropagation();">Remove</button>
+                    <button class="action-btn add-to-portfolio" onclick="addToPortfolio('${symbol}'); event.stopPropagation();">Portfolio</button>
+                </td>
+            `;
+            
+            // Add the new row to the watchlist table
+            watchlistBody.appendChild(newRow);
+            
+            // Show confirmation
+            alert(`${symbol} added to watchlist!`);
+        }
+        
+        // Remove from watchlist function
+        function removeFromWatchlist(symbol) {
+            // In a real implementation, this would remove the stock from the user's watchlist in the database
+            if (confirm(`Are you sure you want to remove ${symbol} from your watchlist?`)) {
+                // Remove the row from the table
+                const row = event.target.closest('tr');
+                if (row) {
+                    row.remove();
+                }
+            }
+        }
+        
+        // Add to portfolio function
+        function addToPortfolio(symbol) {
+            // In a real implementation, this would add the stock to the user's portfolio in the database
+            alert(`To add ${symbol} to portfolio, go to the Portfolio section and use the search functionality there.`);
+        }
+        
+        // Load watchlist data (in a real implementation, this would fetch from the backend)
+        function loadWatchlistData() {
+            // This function would fetch watchlist data from the backend in a real implementation
+            console.log('Loading watchlist data...');
+        }
+        
+        // Watchlist search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listener for the watchlist search box
+            const watchlistSearch = document.getElementById('watchlist-search');
+            if (watchlistSearch) {
+                watchlistSearch.addEventListener('keyup', function(event) {
+                    if (event.key === 'Enter') {
+                        searchStocksForWatchlist(this.value);
+                    }
+                });
+            }
+        });
+        
+        // Search function for adding stocks to watchlist
+        function searchStocksForWatchlist(query) {
+            if (query.trim() === '') {
+                alert('Please enter a stock symbol or name');
+                return;
+            }
+            
+            // In a real implementation, this would call an API to search for stocks
+            // For now, we'll simulate a search result
+            alert(`Searching for: ${query}. In a real implementation, this would fetch from the backend.`);
+            
+            // Simulate adding the stock to watchlist
+            addToWatchlist(query.toUpperCase());
+        }
+        
+        // Function to handle dashboard watch button clicks
+        function handleWatchButtonClick(symbol) {
+            addToWatchlist(symbol);
+        }
+        
+        // Search function for adding stocks to portfolio
+        function searchStockForPortfolio() {
+            const searchInput = document.getElementById('portfolio-search');
+            const symbol = searchInput.value.trim().toUpperCase();
+            
+            if (!symbol) {
+                alert('Please enter a stock symbol');
+                return;
+            }
+            
+            // Call the backend API to fetch real-time stock data
+            fetch(`/stocks/${symbol}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Stock not found: ${symbol}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Display the stock data in a modal or add to holdings
+                    showStockDetailsInModal(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching stock data:', error);
+                    alert(`Error: Could not find stock ${symbol}. Please check the symbol and try again.`);
+                });
+        }
+        
+        // Function to show stock details in a modal
+        function showStockDetailsInModal(stockData) {
+            // Create or update a modal to display the stock details
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;';
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="background: var(--card-bg); color: var(--text-color); padding: 2rem; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2>${stockData.symbol} - ${stockData.company_name || 'Company Name'}</h2>
+                        <span onclick="this.parentElement.parentElement.parentElement.remove()" style="font-size: 1.5rem; cursor: pointer;">&times;</span>
+                    </div>
+                    <div class="stock-details">
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Current Price:</strong> ₹${stockData.current_price || stockData.current_value || 'N/A'}
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Industry:</strong> ${stockData.industry || 'N/A'}
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Daily High:</strong> ₹${stockData.daily_high || 'N/A'}
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Daily Low:</strong> ₹${stockData.daily_low || 'N/A'}
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Volume:</strong> ${stockData.volume ? formatNumber(stockData.volume) : 'N/A'}
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Market Cap:</strong> ${stockData.market_cap || 'N/A'}
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <button onclick="addStockToPortfolio('${stockData.symbol}', ${stockData.current_price || stockData.current_value || 0})" class="action-btn buy" style="margin-right: 0.5rem;">Add to Portfolio</button>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="action-btn">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        // Helper function to format large numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(2) + 'K';
+            }
+            return num;
+        }
+        
+        // Function to add stock to portfolio
+        function addStockToPortfolio(symbol, price) {
+            // Close any open modals
+            document.querySelectorAll('.modal').forEach(modal => modal.remove());
+            
+            // Show a form to enter quantity and purchase price
+            const quantity = prompt(`Enter quantity for ${symbol}:`);
+            if (quantity && !isNaN(quantity) && parseInt(quantity) > 0) {
+                // In a real implementation, this would call the backend to add the stock to portfolio
+                alert(`Added ${quantity} shares of ${symbol} to your portfolio at ₹${price} per share.\nIn a real implementation, this would be saved to the database.`);
+            }
+        }
+        
+        // Add Enter key support for portfolio search
+        document.addEventListener('DOMContentLoaded', function() {
+            const portfolioSearch = document.getElementById('portfolio-search');
+            if (portfolioSearch) {
+                portfolioSearch.addEventListener('keyup', function(event) {
+                    if (event.key === 'Enter') {
+                        searchStockForPortfolio();
+                    }
+                });
+            }
+            
+            // Add Enter key support for global search
+            const globalSearch = document.getElementById('global-search');
+            if (globalSearch) {
+                globalSearch.addEventListener('keyup', function(event) {
+                    if (event.key === 'Enter') {
+                        searchGlobalStock();
+                    }
+                });
+            }
+        });
+        
+        // Global search function for any stock
+        function searchGlobalStock() {
+            const searchInput = document.getElementById('global-search');
+            const symbol = searchInput.value.trim().toUpperCase();
+            
+            if (!symbol) {
+                alert('Please enter a stock symbol');
+                return;
+            }
+            
+            // Show loading indicator
+            const searchBtn = document.getElementById('global-search-btn');
+            const originalText = searchBtn.textContent;
+            searchBtn.textContent = 'Searching...';
+            searchBtn.disabled = true;
+            
+            // Call the backend API to fetch real-time stock data
+            fetch(`/stocks/${symbol}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Stock not found: ${symbol}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Display the detailed stock information
+                    showGlobalStockDetails(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching stock data:', error);
+                    alert(`Error: Could not find stock ${symbol}. Please check the symbol and try again.`);
+                })
+                .finally(() => {
+                    // Reset button
+                    searchBtn.textContent = originalText;
+                    searchBtn.disabled = false;
+                });
+        }
+        
+        // Function to show detailed global stock information
+        function showGlobalStockDetails(stockData) {
+            // Get the existing modal instead of creating a new one
+            const modal = document.getElementById('stockModal');
+            const stockDetailsContainer = document.getElementById('stockDetails');
+            
+            if (!modal || !stockDetailsContainer) {
+                console.error('Modal or stock details container not found');
+                return;
+            }
+            
+            // Show the modal
+            modal.style.display = 'block';
+            
+            // Format the last updated date
+            const formatDate = (dateString) => {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            };
+            
+            // Calculate percentage change
+            const calculateChangePercent = (current, prev) => {
+                if (!current || !prev) return 'N/A';
+                const change = ((current - prev) / prev) * 100;
+                return change.toFixed(2) + '%';
+            };
+            
+            // Determine if change is positive or negative
+            const getChangeClass = (current, prev) => {
+                if (!current || !prev) return '';
+                return current >= prev ? 'positive' : 'negative';
+            };
+            
+            // Update the existing modal content instead of replacing it
+            document.getElementById('modalStockSymbol').textContent = `${stockData.symbol} - ${stockData.company_name || 'Company Name'}`;
+            document.getElementById('modalCurrentPrice').textContent = `₹${stockData.current_price || stockData.current_value || 'N/A'}`;
+            
+            // Calculate and set day change
+            const dayChangeEl = document.getElementById('modalDayChange');
+            if (stockData.daily_high && stockData.daily_low) {
+                const changePercent = calculateChangePercent(stockData.current_price, (stockData.daily_high + stockData.daily_low)/2);
+                const changeClass = getChangeClass(stockData.current_price, (stockData.daily_high + stockData.daily_low)/2);
+                dayChangeEl.textContent = changePercent;
+                dayChangeEl.className = changeClass;
+            } else {
+                dayChangeEl.textContent = 'N/A';
+            }
+            
+            document.getElementById('modalOverallReturn').textContent = 'N/A'; // Placeholder for now
+            document.getElementById('modalSector').textContent = stockData.industry || 'N/A';
+            document.getElementById('modalMarketCap').textContent = stockData.market_cap || 'N/A';
+            document.getElementById('modalPERatio').textContent = 'N/A';
+            document.getElementById('modalDividendYield').textContent = 'N/A';
+            document.getElementById('modal52WHigh').textContent = 'N/A';
+            document.getElementById('modal52WLow').textContent = 'N/A';
+            
+            // Show the modal
+            modal.style.display = 'block';
+            
+            // Force a reflow to ensure DOM is updated
+            void modal.offsetWidth;
+            
+            // Initialize charts with the stock data after a brief delay to ensure DOM is rendered
+            setTimeout(() => {
+                initStockChart(stockData.symbol, '1Y');
+                initVolumeChart(stockData.symbol, '1Y');
+            }, 100);
+        }
+        
+        // Function to initialize stock chart
+        function initStockChart(symbol, period = '1Y') {
+            const ctx = document.getElementById('stockChart')?.getContext('2d');
+            if (!ctx || !window.Chart) {
+                console.error('Canvas context not found or Chart.js not loaded');
+                return;
+            }
+            
+            // Clear any existing chart
+            if (window.currentStockChart && typeof window.currentStockChart.destroy === 'function') {
+                window.currentStockChart.destroy();
+            }
+            
+            // Generate data based on symbol and time period
+            let data = [];
+            let labels = [];
+            
+            if (symbol === 'RELIANCE') {
+                if (period === '1D') {
+                    data = [2140, 2142, 2145, 2143, 2148, 2150, 2149, 2152, 2151, 2153, 2155, 2150];
+                    labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                } else if (period === '1W') {
+                    data = [2100, 2110, 2120, 2115, 2130, 2140, 2150];
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                } else if (period === '1M') {
+                    data = [2000, 2020, 2040, 2030, 2060, 2080, 2100, 2120, 2130, 2140, 2145, 2150];
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                } else if (period === 'MAX') {
+                    data = [1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150];
+                    labels = ['2020', '2021', '2022', '2023', '2024'];
+                } else { // 1Y
+                    data = [1900, 1950, 2000, 2030, 2060, 2090, 2120, 2150];
+                    labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                }
+            } else if (symbol === 'TCS') {
+                if (period === '1D') {
+                    data = [3190, 3192, 3195, 3193, 3198, 3200, 3199, 3202, 3201, 3203, 3205, 3200];
+                    labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                } else if (period === '1W') {
+                    data = [3150, 3160, 3170, 3165, 3180, 3190, 3200];
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                } else if (period === '1M') {
+                    data = [3000, 3050, 3100, 3080, 3120, 3150, 3180, 3200];
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                } else if (period === 'MAX') {
+                    data = [2500, 2700, 2900, 3100, 3200];
+                    labels = ['2020', '2021', '2022', '2023', '2024'];
+                } else { // 1Y
+                    data = [2800, 2900, 3000, 3050, 3100, 3150, 3200];
+                    labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                }
+            } else if (symbol === 'INFY') {
+                if (period === '1D') {
+                    data = [1490, 1492, 1495, 1493, 1498, 1500, 1499, 1502, 1501, 1503, 1505, 1500];
+                    labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                } else if (period === '1W') {
+                    data = [1450, 1460, 1470, 1465, 1480, 1490, 1500];
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                } else if (period === '1M') {
+                    data = [1300, 1350, 1400, 1380, 1420, 1450, 1480, 1500];
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                } else if (period === 'MAX') {
+                    data = [1000, 1100, 1200, 1300, 1400, 1500];
+                    labels = ['2020', '2021', '2022', '2023', '2024'];
+                } else { // 1Y
+                    data = [1200, 1300, 1400, 1450, 1500];
+                    labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                }
+            } else if (symbol === 'HDFCBANK') {
+                if (period === '1D') {
+                    data = [1840, 1842, 1845, 1843, 1848, 1850, 1849, 1852, 1851, 1853, 1855, 1850];
+                    labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                } else if (period === '1W') {
+                    data = [1800, 1810, 1820, 1815, 1830, 1840, 1850];
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                } else if (period === '1M') {
+                    data = [1700, 1750, 1800, 1780, 1820, 1840, 1850];
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                } else if (period === 'MAX') {
+                    data = [1400, 1500, 1600, 1700, 1800, 1850];
+                    labels = ['2020', '2021', '2022', '2023', '2024'];
+                } else { // 1Y
+                    data = [1600, 1700, 1800, 1850];
+                    labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                }
+            } else {
+                // Default data if symbol not matched
+                if (period === '1D') {
+                    data = generateRandomData(12, 10); // 12 data points for intraday
+                    labels = ['9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00', '2:30', '3:00'];
+                } else if (period === '1W') {
+                    data = generateRandomData(7, 20); // 7 data points for weekly
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Today'];
+                } else if (period === '1M') {
+                    data = generateRandomData(5, 30); // 5 data points for monthly
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                } else if (period === 'MAX') {
+                    data = generateRandomData(5, 50); // 5 data points for max
+                    labels = ['2020', '2021', '2022', '2023', '2024'];
+                } else { // 1Y
+                    data = generateRandomData(7, 40); // 7 data points for yearly
+                    labels = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Today'];
+                }
+            }
+            
+            window.currentStockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${symbol} Price Trend`,
+                        data: data,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Theme Toggle Functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            // Toggle dark mode class
+            body.classList.toggle('dark-mode');
+            
+            // Update theme icon and text
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        // Initialize theme based on user preference or system setting
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            // Determine the initial theme
+            let currentTheme = savedTheme;
+            if (!currentTheme) {
+                currentTheme = prefersDarkScheme.matches ? 'dark' : 'light';
+            }
+            
+            // Apply the theme
+            if (currentTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            } else {
+                body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            }
+        });
+        
+        // Alert Management Functions
+        async function createAlert() {
+            const symbol = document.getElementById('alert-symbol').value.trim().toUpperCase();
+            const alertType = document.getElementById('alert-type').value;
+            const targetValue = parseFloat(document.getElementById('alert-target').value);
+            
+            if (!symbol) {
+                alert('Please enter a stock symbol');
+                return;
+            }
+            
+            if (isNaN(targetValue)) {
+                alert('Please enter a valid target value');
+                return;
+            }
+            
+            // Show loading indicator
+            const createBtn = document.getElementById('create-alert-btn');
+            const originalText = createBtn.textContent;
+            createBtn.textContent = 'Creating...';
+            createBtn.disabled = true;
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert('Please login first');
+                    return;
+                }
+                
+                const response = await fetch('/alerts/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        stock_symbol: symbol,
+                        alert_type: alertType,
+                        target_value: targetValue
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to create alert');
+                }
+                
+                const result = await response.json();
+                alert(`Alert created successfully for ${symbol}`);
+                
+                // Clear form
+                document.getElementById('alert-symbol').value = '';
+                document.getElementById('alert-target').value = '';
+                
+                // Refresh alerts list
+                loadUserAlerts();
+                
+            } catch (error) {
+                console.error('Error creating alert:', error);
+                alert(`Error creating alert: ${error.message}`);
+            } finally {
+                // Reset button
+                createBtn.textContent = originalText;
+                createBtn.disabled = false;
+            }
+        }
+        
+        async function loadUserAlerts() {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert('Please login first');
+                    return;
+                }
+                
+                const response = await fetch('/alerts/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to load alerts');
+                }
+                
+                const alerts = await response.json();
+                displayAlerts(alerts);
+                
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+                alert(`Error loading alerts: ${error.message}`);
+            }
+        }
+        
+        function displayAlerts(alerts) {
+            const tbody = document.getElementById('alerts-table-body');
+            const placeholder = document.getElementById('no-alerts-placeholder');
+            
+            if (!tbody) {
+                console.error('Alerts table body not found');
+                return;
+            }
+            
+            if (alerts.length === 0) {
+                // Show the placeholder when no alerts exist
+                if (placeholder) {
+                    placeholder.style.display = 'table-row';
+                }
+                return;
+            }
+            
+            // Hide the placeholder when alerts exist
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+            
+            tbody.innerHTML = ''; // Clear existing alerts
+            
+            alerts.forEach(alert => {
+                const row = document.createElement('tr');
+                
+                // Format last triggered date
+                let lastTriggered = 'Never';
+                if (alert.last_triggered) {
+                    const date = new Date(alert.last_triggered);
+                    lastTriggered = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                }
+                
+                // Format alert type for display
+                let alertTypeDisplay = alert.alert_type;
+                if (alert.alert_type === 'above') {
+                    alertTypeDisplay = `Price > ₹${alert.target_value}`;
+                } else if (alert.alert_type === 'below') {
+                    alertTypeDisplay = `Price < ₹${alert.target_value}`;
+                } else if (alert.alert_type === 'percent_change') {
+                    alertTypeDisplay = `Change ≥ ${alert.target_value}%`;
+                }
+                
+                row.innerHTML = `
+                    <td>${alert.stock_symbol}</td>
+                    <td>${alertTypeDisplay}</td>
+                    <td>₹${alert.target_value}</td>
+                    <td>${alert.is_active ? '<span class="positive">Active</span>' : '<span class="negative">Inactive</span>'}</td>
+                    <td>${alert.triggered_count}</td>
+                    <td>${lastTriggered}</td>
+                    <td>
+                        <button class="action-btn small-btn" onclick="deleteAlert(${alert.id})" style="background: #ef4444; color: white; margin-right: 0.25rem;">Delete</button>
+                        ${!alert.is_active ? `<button class="action-btn small-btn" onclick="activateAlert(${alert.id})" style="background: #10b981; color: white;">Activate</button>` : `<button class="action-btn small-btn" onclick="deactivateAlert(${alert.id})" style="background: #f59e0b; color: white;">Deactivate</button>`}
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        async function deleteAlert(alertId) {
+            if (!confirm('Are you sure you want to delete this alert?')) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert('Please login first');
+                    return;
+                }
+                
+                const response = await fetch(`/alerts/${alertId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to delete alert');
+                }
+                
+                alert('Alert deleted successfully');
+                
+                // Refresh alerts list
+                loadUserAlerts();
+                
+            } catch (error) {
+                console.error('Error deleting alert:', error);
+                alert(`Error deleting alert: ${error.message}`);
+            }
+        }
+        
+        async function activateAlert(alertId) {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert('Please login first');
+                    return;
+                }
+                
+                const response = await fetch(`/alerts/${alertId}/activate`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to activate alert');
+                }
+                
+                alert('Alert activated successfully');
+                
+                // Refresh alerts list
+                loadUserAlerts();
+                
+            } catch (error) {
+                console.error('Error activating alert:', error);
+                alert(`Error activating alert: ${error.message}`);
+            }
+        }
+        
+        async function deactivateAlert(alertId) {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert('Please login first');
+                    return;
+                }
+                
+                const response = await fetch(`/alerts/${alertId}/deactivate`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to deactivate alert');
+                }
+                
+                alert('Alert deactivated successfully');
+                
+                // Refresh alerts list
+                loadUserAlerts();
+                
+            } catch (error) {
+                console.error('Error deactivating alert:', error);
+                alert(`Error deactivating alert: ${error.message}`);
+            }
+        }
+        
+        // Add the function to show alerts when the alerts section is shown
+        const originalShowSection = showSection;
+        window.showSection = function(sectionName) {
+            originalShowSection(sectionName);
+            
+            if (sectionName === 'alerts') {
+                // Load alerts when the alerts section is shown
+                setTimeout(loadUserAlerts, 200);
+            }
+        };
+        
+        // Initialize alerts if the alerts section is the current section
+        document.addEventListener('DOMContentLoaded', function() {
+            // If alerts section is visible, load the alerts
+            setTimeout(() => {
+                if (!document.getElementById('alerts-section').classList.contains('hidden')) {
+                    loadUserAlerts();
+                }
+            }, 500);
+        });
+        
+        // Close modal function
+        function closeStockModal() {
+            const modal = document.getElementById('stockModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+    
+    <!-- Stock Detail Modal -->
+    <div id="stockModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeStockModal()" style="font-size: 1.5rem; cursor: pointer;">&times;</span>
+            <div id="stockDetails">
+                <h2 id="modalStockSymbol">Stock Details</h2>
+                <div class="stock-stats">
+                    <div class="stat">
+                        <label>Current Price:</label>
+                        <span id="modalCurrentPrice">₹0.00</span>
+                    </div>
+                    <div class="stat">
+                        <label>Day Change:</label>
+                        <span id="modalDayChange">0.00%</span>
+                    </div>
+                    <div class="stat">
+                        <label>Overall Return:</label>
+                        <span id="modalOverallReturn">0.00%</span>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 300px; margin: 20px 0;">
+                    <canvas id="stockChart" width="800" height="300"></canvas>
+                </div>
+                <div class="chart-container" style="height: 150px; margin: 20px 0;">
+                    <canvas id="volumeChart" width="800" height="150"></canvas>
+                </div>
+                <div class="time-filters">
+                    <button class="filter-btn active" onclick="setTimeFilter('1D', event)">1D</button>
+                    <button class="filter-btn" onclick="setTimeFilter('1W', event)">1W</button>
+                    <button class="filter-btn" onclick="setTimeFilter('1M', event)">1M</button>
+                    <button class="filter-btn" onclick="setTimeFilter('1Y', event)">1Y</button>
+                    <button class="filter-btn" onclick="setTimeFilter('MAX', event)">MAX</button>
+                </div>
+                <div class="stock-info">
+                    <div class="info-row">
+                        <span class="info-label">Sector:</span>
+                        <span id="modalSector">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Market Cap:</span>
+                        <span id="modalMarketCap">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">P/E Ratio:</span>
+                        <span id="modalPERatio">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Dividend Yield:</span>
+                        <span id="modalDividendYield">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">52W High:</span>
+                        <span id="modal52WHigh">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">52W Low:</span>
+                        <span id="modal52WLow">-</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button onclick="addStockToPortfolio(document.getElementById('modalStockSymbol').textContent.split(' - ')[0].split(' ')[0], document.getElementById('modalCurrentPrice').textContent.replace('₹', '').replace(/,/g, '') || 0)" class="action-btn buy" style="margin-right: 0.5rem;">Add to Portfolio</button>
+                    <button onclick="addToWatchlist(document.getElementById('modalStockSymbol').textContent.split(' - ')[0].split(' ')[0]); closeStockModal();" class="action-btn add-btn" style="margin-right: 0.5rem;">Add to Watchlist</button>
+                    <button onclick="closeStockModal()" class="action-btn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
