@@ -178,7 +178,7 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
 // Google OAuth
 async function googleLogin() {
     try {
-        // Redirect to your Flask Google OAuth endpoint
+        // Redirect to Flask Google OAuth endpoint
         window.location.href = "/auth/google";
     } catch (e) {
         error_display.style.display = "block";
@@ -189,7 +189,7 @@ async function googleLogin() {
 // GitHub OAuth
 async function githubLogin() {
     try {
-        // Redirect to your Flask GitHub OAuth endpoint
+        // Redirect to Flask GitHub OAuth endpoint
         window.location.href = "/auth/github";
     } catch (e) {
         error_display.style.display = "block";

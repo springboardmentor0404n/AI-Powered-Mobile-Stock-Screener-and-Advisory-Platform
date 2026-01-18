@@ -761,19 +761,6 @@ def poll_watchlist_changes():
         time.sleep(5)
 
 
-#---------------- DEBUG ALERTS ----------------#
-
-@app.route("/debug/alerts")
-def debug_alerts():
-    global recent_changes, last_snapshot
-    return jsonify({
-        "recent_changes_count": len(recent_changes),
-        "recent_changes": recent_changes[-5:],  # Last 5
-        "snapshot_count": len(last_snapshot),
-        "poller_status": "running"
-    })
-
-
 # ---------------- RUN APP ----------------#
 if __name__ == "__main__":
     threading.Thread(target=poll_watchlist_changes, daemon=True).start()

@@ -13,7 +13,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <style>
-  /* ===== ALERT BELL UPGRADE ===== */
+  /* ===== ALERT BELL ===== */
 .notification-bell {
   position: relative;
   cursor: pointer;
@@ -101,7 +101,7 @@
 }
 
 b {
-  color: #f8fafc !important;  /* BRIGHT WHITE COMPANY NAMES */
+  color: #f8fafc !important;
   font-weight: 700;
 }
 
@@ -246,7 +246,7 @@ textAnchor="middle">{l}</text>
 </>
 );
 
-/* ---------- CHARTS (UNCHANGED) ---------- */
+/* ---------- CHARTS ---------- */
 const BarChart=({data,labels})=>{
 const w=380,h=260,max=Math.max(...data,1),bw=40;
 const step=(w-70)/(data.length-1||1);
@@ -450,7 +450,7 @@ function App(){
     });
   }, []);
 
-  // ALERTS (keep existing)
+  // ALERTS
   useEffect(() => {
     const es = new EventSource("/api/alerts");
     const seenAlerts = new Set();
@@ -459,7 +459,7 @@ function App(){
       const data = JSON.parse(e.data);
       const alertId = `${data.type}_${data.symbol}_${data.metric || ''}_${Date.now()}`;
       
-      //if (seenAlerts.has(alertId)) return;
+  
       seenAlerts.add(alertId);
       
       setAlerts(a => [data, ...a.slice(0, 50)]);
@@ -501,7 +501,6 @@ function App(){
   const v=k=>f(k).map(r=>r[k]);
   const l=k=>f(k).map(r=>r.symbol);
 
-  // REST OF RETURN STATEMENT (keep exactly same)
 
 
 return(

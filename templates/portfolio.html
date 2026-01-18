@@ -15,7 +15,7 @@
 <style>
 body { background:#020617; }
 
-/* SAME SIDEBAR COLLAPSE AS WATCHLIST */
+
 .wrapper.sidebar-collapsed .main-sidebar { width:64px; }
 .wrapper.sidebar-collapsed .nav-sidebar p { display:none; }
 .wrapper.sidebar-collapsed .content-wrapper { margin-left:64px; }
@@ -103,7 +103,7 @@ document.getElementById("toggleBtn").onclick = () => {
 <script type="text/babel">
 const {useState,useEffect} = React;
 
-/* PORTFOLIO LOGIC UNCHANGED */
+
 function Portfolio(){
   const [rows,setRows]=useState([]);
   const [qty,setQty]=useState({});

@@ -143,11 +143,10 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(1.2); }
         }
-        /* **PERFECTLY FITTED CHART CONTAINER** */
         .chart-wrapper {
             position: relative;
             width: 100%;
-            height: 280px;  /* FIXED HEIGHT */
+            height: 280px;  
             margin-top: 20px;
             border-radius: 20px;
             overflow: hidden;
@@ -161,7 +160,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 20px;  /* INNER PADDING FOR AXIS */
+            padding: 20px;  
             background: transparent;
         }
         canvas {
@@ -263,7 +262,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,  /* CRITICAL FOR BORDER FIT */
+                    maintainAspectRatio: true,  
                     layout: {
                         padding: {
                             left: 10,
