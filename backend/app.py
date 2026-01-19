@@ -17,20 +17,20 @@ def send_email(to_email, subject, body):
     try:
         msg = MIMEText(body)
         msg["Subject"] = subject
-        msg["From"] = "kh3059843@gmail.com"
+        msg["From"] = os.getenv("EMAIL_ADDRESS")
         msg["To"] = to_email
 
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-      EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
-server.login(EMAIL_USER, EMAIL_PASS)
-
+        server.login(
+            os.getenv("EMAIL_ADDRESS"),
+            os.getenv("EMAIL_APP_PASSWORD")
+        )
         server.send_message(msg)
         server.quit()
-        print("✅ Email sent to", to_email)
     except Exception as e:
         print("Email error:", e)
+
 
 app = Flask(__name__)
 CORS(app)
