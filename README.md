@@ -1,42 +1,85 @@
-# AI-Powered Mobile Stock Screener & Advisory Platform
-**Developer: Ankita Pawar**
+# 📊 AI-Powered Mobile Stock Screener & Advisory Platform
 
-A sophisticated full-stack application that combines a **Flutter** mobile interface with a **FastAPI** backend to provide real-time stock insights, automated portfolio management, and AI-driven market advisory using RAG (Retrieval-Augmented Generation).
+**Developer:** Ankita Pawar  
+**Internship Project | Infosys**
+
+A sophisticated **full-stack AI-driven stock analysis platform** that combines a **Flutter mobile application** with a **FastAPI backend** to deliver real-time market insights, intelligent stock screening, automated portfolio tracking, and AI-powered advisory using **Retrieval-Augmented Generation (RAG)**.
 
 ---
 
-## 🚀 Features
+## 🚀 Project Overview
+
+This platform enables users to interact with the stock market using **natural language queries**, visualize real-time data through interactive charts, manage virtual portfolios, and receive intelligent recommendations powered by **LLMs** and **vector search**.
+
+Example queries:
+- *“Show NSE stocks with PE below 10 and high promoter holding”*
+- *“Which stocks are trending today with bullish indicators?”*
+
+---
+
+## ✨ Key Features
 
 ### 📱 Frontend (Flutter Mobile App)
-* **Intelligent Dashboard**: Real-time KPI tracking for Nifty 50 stocks with interactive FL-Charts.
-* **AI Market Bot**: A built-in chat interface powered by Gemini to answer complex market queries and provide data-driven advisory.
-* **Live Data & Charts**: Professional-grade candlestick charts for technical analysis.
-* **Smart Watchlist & Portfolio**: Track favorite stocks and execute "virtual trades" with real-time profit/loss calculations.
-* **Push Notifications**: Firebase-powered alerts for target price hits and new stock additions.
+
+- **Intelligent Dashboard**
+  - Real-time KPIs for Nifty 50 stocks
+  - Interactive charts using FL Chart
+
+- **AI Market Bot**
+  - Conversational AI powered by Google Gemini
+  - Supports complex stock-related queries and advisory
+
+- **Live Market Data**
+  - Candlestick charts for technical analysis
+  - Real-time price updates
+
+- **Smart Watchlist & Portfolio**
+  - Track favorite stocks
+  - Virtual trading with live P&L calculation
+
+- **Push Notifications**
+  - Firebase-powered alerts for:
+    - Target price hits
+    - Watchlist updates
+    - Market movements
+
+---
 
 ### ⚙️ Backend (FastAPI & AI)
-* **RAG Engine**: Advanced Retrieval-Augmented Generation using `LangChain`, `HuggingFace Embeddings`, and `PGVector` for high-accuracy stock analysis.
-* **Market Data Integration**: Real-time data fetching via MarketStack API.
-* **Automated Alert System**: Background tasks to monitor price movements and trigger Firebase Cloud Messaging (FCM) notifications.
-* **Secure Auth**: JWT-based authentication with support for Google OAuth.
+
+- **RAG Engine**
+  - LangChain-based Retrieval-Augmented Generation
+  - HuggingFace embeddings with PGVector for semantic search
+
+- **Market Data Integration**
+  - Live stock data via MarketStack API
+
+- **Automated Alert System**
+  - Background tasks monitoring stock prices
+  - Firebase Cloud Messaging (FCM) notifications
+
+- **Authentication & Security**
+  - JWT-based authentication
+  - Google OAuth support
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-* **Framework**: Flutter (Dart)
-* **State Management**: Provider / StatefulWidget
-* **Charts**: FL Chart, Candlesticks
-* **Backend Communication**: HTTP / JSON
-* **Cloud**: Firebase (Messaging & Auth)
+- **Framework:** Flutter (Dart)
+- **State Management:** Provider / StatefulWidget
+- **Charts:** FL Chart, Candlestick Charts
+- **Networking:** HTTP / JSON
+- **Cloud Services:** Firebase (Auth & Messaging)
 
 ### Backend
-* **Framework**: FastAPI (Python)
-* **Database**: PostgreSQL with PGVector (Vector Search)
-* **OR Mapper**: SQLAlchemy
-* **AI/LLM**: Google Gemini (via LangChain)
-* **Embeddings**: HuggingFace (all-MiniLM-L6-v2)
+- **Framework:** FastAPI (Python)
+- **Database:** PostgreSQL + PGVector
+- **ORM:** SQLAlchemy
+- **AI / LLM:** Google Gemini (via LangChain)
+- **Embeddings:** HuggingFace (`all-MiniLM-L6-v2`)
+- **APIs:** MarketStack
 
 ---
 
@@ -44,55 +87,101 @@ A sophisticated full-stack application that combines a **Flutter** mobile interf
 
 ```text
 stock_RAG2/
-├── backend/                # FastAPI Application
-│   ├── main2.py            # Primary API & Auth Logic
-│   ├── main3.py            # Live Data & Notification Logic
-│   ├── retriever.py        # LangChain & Gemini RAG Implementation
-│   ├── parser2.py          # Data ingestion and Vector DB setup
-│   ├── requirements.txt    # Python dependencies
-│   └── .env                # Environment variables (Hidden)
-├── frontend/               # Flutter Application
+├── backend/
+│   ├── main2.py                    # Core API & Authentication
+│   ├── main3.py                    # Live data & notifications
+│   ├── retriever.py                # LangChain RAG implementation
+│   ├── parser2.py                  # Data ingestion & vector DB setup
+│   ├── requirements.txt            # Backend dependencies
+│   └── .env                        # Environment variables (ignored)
+│
+├── frontend/
 │   ├── lib/
-│   │   ├── main.dart       # App Entry Point & Theme
-│   │   ├── dashboard.dart  # Main KPI & Chart UI
-│   │   ├── ai_bot.dart     # Gemini AI Chat Interface
-│   │   ├── portfolio.dart  # Trade execution & Tracking
-│   │   └── watchlist_screen.dart
-|   |   ├── live_data.dart
-|   |   ├── notification_center_screen.dart
-|   |   ├── firebase_options.dart       # Feature-specific screens
-│   └── pubspec.yaml        # Flutter dependencies
-├── .gitignore              # Global exclusion rules
-└── README.md               # Project documentation
+│   │   ├── main.dart               # App entry point & theme
+│   │   ├── dashboard.dart          # Dashboard & KPIs
+│   │   ├── ai_bot.dart             # AI chat interface
+│   │   ├── portfolio.dart          # Portfolio tracking
+│   │   ├── watchlist_screen.dart   # Watchlist management
+│   │   ├── live_data.dart          # Live market data
+│   │   ├── notification_center_screen.dart
+│   │   └── firebase_options.dart   # Firebase configuration
+│   └── pubspec.yaml                # Flutter dependencies
+│
+├── .gitignore
+└── README.md
+```
 
-🛠️ Setup Instructions
-Backend Setup
-Navigate to the backend/ folder.
+## ⚙️ Setup Instructions
 
-Install dependencies:
+### 🔹 1. Backend Setup (FastAPI)
 
-Bash
+The backend handles AI processing, market data retrieval, authentication, and notifications.
 
+#### Navigate to Backend Directory
+bash
+cd backend
+
+#### Create Virtual Environment (Recommended)
+```bash
+python -m venv venv
+```
+
+### Activate the Environment
+ **Windows :**
+ ```bash
+ .\venv\Scripts\activate
+```
+**macOS / Linux :**
+```bash
+source venv/bin/activate
+```
+
+### Install Dependencies
+```bash
 pip install -r requirements.txt
-Configure your .env file with your DATABASE_URL, GOOGLE_API_KEY, and MARKETSTACK_KEY.
+```
 
-Run the server:
+### Environment Configuration
 
-Bash
+**Create a .env file inside the backend/ directory and add:**
+```bash
+DATABASE_URL=postgresql://user:password@localhost:5432/stockdb
+GOOGLE_API_KEY=your_gemini_api_key
+MARKETSTACK_KEY=your_marketstack_api_key
+```
 
+### Run the Backend Server
+```bash
 uvicorn main2:app --reload
-Frontend Setup
-Navigate to the frontend/ folder.
+```
+--------
+### 2. Frontend Setup (Flutter)
 
-Install Flutter packages:
+The frontend provides the mobile interface for interacting with the AI and stock data.
 
-Bash
+### Navigate to Frontend Directory
+```bash
+cd frontend
+```
 
+### Install Flutter Dependencies
+```bash
 flutter pub get
-Ensure your firebase_options.dart is correctly configured for your project.
+```
 
-Run the application:
+### Firebase Configuration
+Configure Firebase using FlutterFire CLI
+Ensure firebase_options.dart is generated
 
-Bash
+**Place the following files in their respective directories:**
+google-services.json (Android)
+GoogleService-Info.plist (iOS)
 
+### Run the Application
+# Ensure emulator or physical device is connected
+```bash
 flutter run
+```
+
+
+
