@@ -1,0 +1,3899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Stock Market Analytics - Professional Dashboard</title>
+	<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+	<script src="/static/chart.min.js"></script>
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		
+		/* CSS Variables for Theme */
+		:root {
+			--bg-primary: #ffffff;
+			--bg-secondary: #f8fafc;
+			--bg-tertiary: #f1f5f9;
+			--bg-glass: rgba(255, 255, 255, 0.8);
+			--text-primary: #0f172a;
+			--text-secondary: #64748b;
+			--text-tertiary: #94a3b8;
+			--border-color: rgba(0, 0, 0, 0.08);
+			--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+			--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+			--shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+			--shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+			--accent-primary: #6366f1;
+			--accent-secondary: #8b5cf6;
+			--accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+			--success: #10b981;
+			--success-light: rgba(16, 185, 129, 0.1);
+			--danger: #ef4444;
+			--danger-light: rgba(239, 68, 68, 0.1);
+			--warning: #f59e0b;
+			--warning-light: rgba(245, 158, 11, 0.1);
+			--info: #3b82f6;
+			--info-light: rgba(59, 130, 246, 0.1);
+			--card-radius: 16px;
+			--btn-radius: 12px;
+		}
+		
+		[data-theme="dark"] {
+			--bg-primary: #0f172a;
+			--bg-secondary: #1e293b;
+			--bg-tertiary: #334155;
+			--bg-glass: rgba(15, 23, 42, 0.8);
+			--text-primary: #f8fafc;
+			--text-secondary: #94a3b8;
+			--text-tertiary: #64748b;
+			--border-color: rgba(255, 255, 255, 0.1);
+			--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+			--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+			--shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+			--shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.5);
+			--accent-primary: #818cf8;
+			--accent-secondary: #a78bfa;
+			--accent-gradient: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+			--success-light: rgba(16, 185, 129, 0.15);
+			--danger-light: rgba(239, 68, 68, 0.15);
+			--warning-light: rgba(245, 158, 11, 0.15);
+			--info-light: rgba(59, 130, 246, 0.15);
+		}
+		
+		/* Light mode placeholder text */
+		input::placeholder,
+		textarea::placeholder,
+		select::placeholder {
+			color: #94a3b8 !important;
+			opacity: 1;
+		}
+		
+		/* Dark mode placeholder text */
+		[data-theme="dark"] input::placeholder,
+		[data-theme="dark"] textarea::placeholder {
+			color: #64748b !important;
+			opacity: 1;
+		}
+		
+		/* Dark mode select options */
+		[data-theme="dark"] select option {
+			background: #1e293b;
+			color: #f8fafc;
+		}
+		
+		/* Dark mode button text on accent background */
+		[data-theme="dark"] .selector-card button,
+		[data-theme="dark"] .search-input-group button,
+		[data-theme="dark"] .chat-input-group button:not(.clear-btn) {
+			background: var(--accent-gradient);
+			color: #ffffff;
+		}
+		
+		/* Enhanced Animations */
+		@keyframes fadeIn { 
+			from { opacity: 0; transform: translateY(20px); } 
+			to { opacity: 1; transform: translateY(0); } 
+		}
+		@keyframes slideIn { 
+			from { opacity: 0; transform: translateX(-20px); } 
+			to { opacity: 1; transform: translateX(0); } 
+		}
+		@keyframes pulse { 
+			0%, 100% { opacity: 1; transform: scale(1); } 
+			50% { opacity: 0.6; transform: scale(1.3); } 
+		}
+		@keyframes shimmer {
+			0% { background-position: -200% 0; }
+			100% { background-position: 200% 0; }
+		}
+		@keyframes float {
+			0%, 100% { transform: translateY(0); }
+			50% { transform: translateY(-5px); }
+		}
+		@keyframes glow {
+			0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.5); }
+			50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.8); }
+		}
+		
+		/* Live Indicator */
+		.live-indicator {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			background: linear-gradient(135deg, #10b981, #059669);
+			color: white;
+			font-size: 0.65rem;
+			font-weight: 700;
+			padding: 5px 12px;
+			border-radius: 20px;
+			margin-left: 12px;
+			vertical-align: middle;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+			animation: float 3s ease-in-out infinite;
+		}
+		
+		.live-dot {
+			width: 6px;
+			height: 6px;
+			background: #fff;
+			border-radius: 50%;
+			animation: pulse 1.5s ease-in-out infinite;
+			box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+		}
+		
+		body { 
+			font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+			background: var(--bg-secondary);
+			color: var(--text-primary);
+			min-height: 100vh; 
+			padding: 20px;
+			transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			line-height: 1.6;
+		}
+		
+		/* Background Pattern */
+		body::before {
+			content: '';
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-image: 
+				radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+				radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+			pointer-events: none;
+			z-index: -1;
+		}
+	
+	.dashboard-container { 
+		max-width: 1600px; 
+		margin: 0 auto; 
+		animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+	}
+	
+	/* Top Navigation Bar - Glassmorphism */
+	.top-bar { 
+		display: flex; 
+		align-items: center; 
+		justify-content: space-between; 
+		margin-bottom: 24px; 
+		background: var(--bg-glass);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		padding: 16px 24px; 
+		border-radius: var(--card-radius); 
+		box-shadow: var(--shadow-lg);
+		animation: slideIn 0.5s ease;
+		border: 1px solid var(--border-color);
+		position: sticky;
+		top: 20px;
+		z-index: 100;
+	}
+	
+	.logo { 
+		font-size: 1.5rem; 
+			font-weight: 800; 
+			color: var(--text-primary); 
+			display: flex; 
+			align-items: center; 
+			gap: 14px;
+			letter-spacing: -0.5px;
+		}
+		
+		.logo-icon { 
+			width: 44px; 
+			height: 44px; 
+			background: var(--accent-gradient); 
+			border-radius: 12px; 
+			display: flex; 
+			align-items: center; 
+			justify-content: center; 
+			color: white; 
+			font-size: 22px;
+			box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+			transition: transform 0.3s ease;
+		}
+		
+		.logo-icon:hover {
+			transform: rotate(-10deg) scale(1.1);
+		}
+		
+		.top-bar-right {
+			display: flex;
+			align-items: center;
+			gap: 16px;
+		}
+		
+		.theme-toggle {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background: transparent;
+			border: none;
+			cursor: pointer;
+			padding: 0;
+		}
+		
+		.toggle-switch {
+			position: relative;
+			width: 60px;
+			height: 30px;
+			background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+			border-radius: 30px;
+			transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 4px 12px rgba(99, 102, 241, 0.3);
+		}
+		
+		.toggle-switch::before {
+			content: '';
+			position: absolute;
+			top: 3px;
+			left: 3px;
+			width: 24px;
+			height: 24px;
+			background: white;
+			border-radius: 50%;
+			transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+		}
+		
+		[data-theme="dark"] .toggle-switch {
+			background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+			box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+		}
+		
+		[data-theme="dark"] .toggle-switch::before {
+			left: 33px;
+			background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+			box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+		}
+		
+		.toggle-icon {
+			font-size: 18px;
+			transition: all 0.3s ease;
+		}
+		
+		.theme-toggle:hover .toggle-switch {
+			transform: scale(1.05);
+		}
+		
+		.user-info { 
+			display: flex; 
+			align-items: center; 
+			gap: 12px;
+			padding: 10px 18px;
+			background: var(--bg-tertiary);
+			border-radius: var(--btn-radius);
+			border: 1px solid var(--border-color);
+			transition: all 0.3s ease;
+		}
+		
+		.user-info:hover {
+			background: var(--bg-primary);
+			box-shadow: var(--shadow-md);
+		}
+		
+		.user-email {
+			color: var(--text-secondary);
+			font-size: 0.9rem;
+			font-weight: 500;
+		}
+		
+		.logout-btn { 
+			background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+			color: white; 
+			border: none; 
+			padding: 10px 20px; 
+			border-radius: var(--btn-radius); 
+			cursor: pointer; 
+			font-weight: 600; 
+			font-size: 0.9rem;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+		}
+		
+		.logout-btn:hover { 
+			transform: translateY(-2px); 
+			box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); 
+		}
+		
+		/* KPI Cards - Enhanced */
+		.kpi-grid { 
+			display: grid; 
+		grid-template-columns: repeat(4, 1fr); 
+		gap: 20px; 
+		margin-bottom: 24px; 
+	}
+	
+	.kpi-card { 
+		background: var(--bg-primary); 
+		border-radius: var(--card-radius); 
+		padding: 24px; 
+		box-shadow: var(--shadow-md); 
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		border: 1px solid var(--border-color);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.kpi-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 4px;
+		background: var(--accent-gradient);
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	
+	.kpi-card:hover { 
+		transform: translateY(-6px); 
+		box-shadow: var(--shadow-xl);
+	}
+	
+	.kpi-card:hover::before {
+		opacity: 1;
+	}
+	
+	.kpi-card:nth-child(1)::before { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+	.kpi-card:nth-child(2)::before { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+	.kpi-card:nth-child(3)::before { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+	.kpi-card:nth-child(4)::before { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+	
+	.kpi-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 12px;
+	}
+	
+	.kpi-icon { 
+		font-size: 2rem; 
+		opacity: 0.9;
+		line-height: 1;
+		filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+	}
+	
+	.kpi-label { 
+		color: var(--text-secondary); 
+		font-size: 0.75rem; 
+		margin-bottom: 8px; 
+		font-weight: 600; 
+		text-transform: uppercase; 
+		letter-spacing: 1px; 
+		display: block;
+	}
+	
+	.kpi-value { 
+		font-size: 2rem; 
+		font-weight: 800; 
+		color: var(--text-primary); 
+		line-height: 1;
+		margin-bottom: 8px;
+		letter-spacing: -0.5px;
+	}
+	
+	.kpi-unit { 
+		font-size: 0.85rem; 
+		color: var(--text-secondary); 
+		font-weight: 500; 
+	}
+	
+	/* Dashboard Layout */
+	.dashboard-main { 
+		display: grid; 
+		grid-template-columns: 300px 1fr; 
+		gap: 24px; 
+	}
+
+	.dashboard-left { 
+		/* Stock selector column */
+	}
+	
+	.dashboard-right { 
+		display: grid; 
+		grid-template-columns: repeat(2, 1fr); 
+		gap: 24px;
+		max-width: 100%;
+	}
+	
+	/* Chart Cards - Enhanced */
+	.chart-card { 
+		background: var(--bg-primary); 
+		border-radius: var(--card-radius); 
+		padding: 24px; 
+		box-shadow: var(--shadow-md);
+		border: 1px solid var(--border-color);
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		height: 400px;
+		max-height: 400px;
+		overflow: hidden;
+		position: relative;
+	}
+	
+	.chart-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: var(--accent-gradient);
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	
+	.chart-card:hover { 
+		transform: translateY(-6px); 
+		box-shadow: var(--shadow-xl);
+	}
+	
+	.chart-card:hover::before {
+		opacity: 1;
+	}
+	
+	.chart-card h3 { 
+		font-size: 1.1rem; 
+		font-weight: 700; 
+		margin-bottom: 20px; 
+		color: var(--text-primary);
+		padding-bottom: 12px;
+		border-bottom: 2px solid var(--border-color);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	
+	.chart-card:nth-child(1) h3 { border-bottom-color: #10b981; }
+	.chart-card:nth-child(2) h3 { border-bottom-color: #ef4444; }
+	.chart-card:nth-child(3) h3 { border-bottom-color: #f59e0b; }
+	.chart-card:nth-child(4) h3 { border-bottom-color: #3b82f6; }
+	.chart-card:nth-child(5) h3 { border-bottom-color: #8b5cf6; }
+	
+	.chart-card canvas {
+		width: 100% !important;
+		height: 320px !important;
+		max-height: 320px !important;
+	}
+		
+		/* Selector Card - Enhanced */
+		.selector-card { 
+			background: var(--bg-primary); 
+			border-radius: var(--card-radius);
+			padding: 28px;
+			box-shadow: var(--shadow-md);
+			border: 1px solid var(--border-color);
+			position: sticky;
+			top: 20px;
+			max-height: calc(100vh - 40px);
+			overflow-y: auto;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+		
+		.selector-card:hover {
+			box-shadow: var(--shadow-xl);
+		}
+		
+		.selector-card h3 {
+			font-size: 1.2rem;
+			font-weight: 800;
+			margin-bottom: 24px;
+			color: var(--text-primary);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			letter-spacing: -0.3px;
+		}
+		
+		.selector-card label { 
+			display: block; 
+			color: var(--text-secondary); 
+			font-size: 0.9rem; 
+			margin-bottom: 8px; 
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			font-size: 0.8rem;
+		}
+		
+		.selector-card select { 
+			width: 100%; 
+			padding: 14px 16px;
+			border: 2px solid var(--border-color);
+			border-radius: var(--btn-radius);
+			font-size: 1rem; 
+			margin-bottom: 20px;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			background: var(--bg-secondary);
+			color: var(--text-primary);
+			cursor: pointer;
+			font-weight: 500;
+		}
+		
+		.selector-card select:focus { 
+			outline: none; 
+			border-color: var(--accent-primary); 
+			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+			background: var(--bg-primary);
+		}
+		
+		.selector-card button { 
+			width: 100%; 
+			background: var(--accent-gradient);
+			color: white; 
+			border: none; 
+			padding: 14px;
+			border-radius: var(--btn-radius);
+			cursor: pointer; 
+			font-weight: 700; 
+			font-size: 1rem; 
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+		}
+		
+		.selector-card button:hover { 
+			transform: translateY(-2px); 
+			box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+		}
+		
+		.selector-card button:active {
+			transform: translateY(0);
+		}
+		
+		/* Watchlist Section - Enhanced */
+		.watchlist-section {
+			margin-top: 30px;
+			padding-top: 24px;
+			border-top: 2px solid var(--border-color);
+		}
+		
+		.watchlist-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 20px;
+		}
+		
+		.watchlist-title {
+			font-size: 1.2rem;
+			font-weight: 800;
+			color: var(--text-primary);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			letter-spacing: -0.3px;
+		}
+		
+		.watchlist-count {
+			background: var(--accent-gradient);
+			color: white;
+			padding: 6px 14px;
+			border-radius: 20px;
+			font-size: 0.85rem;
+			font-weight: 700;
+			box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+		}
+		
+		.watchlist-items {
+			max-height: 300px;
+			overflow-y: auto;
+		}
+		
+		.watchlist-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 14px 16px;
+			background: var(--bg-secondary);
+			border-radius: var(--btn-radius);
+			margin-bottom: 10px;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			border: 1px solid var(--border-color);
+		}
+		
+		.watchlist-item:hover {
+			background: var(--bg-tertiary);
+			transform: translateX(6px);
+			border-color: var(--accent-primary);
+		}
+		
+		.watchlist-stock-info {
+			flex: 1;
+		}
+		
+		.watchlist-symbol {
+			font-weight: 700;
+			font-size: 1rem;
+			color: var(--text-primary);
+		}
+		
+		.watchlist-change {
+			font-size: 0.9rem;
+			font-weight: 600;
+			margin-top: 4px;
+		}
+		
+		.watchlist-change.positive {
+			color: var(--success);
+		}
+		
+		.watchlist-change.negative {
+			color: var(--danger);
+		}
+		
+		.watchlist-remove-btn {
+			background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: var(--btn-radius);
+			cursor: pointer;
+			font-size: 0.85rem;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			font-weight: 700;
+			box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+		}
+		
+		.watchlist-remove-btn:hover {
+			transform: scale(1.05);
+			box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+		}
+		
+		.watchlist-empty {
+			text-align: center;
+			padding: 30px 20px;
+			color: var(--text-secondary);
+		}
+		
+		.watchlist-empty-icon {
+			font-size: 3rem;
+			margin-bottom: 12px;
+		}
+		
+		.add-watchlist-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			background: var(--success);
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 0.9rem;
+			transition: all 0.2s;
+			font-weight: 600;
+			margin-top: 8px;
+			width: auto;
+		}
+		
+		.add-watchlist-btn:hover {
+			background: #059669;
+			transform: translateY(-2px);
+		}
+		
+		.add-watchlist-btn:disabled {
+			background: var(--text-tertiary);
+			cursor: not-allowed;
+			transform: none;
+		}
+
+		/* Watchlist Chart Section Styles */
+		.watchlist-chart-title {
+			font-size: 1.5rem;
+			font-weight: 700;
+		}
+		
+		.watchlist-chart-subtitle {
+			font-size: 0.9rem;
+			margin-top: 4px;
+		}
+		
+		.watchlist-stock-name {
+			font-size: 1.2rem;
+			font-weight: 600;
+			margin-bottom: 16px;
+		}
+
+		/* Light mode (default) - Watchlist Chart */
+		:root .watchlist-chart-title,
+		:root .watchlist-stock-name {
+			color: #0f172a;
+		}
+		
+		:root .watchlist-chart-subtitle {
+			color: #64748b;
+		}
+
+		/* Dark mode - Watchlist Chart */
+		[data-theme="dark"] .watchlist-chart-title,
+		[data-theme="dark"] .watchlist-stock-name {
+			color: #f8fafc;
+		}
+		
+		[data-theme="dark"] .watchlist-chart-subtitle {
+			color: #94a3b8;
+		}
+
+		/* Light mode (default) - Dashboard text colors */
+		:root .section-title,
+		:root .company-header h2,
+		:root .selector-card h3,
+		:root .chart-card h3 {
+			color: #0f172a;
+		}
+		
+		:root .section-subtitle,
+		:root .company-header p,
+		:root .selector-card label {
+			color: #64748b;
+		}
+		
+		:root .watchlist-title,
+		:root .watchlist-symbol {
+			color: #0f172a;
+		}
+		
+		:root .watchlist-change {
+			color: #374151;
+		}
+		
+		:root .watchlist-empty {
+			color: #64748b;
+		}
+
+		/* Dark mode - Dashboard text colors */
+		[data-theme="dark"] .section-title,
+		[data-theme="dark"] .company-header h2,
+		[data-theme="dark"] .selector-card h3,
+		[data-theme="dark"] .chart-card h3 {
+			color: #f8fafc;
+		}
+		
+		[data-theme="dark"] .section-subtitle,
+		[data-theme="dark"] .company-header p,
+		[data-theme="dark"] .selector-card label {
+			color: #94a3b8;
+		}
+		
+		[data-theme="dark"] .watchlist-title,
+		[data-theme="dark"] .watchlist-symbol {
+			color: #f8fafc;
+		}
+		
+		[data-theme="dark"] .watchlist-change {
+			color: #cbd5e1;
+		}
+		
+		[data-theme="dark"] .watchlist-empty {
+			color: #94a3b8;
+		}
+
+		/* Light mode (default) - KPI cards */
+		:root .kpi-value {
+			color: #0f172a;
+		}
+		
+		:root .kpi-label,
+		:root .kpi-unit {
+			color: #64748b;
+		}
+
+		/* Dark mode - KPI cards */
+		[data-theme="dark"] .kpi-value {
+			color: #f8fafc;
+		}
+		
+		[data-theme="dark"] .kpi-label,
+		[data-theme="dark"] .kpi-unit {
+			color: #94a3b8;
+		}
+		
+		#output { 
+			color: var(--danger); 
+			font-size: 0.85rem; 
+			margin-top: 10px; 
+			text-align: center; 
+		}
+	
+		#stockChartDiv { margin-top: 16px; }
+		.profit-card { 
+			grid-column: 1 / -1; 
+			min-height: 420px;
+		}
+	
+		/* Section Headers - Enhanced */
+		.section-header {
+			margin-bottom: 20px;
+		}
+	
+		.section-title {
+			color: var(--text-primary);
+			font-size: 1.6rem;
+			font-weight: 800;
+			margin-bottom: 8px;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			letter-spacing: -0.5px;
+		}
+	
+		.section-subtitle {
+			color: var(--text-secondary);
+			font-size: 0.95rem;
+			font-weight: 500;
+		}
+	
+		/* Search Section */
+		.search-section { 
+			margin-bottom: 24px; 
+		}
+	
+		.search-card {
+			background: var(--bg-primary);
+			border-radius: var(--card-radius);
+			padding: 28px;
+			box-shadow: var(--shadow-md);
+			border: 1px solid var(--border-color);
+			position: relative;
+			overflow: hidden;
+		}
+	
+		.search-card::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 4px;
+			background: var(--accent-gradient);
+		}
+	
+		.search-card h2 { 
+			font-size: 1.5rem;
+			font-weight: 700;
+			margin-bottom: 8px;
+			color: var(--text-primary);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+	
+		.search-card .search-subtitle {
+			color: var(--text-secondary);
+			font-size: 0.95rem;
+			margin-bottom: 20px;
+		}
+	
+		.search-input-group {
+			display: flex;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+	
+		.search-input-group input {
+			flex: 1;
+			padding: 14px 18px;
+			border: 1px solid var(--border-color);
+			border-radius: var(--btn-radius);
+			font-size: 1rem;
+			background: var(--bg-secondary);
+			color: var(--text-primary);
+			transition: all 0.3s ease;
+			font-family: 'Inter', sans-serif;
+		}
+	
+		.search-input-group input:focus {
+			outline: none;
+			border-color: var(--accent-primary);
+			box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+		}
+	
+		.search-input-group button {
+			padding: 14px 28px;
+			background: var(--accent-gradient);
+			color: white;
+			border: none;
+			border-radius: var(--btn-radius);
+			cursor: pointer;
+			font-weight: 600;
+			font-size: 0.95rem;
+			transition: all 0.3s ease;
+			font-family: 'Inter', sans-serif;
+		}
+	
+		.search-input-group button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+		}
+	
+		#searchMessage {
+			color: var(--text-secondary);
+			font-size: 0.9rem;
+			text-align: center;
+		}
+		
+		/* Chatbot Section */
+		.chatbot-section {
+			margin-bottom: 24px;
+		}
+	
+		.chatbot-card {
+			background: var(--bg-primary);
+			border-radius: var(--card-radius);
+			padding: 28px;
+			box-shadow: var(--shadow-md);
+			border: 1px solid var(--border-color);
+			position: relative;
+			overflow: hidden;
+		}
+	
+		.chatbot-card::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 4px;
+			background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+		}
+	
+		.chatbot-header {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+	
+		.chatbot-header h2 {
+			font-size: 1.5rem;
+			font-weight: 700;
+			color: var(--text-primary);
+			margin: 0;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+	
+		.chatbot-subtitle {
+			color: var(--text-secondary);
+			font-size: 0.95rem;
+			margin-bottom: 20px;
+		}
+	
+		#chatHistory {
+			background: var(--bg-secondary);
+			border-radius: var(--btn-radius);
+			padding: 20px;
+			min-height: 250px;
+			max-height: 350px;
+			overflow-y: auto;
+			border: 1px solid var(--border-color);
+			margin-bottom: 16px;
+		}
+	
+		.chat-input-group {
+			display: flex;
+			gap: 12px;
+		}
+	
+		.chat-input-group input {
+			flex: 1;
+			padding: 14px 18px;
+			border: 1px solid var(--border-color);
+			border-radius: var(--btn-radius);
+			font-size: 1rem;
+			background: var(--bg-secondary);
+			color: var(--text-primary);
+			font-family: 'Inter', sans-serif;
+			transition: all 0.3s ease;
+		}
+	
+		.chat-input-group input:focus {
+			outline: none;
+			border-color: #10b981;
+			box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+		}
+	
+		.chat-input-group button {
+			padding: 14px 24px;
+			background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+			color: white;
+			border: none;
+			border-radius: var(--btn-radius);
+			cursor: pointer;
+			font-weight: 600;
+			font-size: 0.95rem;
+			transition: all 0.3s ease;
+			font-family: 'Inter', sans-serif;
+		}
+	
+		.chat-input-group button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+		}
+	
+		.chat-input-group button.clear-btn {
+			background: var(--bg-tertiary);
+			color: var(--text-primary);
+		}
+	
+		.chat-input-group button.clear-btn:hover {
+			background: var(--border-color);
+			box-shadow: none;
+			transform: none;
+		}
+		
+		/* Company Details Section */
+		#companyDetailsSection {
+			display: none;
+			margin-top: 32px;
+			padding-top: 32px;
+			border-top: 2px solid var(--border-color);
+			animation: fadeIn 0.4s ease;
+		}
+		
+		.back-button {
+			background: var(--accent-gradient);
+			color: white;
+			border: none;
+			padding: 12px 24px;
+			border-radius: var(--btn-radius);
+			cursor: pointer;
+			font-weight: 700;
+			margin-bottom: 24px;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+		}
+		
+		.back-button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+		}
+		
+		.company-header {
+			background: var(--bg-primary);
+			border-radius: var(--card-radius);
+			padding: 28px;
+			margin-bottom: 24px;
+			box-shadow: var(--shadow-md);
+			border: 1px solid var(--border-color);
+			position: relative;
+			overflow: hidden;
+		}
+		
+		.company-header::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 4px;
+			background: var(--accent-gradient);
+		}
+		
+		.company-header h2 {
+			font-size: 2.2rem;
+			font-weight: 800;
+			color: var(--text-primary);
+			margin-bottom: 8px;
+			letter-spacing: -0.5px;
+		}
+		
+		.company-header p {
+			color: var(--text-secondary);
+			font-size: 1rem;
+		}
+		
+		.company-charts {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 20px;
+		}
+		
+		.company-charts .chart-card.full-width {
+			grid-column: 1 / -1;
+		}
+		
+		/* Responsive Design */
+	@media (max-width: 1400px) {
+		.dashboard-right { grid-template-columns: repeat(2, 1fr); }
+	}
+	
+	@media (max-width: 1200px) {
+		.dashboard-main { grid-template-columns: 1fr; }
+		.dashboard-right { grid-template-columns: repeat(2, 1fr); }
+		.company-charts { grid-template-columns: 1fr; }
+		.selector-card { 
+			position: relative; 
+			top: 0;
+			max-height: none;
+		}
+	}
+	
+	@media (max-width: 900px) {
+		.kpi-grid { grid-template-columns: repeat(2, 1fr); }
+		.dashboard-right { grid-template-columns: 1fr; }
+	}
+	
+	@media (max-width: 768px) {
+		body { padding: 12px; }
+		.kpi-grid { grid-template-columns: 1fr; gap: 12px; }
+		.top-bar { 
+			flex-direction: column; 
+			gap: 12px; 
+			position: relative;
+			top: 0;
+			padding: 12px 16px;
+		}
+		.top-bar-right { width: 100%; justify-content: space-between; }
+		.search-input-group { flex-direction: column; }
+		.chat-input-group { flex-direction: column; }
+		.dashboard-right { grid-template-columns: 1fr; }
+		.chart-card { height: 350px; max-height: 350px; }
+		.kpi-card { padding: 16px; }
+		::-webkit-scrollbar {
+			width: 8px;
+			height: 8px;
+		}
+		
+		::-webkit-scrollbar-track {
+			background: var(--bg-secondary);
+			border-radius: 4px;
+		}
+		
+		::-webkit-scrollbar-thumb {
+			background: var(--border-color);
+			border-radius: 4px;
+		}
+		
+		::-webkit-scrollbar-thumb:hover {
+			background: var(--text-tertiary);
+		}
+		
+		/* Toast Animations */
+		@keyframes slideInRight {
+			from {
+				transform: translateX(100%);
+				opacity: 0;
+			}
+			to {
+				transform: translateX(0);
+				opacity: 1;
+			}
+		}
+		
+		@keyframes slideOutRight {
+			from {
+				transform: translateX(0);
+				opacity: 1;
+			}
+			to {
+				transform: translateX(100%);
+				opacity: 0;
+			}
+		}
+		
+		/* Notification Panel Styles */
+		.notification-item {
+			padding: 14px;
+			background: var(--bg-secondary);
+			border-radius: var(--btn-radius);
+			margin-bottom: 8px;
+			border-left: 4px solid var(--accent-primary);
+			transition: all 0.3s ease;
+			cursor: pointer;
+		}
+		
+		.notification-item:hover {
+			background: var(--bg-tertiary);
+			transform: translateX(4px);
+		}
+		
+		.notification-item.unread {
+			border-left-color: var(--warning);
+			background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent);
+		}
+		
+		.notification-item.success {
+			border-left-color: var(--success);
+		}
+		
+		.notification-item.danger {
+			border-left-color: var(--danger);
+		}
+	</style>
+</head>
+<body>
+
+	<div class="dashboard-container">
+		<!-- Top Navigation Bar -->
+		<div class="top-bar" id="topBar">
+			<div class="logo">
+				<div class="logo-icon">📊</div>
+				<span>Stock Analytics Pro</span>
+				<span class="live-indicator"><span class="live-dot"></span> LIVE</span>
+			</div>
+			<div class="top-bar-right">
+				<!-- Notifications Button -->
+				<div class="notifications-wrapper" style="position: relative;">
+					<button id="notificationsBtn" onclick="toggleNotificationsPanel()" style="background: var(--bg-secondary); border: 1px solid var(--border-color); font-size: 1.3rem; cursor: pointer; position: relative; padding: 10px 12px; border-radius: var(--btn-radius); transition: all 0.3s ease;" title="Notifications">
+						🔔
+						<span id="notificationsBadge" style="display: none; position: absolute; top: -4px; right: -4px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-size: 0.7rem; font-weight: 700; min-width: 20px; height: 20px; border-radius: 50%; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);">0</span>
+					</button>
+					
+					<!-- Notifications Panel - Enhanced -->
+					<div id="notificationsPanel" style="display: none; position: absolute; top: 100%; right: 0; width: 400px; max-height: 520px; background: var(--bg-primary); border-radius: var(--card-radius); box-shadow: 0 15px 50px rgba(0,0,0,0.25); border: 1px solid var(--border-color); z-index: 1000; margin-top: 12px; overflow: hidden;">
+						<div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
+							<h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;">
+								🔔 Notifications
+								<span id="notificationsCount" style="background: var(--accent-gradient); color: white; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 700;">0</span>
+							</h3>
+							<div style="display: flex; gap: 12px;">
+								<button onclick="markAllAsRead()" style="background: none; border: none; color: var(--accent-primary); font-size: 0.85rem; cursor: pointer; font-weight: 700; transition: all 0.3s ease;">Mark all read</button>
+								<button onclick="clearAllNotifications()" style="background: none; border: none; color: var(--danger); font-size: 0.85rem; cursor: pointer; font-weight: 700; transition: all 0.3s ease;">Clear all</button>
+							</div>
+						</div>
+						<div id="notificationsList" style="max-height: 420px; overflow-y: auto; padding: 12px;">
+							<div style="text-align: center; padding: 50px 20px; color: var(--text-secondary);">
+								<div style="font-size: 3rem; margin-bottom: 16px;">🔕</div>
+								<p style="font-weight: 600; font-size: 1.1rem;">No notifications yet</p>
+								<p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">Alerts will appear here when triggered</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<button id="themeToggleBtn" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+					<span class="toggle-icon" id="themeIcon">☀️</span>
+					<div class="toggle-switch"></div>
+					<span class="toggle-icon">🌙</span>
+				</button>
+				<div class="user-info">
+					<span class="user-email" id="userEmail">Loading...</span>
+				</div>
+				<button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
+			</div>
+		</div>
+
+		<!-- Search Section -->
+		<div class="search-section" id="searchSection">
+			<div class="search-card">
+				<h2>🔍 Company Search</h2>
+				<p class="search-subtitle">Search for any company by symbol or name to view detailed analytics</p>
+				<div class="search-input-group">
+					<input type="text" id="companySearchInput" placeholder="Enter company symbol (e.g., RELIANCE, TCS, INFY)" />
+					<button id="searchBtn" onclick="searchCompany()">Search</button>
+				</div>
+				<div id="searchMessage"></div>
+			</div>
+		</div>
+
+		<!-- AI Chatbot Section -->
+		<div class="chatbot-section" id="chatbotSection">
+			<div class="chatbot-card">
+				<div class="chatbot-header">
+					<span style="font-size: 2rem;">🤖</span>
+					<h2>AI Stock Assistant <span class="live-indicator"><span class="live-dot"></span> LIVE</span></h2>
+				</div>
+				<p class="chatbot-subtitle">Ask me anything about stocks, market trends, and company performance</p>
+				
+				<div id="chatHistory">
+					<div style="color: var(--text-secondary); text-align: center; padding: 20px;">
+						<p style="font-size: 1.1rem; margin-bottom: 10px; font-weight: 600;">👋 Hi! I'm your AI stock assistant</p>
+						<p style="font-size: 0.95rem; margin-bottom: 15px;">Ask me questions like:</p>
+						<ul style="text-align: left; margin-top: 10px; list-style: none; padding: 0;">
+							<li style="margin: 8px 0;">• "What are the top performing stocks today?"</li>
+							<li style="margin: 8px 0;">• "Tell me about Reliance stock"</li>
+							<li style="margin: 8px 0;">• "Which stocks have high P/E ratios?"</li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="chat-input-group">
+					<input type="text" id="chatInput" placeholder="Type your question here..." onkeypress="if(event.key==='Enter') sendChat()" />
+					<button id="sendChatBtn" onclick="sendChat()">Send</button>
+					<button id="clearChatBtn" class="clear-btn" onclick="clearChat()">Clear</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Stock Filter Section -->
+		<div class="filter-section" id="filterSection" style="margin-bottom: 24px;">
+			<div class="filter-card" style="background: var(--bg-primary); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+				<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+					<span style="font-size: 2rem;">🔍</span>
+					<h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0;">Stock Filters</h2>
+				</div>
+				<p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 20px;">Filter stocks by price, volume, and change percentage</p>
+				
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 16px;">
+					<div>
+						<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Min Price (₹)</label>
+						<input type="number" id="minPrice" placeholder="e.g., 100" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+					</div>
+					<div>
+						<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Max Price (₹)</label>
+						<input type="number" id="maxPrice" placeholder="e.g., 5000" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+					</div>
+					<div>
+						<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Min Volume</label>
+						<input type="number" id="minVolume" placeholder="e.g., 10000" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+					</div>
+					<div>
+						<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Min Change %</label>
+						<input type="number" id="minChange" step="0.1" placeholder="e.g., 2.5" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+					</div>
+				</div>
+				
+				<div style="display: flex; gap: 12px;">
+					<button id="applyFiltersBtn" onclick="applyFilters()" class="primary-btn" style="padding: 12px 24px; background: var(--accent-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.3s;">Apply Filters</button>
+					<button onclick="clearFilters()" style="padding: 12px 24px; background: var(--bg-tertiary); color: var(--text-primary); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">Clear Filters</button>
+				</div>
+				<div id="filterMessage" style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 12px; text-align: center;"></div>
+			</div>
+		</div>
+
+		<!-- Stock Alerts Section - Enhanced -->
+		<div class="alerts-section" id="alertsSection" style="margin-bottom: 24px;">
+			<div class="alerts-card" style="background: var(--bg-primary); border-radius: var(--card-radius); padding: 28px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); position: relative; overflow: hidden;">
+				<div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);"></div>
+				<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+					<div style="display: flex; align-items: center; gap: 14px;">
+						<span style="font-size: 2.2rem;">🔔</span>
+						<h2 style="font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.5px;">Stock Alerts</h2>
+						<span id="alertsBadge" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: none; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">0</span>
+					</div>
+					<button onclick="toggleAlertModal()" style="padding: 12px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: var(--btn-radius); cursor: pointer; font-weight: 700; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+						➕ New Alert
+					</button>
+				</div>
+				<p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 24px;">Get notified when stocks have sudden price changes or hit your target prices</p>
+				
+				<!-- Market Movers Quick View -->
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+					<div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: var(--btn-radius); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+						<div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; opacity: 0.9; letter-spacing: 0.5px;">🚀 Top Gainers</div>
+						<div id="topGainers" style="font-size: 0.95rem; font-weight: 500;">Loading...</div>
+					</div>
+					<div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 20px; border-radius: var(--btn-radius); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">
+						<div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; opacity: 0.9; letter-spacing: 0.5px;">📉 Top Losers</div>
+						<div id="topLosers" style="font-size: 0.95rem; font-weight: 500;">Loading...</div>
+					</div>
+				</div>
+				
+				<!-- Sudden Changes Alert -->
+				<div id="suddenChangesSection" style="background: var(--bg-secondary); padding: 20px; border-radius: var(--btn-radius); margin-bottom: 24px; border: 1px solid var(--border-color); display: none;">
+					<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+						<span style="font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+							⚡ Sudden Price Changes
+							<span id="suddenChangesCount" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 700;">0</span>
+						</span>
+						<span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Threshold: ±3%</span>
+					</div>
+					<div id="suddenChangesList" style="max-height: 150px; overflow-y: auto;"></div>
+				</div>
+				
+				<!-- User Alerts List -->
+				<div>
+					<h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;">
+						📋 My Alerts <span id="myAlertsCount" style="background: var(--accent-gradient); color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">0</span>
+					</h3>
+					<div id="userAlertsList" style="max-height: 300px; overflow-y: auto;">
+						<div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+							<div style="font-size: 3rem; margin-bottom: 16px;">🔕</div>
+							<p style="font-weight: 600; font-size: 1.1rem;">No alerts set up yet</p>
+							<p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">Create an alert to get notified of price changes</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Alert Modal - Enhanced -->
+		<div id="alertModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center;">
+			<div style="background: var(--bg-primary); border-radius: var(--card-radius); padding: 36px; max-width: 480px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.4); border: 1px solid var(--border-color);">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
+					<h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.5px;">🔔 Create Alert</h2>
+					<button onclick="toggleAlertModal()" style="background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); width: 40px; height: 40px; border-radius: 50%; transition: all 0.3s ease;">✕</button>
+				</div>
+				
+				<div style="margin-bottom: 20px;">
+					<label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;">Stock Symbol</label>
+					<select id="alertSymbol" style="width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: var(--btn-radius); background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem; font-weight: 500; transition: all 0.3s ease;">
+						<option value="">Select a stock...</option>
+					</select>
+				</div>
+				
+				<div style="margin-bottom: 20px;">
+					<label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;">Alert Type</label>
+					<select id="alertType" onchange="updateAlertPlaceholder()" style="width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: var(--btn-radius); background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem; font-weight: 500; transition: all 0.3s ease;">
+						<option value="price_above">📈 Price goes above</option>
+						<option value="price_below">📉 Price goes below</option>
+						<option value="change_up">🚀 Daily change exceeds (+%)</option>
+						<option value="change_down">⚠️ Daily change drops below (-%)</option>
+					</select>
+				</div>
+				
+				<div style="margin-bottom: 24px;">
+					<label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;">Threshold Value</label>
+					<input type="number" id="alertThreshold" placeholder="e.g., 1500 for price, 5 for percentage" step="0.01" style="width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: var(--btn-radius); background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem; font-weight: 500; transition: all 0.3s ease; box-sizing: border-box;" />
+					<small id="alertHint" style="color: var(--text-tertiary); font-size: 0.85rem; margin-top: 6px; display: block;">Enter target price in ₹</small>
+				</div>
+				
+				<div id="alertModalMessage" style="color: var(--danger); font-size: 0.9rem; margin-bottom: 16px; text-align: center; font-weight: 600;"></div>
+				
+				<button onclick="createAlert()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: var(--btn-radius); cursor: pointer; font-weight: 700; font-size: 1.05rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+					🔔 Create Alert
+				</button>
+			</div>
+		</div>
+
+		<!-- Toast Notification Container -->
+		<div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+		<!-- Portfolio Section - Enhanced -->
+		<div class="portfolio-section" id="portfolioSection" style="margin-bottom: 24px;">
+			<div class="portfolio-card" style="background: var(--bg-primary); border-radius: var(--card-radius); padding: 28px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); position: relative; overflow: hidden;">
+				<div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"></div>
+				<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+					<div style="display: flex; align-items: center; gap: 14px;">
+						<span style="font-size: 2.2rem;">💼</span>
+						<h2 style="font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.5px;">My Portfolio</h2>
+					</div>
+					<button id="addTransactionBtn" onclick="togglePortfolioModal()" style="padding: 12px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: var(--btn-radius); cursor: pointer; font-weight: 700; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+						➕ Add Transaction
+					</button>
+				</div>
+				<p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 24px;">Track your investments, view P&L, and manage your holdings</p>
+				
+				<!-- Portfolio Summary KPIs -->
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px;">
+					<div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--btn-radius); border: 1px solid var(--border-color); transition: all 0.3s ease;">
+						<div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Total Invested</div>
+						<div style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary);" id="portfolioInvested">₹0</div>
+					</div>
+					<div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--btn-radius); border: 1px solid var(--border-color); transition: all 0.3s ease;">
+						<div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Current Value</div>
+						<div style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary);" id="portfolioValue">₹0</div>
+					</div>
+					<div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--btn-radius); border: 1px solid var(--border-color); transition: all 0.3s ease;">
+						<div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Total P&L</div>
+						<div style="font-size: 1.6rem; font-weight: 800;" id="portfolioPnL">₹0</div>
+					</div>
+					<div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--btn-radius); border: 1px solid var(--border-color); transition: all 0.3s ease;">
+						<div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">P&L %</div>
+						<div style="font-size: 1.6rem; font-weight: 800;" id="portfolioPnLPercent">0%</div>
+					</div>
+				</div>
+				
+				<!-- Portfolio Holdings Table -->
+				<div style="margin-bottom: 24px;">
+					<h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;">
+						📊 Holdings <span style="background: var(--accent-gradient); color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);" id="holdingsCount">0</span>
+					</h3>
+					<div id="portfolioHoldings" style="max-height: 400px; overflow-y: auto;">
+						<div style="text-align: center; padding: 50px; color: var(--text-secondary);">
+							<div style="font-size: 4rem; margin-bottom: 16px;">📈</div>
+							<p style="font-weight: 600; font-size: 1.1rem;">No holdings yet</p>
+							<p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">Add your first transaction to start tracking</p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Recent Transactions -->
+				<div>
+					<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+						<h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;">
+							📜 Recent Transactions
+						</h3>
+						<button onclick="loadTransactions()" style="padding: 8px 16px; background: var(--bg-tertiary); color: var(--text-primary); border: none; border-radius: var(--btn-radius); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease;">
+							🔄 Refresh
+						</button>
+					</div>
+					<div id="portfolioTransactions" style="max-height: 300px; overflow-y: auto;">
+						<div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+							<p style="font-weight: 600;">No transactions yet</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Transaction Modal - Enhanced -->
+		<div id="transactionModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center;">
+			<div style="background: var(--bg-primary); border-radius: var(--card-radius); padding: 36px; max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.4); border: 1px solid var(--border-color);">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
+					<h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.5px;">➕ Add Transaction</h2>
+					<button onclick="togglePortfolioModal()" style="background: var(--bg-secondary); border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); width: 40px; height: 40px; border-radius: 50%; transition: all 0.3s ease;">✕</button>
+				</div>
+				
+				<div style="margin-bottom: 20px;">
+					<label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;">Transaction Type</label>
+					<div style="display: flex; gap: 12px;">
+						<button id="buyBtn" onclick="setTransactionType('BUY')" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: var(--btn-radius); cursor: pointer; font-weight: 700; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">🟢 BUY</button>
+						<button id="sellBtn" onclick="setTransactionType('SELL')" style="flex: 1; padding: 14px; background: var(--bg-tertiary); color: var(--text-primary); border: none; border-radius: var(--btn-radius); cursor: pointer; font-weight: 700; transition: all 0.3s ease;">🔴 SELL</button>
+					</div>
+				</div>
+				
+				<div style="margin-bottom: 20px;">
+					<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Stock Symbol</label>
+					<select id="txnSymbol" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem;">
+						<option value="">Select a stock...</option>
+					</select>
+				</div>
+				
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+					<div>
+						<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Quantity</label>
+						<input type="number" id="txnQuantity" placeholder="e.g., 10" min="0.0001" step="0.0001" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+					</div>
+					<div>
+						<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Price (₹)</label>
+						<input type="number" id="txnPrice" placeholder="e.g., 1500" min="0.01" step="0.01" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+					</div>
+				</div>
+				
+				<div style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+					<div style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.9rem;">
+						<span>Total Amount:</span>
+						<span style="font-weight: 700; color: var(--text-primary);" id="txnTotal">₹0.00</span>
+					</div>
+				</div>
+				
+				<div style="margin-bottom: 20px;">
+					<label style="display: block; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">Notes (Optional)</label>
+					<input type="text" id="txnNotes" placeholder="e.g., Long term investment" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);" />
+				</div>
+				
+				<div id="txnMessage" style="color: var(--danger); font-size: 0.9rem; margin-bottom: 12px; text-align: center;"></div>
+				
+				<button onclick="submitTransaction()" class="primary-btn" style="width: 100%; padding: 14px; background: var(--accent-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s;">
+					Submit Transaction
+				</button>
+			</div>
+		</div>
+
+		<!-- Overview Section -->
+		<div id="overviewSection">
+			<div class="section-header">
+				<h2 class="section-title">📊 Market Overview</h2>
+				<p class="section-subtitle">Real-time insights and performance metrics across all stocks</p>
+			</div>
+
+			<!-- KPI Cards -->
+			<div class="kpi-grid">
+				<div class="kpi-card">
+					<div class="kpi-header">
+						<div class="kpi-icon">📈</div>
+					</div>
+					<div class="kpi-label">Total Stocks</div>
+					<div class="kpi-value" id="totalStocks">0</div>
+					<div class="kpi-unit">companies listed</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-header">
+						<div class="kpi-icon">💰</div>
+					</div>
+					<div class="kpi-label">Market Value</div>
+					<div class="kpi-value" id="marketCap">₹0</div>
+					<div class="kpi-unit">total market cap</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-header">
+						<div class="kpi-icon">📊</div>
+					</div>
+					<div class="kpi-label">Avg Volume</div>
+					<div class="kpi-value" id="avgVolume">0</div>
+					<div class="kpi-unit">shares traded</div>
+				</div>
+				<div class="kpi-card">
+					<div class="kpi-header">
+						<div class="kpi-icon">🎯</div>
+					</div>
+					<div class="kpi-label">Active Stocks</div>
+					<div class="kpi-value" id="activeStocks">0</div>
+					<div class="kpi-unit">currently trading</div>
+				</div>
+			</div>
+
+			<!-- Dashboard Main -->
+			<div class="dashboard-main">
+				<div class="dashboard-left">
+					<div class="selector-card">
+						<h3>📌 Quick Stock Access</h3>
+						<label for="symbolSelect">Browse all available stocks:</label>
+						<select id="symbolSelect" size="12">
+							<option>Loading...</option>
+						</select>
+						<button onclick="loadSelectedCompany()">View Details</button>
+						<button class="add-watchlist-btn" onclick="addToWatchlist()" id="addWatchlistBtn">
+							⭐ Add to Watchlist
+						</button>
+						<button onclick="loadSelectedStockChart()" style="background: var(--info); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 8px; width: 100%; transition: all 0.2s;">
+							📈 View Price Chart
+						</button>
+						<div id="output"></div>
+						
+						<!-- Watchlist Section -->
+						<div class="watchlist-section" id="watchlistSection">
+							<div class="watchlist-header">
+								<span class="watchlist-title">
+									⭐ My Watchlist
+									<span class="watchlist-count" id="watchlistCount">0</span>
+								</span>
+							</div>
+							<div class="watchlist-items" id="watchlistItems">
+								<div class="watchlist-empty">
+									<div class="watchlist-empty-icon">📋</div>
+									<p>No stocks in watchlist</p>
+									<p style="font-size: 0.85rem; margin-top: 8px;">Select a stock and click "Add to Watchlist"</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="dashboard-right">
+					<div class="chart-card">
+						<h3>📊 Top Performing Stocks</h3>
+						<div style="height: 320px; position: relative;">
+							<canvas id="topPerformersChart"></canvas>
+						</div>
+					</div>
+					<div class="chart-card">
+						<h3>📉 Bottom Performers</h3>
+						<div style="height: 320px; position: relative;">
+							<canvas id="bottomPerformersChart"></canvas>
+						</div>
+					</div>
+					<div class="chart-card">
+						<h3>📊 Highest Volume</h3>
+						<div style="height: 320px; position: relative;">
+							<canvas id="volumeChart"></canvas>
+						</div>
+					</div>
+					<div class="chart-card">
+						<h3>📈 P/E Ratio Distribution</h3>
+						<div style="height: 320px; position: relative;">
+							<canvas id="peChart"></canvas>
+						</div>
+					</div>
+					<div class="chart-card profit-card">
+						<h3>🏢 Sector Distribution</h3>
+						<div style="height: 320px; position: relative;">
+							<canvas id="sectorChart"></canvas>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Watchlist Chart Section -->
+		<div id="watchlistChartSection" style="display: none; margin: 20px; background: var(--bg-primary); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+				<div>
+					<h2 class="watchlist-chart-title">📊 Watchlist</h2>
+					<p class="watchlist-chart-subtitle">Price chart for selected stock</p>
+				</div>
+				<button onclick="closeWatchlistChart()" style="background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">✕ Close</button>
+			</div>
+			<div id="watchlistStockName" class="watchlist-stock-name"></div>
+			<div style="height: 450px; position: relative;">
+				<canvas id="watchlistStockChart"></canvas>
+			</div>
+		</div>
+
+		<!-- Company Details Section -->
+		<div id="companyDetailsSection">
+			<div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+				<div>
+					<h2 class="section-title">📈 Company Details</h2>
+					<p class="section-subtitle">Detailed analysis and metrics for selected company</p>
+				</div>
+				<button class="back-button" onclick="backToOverview()">✕ Close Details</button>
+			</div>
+			
+			<div class="company-header">
+				<h2 id="companyName">Company Name</h2>
+				<p id="companySymbol">SYMBOL</p>
+			</div>
+
+			<div class="company-charts">
+				<div class="chart-card full-width" style="min-height: 450px;">
+					<h3>🕯️ Price Chart (Last 30 Days)</h3>
+					<div style="height: 400px; position: relative;">
+						<canvas id="companyCandlestickChart"></canvas>
+					</div>
+				</div>
+				<div class="chart-card">
+					<h3>📊 Stock Metrics</h3>
+					<canvas id="companyMetricsChart"></canvas>
+				</div>
+				<div class="chart-card">
+					<h3>🎯 Holdings Breakdown</h3>
+					<div style="height: 280px; position: relative;">
+						<canvas id="companyHoldingsChart"></canvas>
+					</div>
+				</div>
+				<div class="chart-card">
+					<h3>💰 Financial Metrics</h3>
+					<canvas id="companyFinancialChart"></canvas>
+				</div>
+				<div class="chart-card">
+					<h3>📊 Quarterly Performance</h3>
+					<canvas id="companyQuarterlyChart"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="/static/script.js"></script>
+	<script>
+		// Theme Toggle
+		function toggleTheme() {
+			const html = document.documentElement;
+			const currentTheme = html.getAttribute('data-theme');
+			const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+			
+			html.setAttribute('data-theme', newTheme);
+			localStorage.setItem('theme', newTheme);
+			
+			// Reload charts with new theme
+			if (typeof loadKPIsAndCharts === 'function') {
+				loadKPIsAndCharts();
+			}
+		}
+		
+		// Load saved theme on page load
+		document.addEventListener('DOMContentLoaded', () => {
+			const savedTheme = localStorage.getItem('theme') || 'light';
+			document.documentElement.setAttribute('data-theme', savedTheme);
+			
+			// Load user email - try localStorage first, then decode from JWT token
+			let userEmail = localStorage.getItem('user_email');
+			if (!userEmail || userEmail === 'user@example.com') {
+				// Try to decode email from JWT token
+				const token = localStorage.getItem('token');
+				if (token) {
+					try {
+						const payload = JSON.parse(atob(token.split('.')[1]));
+						userEmail = payload.sub || payload.email || 'user@example.com';
+						localStorage.setItem('user_email', userEmail);
+					} catch (e) {
+						userEmail = 'user@example.com';
+					}
+				} else {
+					userEmail = 'user@example.com';
+				}
+			}
+			document.getElementById('userEmail').textContent = userEmail;
+			
+			// Load dashboard data
+			loadKPIsAndCharts();
+			loadWatchlist();
+		});
+
+		let stockChart = null;
+		let screenerData = [];
+
+		// Watchlist functions
+		async function loadWatchlist() {
+			try {
+				const token = localStorage.getItem('token');
+				if (!token) return;
+				
+				const response = await fetch('/api/watchlist', {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to load watchlist');
+				
+				const watchlist = await response.json();
+				displayWatchlist(watchlist);
+			} catch (err) {
+				console.error('Watchlist load error:', err);
+			}
+		}
+
+		function displayWatchlist(watchlist) {
+			const container = document.getElementById('watchlistItems');
+			const countElem = document.getElementById('watchlistCount');
+			
+			countElem.textContent = watchlist.length;
+			
+			if (watchlist.length === 0) {
+				container.innerHTML = `
+					<div class="watchlist-empty">
+						<div class="watchlist-empty-icon">📋</div>
+						<p>No stocks in watchlist</p>
+						<p style="font-size: 0.85rem; margin-top: 8px;">Select a stock and click "Add to Watchlist"</p>
+					</div>
+				`;
+				return;
+			}
+			
+			container.innerHTML = watchlist.map(stock => {
+				const change = Number(stock['%chng'] || 0);
+				const changeClass = change >= 0 ? 'positive' : 'negative';
+				const changeSymbol = change >= 0 ? '▲' : '▼';
+				const price = Number(stock['close'] || 0);
+				const volume = Number(stock['volume'] || 0);
+				
+				return `
+					<div class="watchlist-item" style="cursor: pointer;" onclick="loadWatchlistStockChart('${stock.symbol}')" title="Click to view chart">
+						<div class="watchlist-stock-info">
+							<div class="watchlist-symbol">${stock.symbol}</div>
+							<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">
+								Price: ₹${price.toFixed(2)}
+							</div>
+							<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">
+								Vol: ${volume.toLocaleString()}
+							</div>
+							<div class="watchlist-change ${changeClass}">
+								${changeSymbol} ${change.toFixed(2)}%
+							</div>
+						</div>
+						<button class="watchlist-remove-btn" onclick="event.stopPropagation(); removeFromWatchlist('${stock.symbol}')">
+							Remove
+						</button>
+					</div>
+				`;
+			}).join('');
+		}
+
+		async function addToWatchlist() {
+			const selectElem = document.getElementById('symbolSelect');
+			const symbol = selectElem.value;
+			
+			if (!symbol) {
+				alert('Please select a stock first');
+				return;
+			}
+			
+			try {
+				const token = localStorage.getItem('token');
+				const response = await fetch('/api/watchlist', {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ symbol })
+				});
+				
+				if (!response.ok) throw new Error('Failed to add to watchlist');
+				
+				const result = await response.json();
+				alert(result.message || 'Added to watchlist!');
+				loadWatchlist();
+			} catch (err) {
+				console.error('Add to watchlist error:', err);
+				alert('Failed to add to watchlist');
+			}
+		}
+
+		async function removeFromWatchlist(symbol) {
+			if (!confirm(`Remove ${symbol} from watchlist?`)) return;
+			
+			try {
+				const token = localStorage.getItem('token');
+				const response = await fetch(`/api/watchlist/${symbol}`, {
+					method: 'DELETE',
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to remove from watchlist');
+				
+				const result = await response.json();
+				alert(result.message || 'Removed from watchlist');
+				loadWatchlist();
+			} catch (err) {
+				console.error('Remove from watchlist error:', err);
+				alert('Failed to remove from watchlist');
+			}
+		}
+
+		async function loadKPIsAndCharts() {
+		console.log('loadKPIsAndCharts called');
+		try {
+			console.log('Fetching screener data...');
+			const r = await fetch("/api/screener");
+			console.log('Fetch response:', r.ok);
+			if (!r.ok) throw new Error("Failed to fetch data");
+			
+			screenerData = await r.json();
+			console.log('Screener data loaded:', screenerData.length, 'stocks');
+				// Update KPIs
+				document.getElementById('totalStocks').innerText = screenerData.length;
+				
+				const totalMktCap = screenerData.reduce((sum, d) => sum + Number(d['market cap'] || 0), 0);
+				document.getElementById('marketCap').innerText = '₹' + (totalMktCap / 10000000).toFixed(2);
+				
+				const avgVol = screenerData.reduce((sum, d) => sum + Number(d.volume || 0), 0) / screenerData.length;
+				document.getElementById('avgVolume').innerText = Math.round(avgVol).toLocaleString();
+				
+				const activeCount = screenerData.filter(d => Number(d.volume || 0) > 0).length;
+				document.getElementById('activeStocks').innerText = activeCount;
+
+				// Populate stock selector
+				const selectElem = document.getElementById('symbolSelect');
+				selectElem.innerHTML = '';
+				screenerData.forEach(d => {
+					const opt = document.createElement('option');
+					opt.value = d.symbol;
+					opt.textContent = `${d.symbol} - ${d.company}`;
+					selectElem.appendChild(opt);
+				});
+
+		// Destroy existing charts before creating new ones
+		['topPerformersChart', 'bottomPerformersChart', 'volumeChart', 'peChart', 'sectorChart'].forEach(id => {
+			const existingChart = Chart.getChart(id);
+			if (existingChart) existingChart.destroy();
+		});
+
+		// Get theme colors
+		const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+		const textColor = isDark ? '#ffffff' : '#1a1a1a';
+	const gridColor = isDark ? 'rgba(74, 85, 104, 0.2)' : 'rgba(222, 226, 230, 0.3)';
+
+	// Top Performers
+	const sorted = [...screenerData].sort((a, b) => (Number(b['%chng'] || 0) - Number(a['%chng'] || 0)));
+	const top5 = sorted.slice(0, 5);
+	
+	const topGradient = document.getElementById('topPerformersChart').getContext('2d').createLinearGradient(0, 0, 0, 300);
+	topGradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+	topGradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+	
+	new Chart(document.getElementById('topPerformersChart'), {
+		type: 'bar',
+		data: {
+			labels: top5.map(d => d.symbol),
+			datasets: [{
+				label: '% Change',
+				data: top5.map(d => Number(d['%chng'] || 0)),
+				backgroundColor: topGradient,
+				borderColor: '#10b981',
+				borderWidth: 2,
+						borderRadius: 8,
+						barThickness: 'flex',
+						maxBarThickness: 60
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					plugins: { 
+						legend: { display: false },
+						tooltip: { 
+							backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+							titleColor: textColor, 
+							bodyColor: textColor,
+							borderColor: isDark ? '#4a5568' : '#dee2e6',
+							borderWidth: 1,
+							padding: 12,
+							cornerRadius: 8,
+							displayColors: false
+						}
+					},
+					scales: {
+						y: { 
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '500' },
+								callback: (value) => value + '%'
+							}, 
+							grid: { color: gridColor, lineWidth: 1 }
+						},
+						x: { 
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '600' }
+							}, 
+							grid: { display: false }
+						}
+				}
+			}
+		});
+
+		// Bottom Performers
+		const bottom5 = sorted.slice(-5).reverse();
+		
+		const bottomGradient = document.getElementById('bottomPerformersChart').getContext('2d').createLinearGradient(0, 0, 0, 300);
+		bottomGradient.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
+		bottomGradient.addColorStop(1, 'rgba(239, 68, 68, 0.2)');
+		
+		new Chart(document.getElementById('bottomPerformersChart'), {
+			type: 'bar',
+			data: {
+				labels: bottom5.map(d => d.symbol),
+				datasets: [{
+					label: '% Change',
+					data: bottom5.map(d => Number(d['%chng'] || 0)),
+					backgroundColor: bottomGradient,
+					borderColor: '#ef4444',
+					borderWidth: 2,
+					borderRadius: 8,
+					barThickness: 'flex',
+					maxBarThickness: 60
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				aspectRatio: 2,
+				plugins: { 
+					legend: { display: false },
+					tooltip: { 
+						backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+						titleColor: textColor, 
+						bodyColor: textColor,
+						borderColor: isDark ? '#4a5568' : '#dee2e6',
+						borderWidth: 1,
+						padding: 12,
+						cornerRadius: 8,
+						displayColors: false
+					}
+				},
+				scales: {
+					y: { 
+						ticks: { 
+							color: textColor,
+							font: { size: 11, weight: '500' },
+							callback: (value) => value + '%'
+						}, 
+						grid: { color: gridColor, lineWidth: 1 }
+					},
+					x: { 
+						ticks: { 
+							color: textColor,
+							font: { size: 11, weight: '600' }
+						}, 
+						grid: { display: false }
+					}
+				}
+			}
+		});
+
+		// Volume Chart
+		const topVol = [...screenerData].sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0)).slice(0, 10);
+		
+		new Chart(document.getElementById('volumeChart'), {
+			type: 'line',
+			data: {
+				labels: topVol.map(d => d.symbol),
+				datasets: [{
+					label: 'Volume',
+					data: topVol.map(d => d.volume),
+					borderColor: '#f59e0b',
+					backgroundColor: 'rgba(245, 158, 11, 0.15)',
+					fill: true,
+					tension: 0.4,
+					borderWidth: 3,
+					pointRadius: 5,
+					pointHoverRadius: 7,
+					pointBackgroundColor: '#f59e0b',
+					pointBorderColor: '#fff',
+					pointBorderWidth: 2,
+					pointHoverBackgroundColor: '#fff',
+					pointHoverBorderColor: '#f59e0b'
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				plugins: { 
+					legend: { display: false },
+					tooltip: { 
+						backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+						titleColor: textColor, 
+						bodyColor: textColor,
+						borderColor: isDark ? '#4a5568' : '#dee2e6',
+						borderWidth: 1,
+						padding: 12,
+						cornerRadius: 8,
+						displayColors: false,
+						callbacks: {
+							label: (context) => 'Volume: ' + context.parsed.y.toLocaleString()
+						}
+					}
+				},
+				scales: {
+					y: { 
+						ticks: { 
+							color: textColor,
+							font: { size: 11, weight: '500' },
+							callback: (value) => (value / 1000).toFixed(0) + 'K'
+						}, 
+						grid: { color: gridColor, lineWidth: 1 }
+					},
+					x: { 
+						ticks: { 
+							color: textColor,
+							font: { size: 11, weight: '600' }
+						}, 
+						grid: { display: false }
+					}
+				}
+			}
+		});
+
+		// P/E Ratio Chart
+		const peRatios = screenerData.map(d => Number(d.pe_ratio || 0)).filter(x => x > 0);
+		console.log('P/E Ratios found:', peRatios.length, peRatios);
+		if (peRatios.length > 0) {
+			const peBins = [0, 10, 20, 30, 50, 100];
+			const peDist = [];
+			for (let i = 0; i < peBins.length - 1; i++) {
+				peDist.push(peRatios.filter(p => p >= peBins[i] && p < peBins[i + 1]).length);
+			}
+			peDist.push(peRatios.filter(p => p >= 100).length); // 100+
+			
+			console.log('P/E Distribution:', peDist);
+			
+			const peCtx = document.getElementById('peChart').getContext('2d');
+			const peGradient = peCtx.createLinearGradient(0, 0, 0, 300);
+			peGradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+			peGradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+			
+			new Chart(peCtx, {
+				type: 'bar',
+				data: {
+					labels: ['0-10', '10-20', '20-30', '30-50', '50-100', '100+'],
+					datasets: [{
+						label: 'Stocks',
+						data: peDist,
+						backgroundColor: peGradient,
+						borderColor: '#3b82f6',
+						borderWidth: 2,
+						borderRadius: 8,
+						barThickness: 'flex',
+						maxBarThickness: 50
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					plugins: { 
+						legend: { display: false },
+						tooltip: { 
+							backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+							titleColor: textColor, 
+							bodyColor: textColor,
+							borderColor: isDark ? '#4a5568' : '#dee2e6',
+							borderWidth: 1,
+							padding: 12,
+							cornerRadius: 8,
+							displayColors: false,
+							callbacks: {
+								label: (context) => context.parsed.y + ' stocks'
+							}
+						}
+					},
+					scales: {
+						y: { 
+							beginAtZero: true,
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '500' },
+								stepSize: 1
+							}, 
+							grid: { color: gridColor, lineWidth: 1 }
+						},
+						x: { 
+							ticks: { 
+								color: textColor,
+								font: { size: 11, weight: '600' }
+							}, 
+							grid: { display: false }
+						}
+					}
+				}
+			});
+		} else {
+			console.log('No P/E ratios found in data');
+		}
+
+		// Sector Distribution
+		const sectors = {};
+		screenerData.forEach(d => {
+			const sector = d.industry || 'Unknown';
+			sectors[sector] = (sectors[sector] || 0) + 1;
+		});
+		
+		console.log('Sectors found:', Object.keys(sectors).length, sectors);
+		
+		const topSectors = Object.entries(sectors).sort((a, b) => b[1] - a[1]).slice(0, 8);
+		
+		if (topSectors.length > 0) {
+			new Chart(document.getElementById('sectorChart'), {
+				type: 'doughnut',
+				data: {
+					labels: topSectors.map(s => s[0]),
+					datasets: [{
+						data: topSectors.map(s => s[1]),
+						backgroundColor: [
+							'rgba(59, 130, 246, 0.85)',
+							'rgba(16, 185, 129, 0.85)',
+							'rgba(245, 158, 11, 0.85)',
+							'rgba(239, 68, 68, 0.85)',
+							'rgba(139, 92, 246, 0.85)',
+							'rgba(236, 72, 153, 0.85)',
+							'rgba(20, 184, 166, 0.85)',
+							'rgba(249, 115, 22, 0.85)'
+						],
+						borderColor: isDark ? '#1a1a1a' : '#ffffff',
+						borderWidth: 3,
+						hoverOffset: 15
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					cutout: '65%',
+					plugins: {
+						legend: { 
+							position: 'right',
+							labels: { 
+								color: textColor,
+								padding: 15,
+								font: { size: 12, weight: '500' },
+								boxWidth: 15,
+								boxHeight: 15,
+								usePointStyle: true,
+								pointStyle: 'circle'
+							}
+						},
+						tooltip: { 
+							backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+							titleColor: textColor, 
+							bodyColor: textColor,
+							borderColor: isDark ? '#4a5568' : '#dee2e6',
+							borderWidth: 1,
+							padding: 12,
+							cornerRadius: 8,
+							displayColors: true,
+							boxWidth: 12,
+							boxHeight: 12,
+							boxPadding: 6,
+							callbacks: {
+								label: (context) => {
+									const total = context.dataset.data.reduce((a, b) => a + b, 0);
+									const percentage = ((context.parsed / total) * 100).toFixed(1);
+									return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+								}
+							}
+						}
+					}
+				}
+			});
+		}
+
+		} catch (err) {
+			console.error('Error loading data:', err);
+		}
+	}
+
+	function loadSelectedCompany() {
+		const symbol = document.getElementById('symbolSelect').value;
+		if (symbol && symbol !== 'Loading...') {
+			searchCompanyBySymbol(symbol);
+		}
+	}
+
+	async function searchCompany() {
+			const input = document.getElementById('companySearchInput').value.trim().toUpperCase();
+			const msg = document.getElementById('searchMessage');
+			
+			if (!input) {
+				msg.innerText = 'Please enter a company symbol';
+				msg.style.color = 'var(--danger)';
+				return;
+			}
+
+			await searchCompanyBySymbol(input);
+		}
+
+		async function searchCompanyBySymbol(symbol) {
+			const msg = document.getElementById('searchMessage');
+			msg.innerText = 'Loading...';
+			msg.style.color = 'var(--text-secondary)';
+
+			try {
+				const res = await fetch(`/api/company/${symbol}`);
+				if (!res.ok) {
+					msg.innerText = `Company "${symbol}" not found`;
+					msg.style.color = 'var(--danger)';
+					return;
+				}
+
+				const company = await res.json();
+				displayCompanyDetails(company);
+				
+				// Show company details below overview (keep overview visible)
+				document.getElementById('companyDetailsSection').style.display = 'block';
+				msg.innerText = '';
+				
+				// Smooth scroll to company details
+				setTimeout(() => {
+					document.getElementById('companyDetailsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}, 100);
+			} catch (err) {
+				console.error('Search error:', err);
+				msg.innerText = 'Error searching company';
+				msg.style.color = 'var(--danger)';
+			}
+		}
+
+		function backToOverview() {
+			document.getElementById('companyDetailsSection').style.display = 'none';
+			document.getElementById('companySearchInput').value = '';
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+
+		function displayCompanyDetails(company) {
+		// Destroy existing company charts before creating new ones
+		const companyChartIds = ['companyCandlestickChart', 'companyMetricsChart', 'companyFinancialChart', 'companyHoldingsChart', 'companyQuarterlyChart'];
+		companyChartIds.forEach(id => {
+			const existingChart = Chart.getChart(id);
+			if (existingChart) {
+				existingChart.destroy();
+			}
+		});
+		
+		document.getElementById('companyName').innerText = company.company || 'Dashboard';
+		document.getElementById('companySymbol').innerText = company.symbol || '';
+
+		// Get theme colors
+		const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+		const textColor = isDark ? '#ffffff' : '#1a1a1a';
+		const gridColor = isDark ? '#4a5568' : '#dee2e6';
+
+		// Load and display candlestick chart
+		loadCandlestickChart(company.symbol, isDark, textColor, gridColor);
+
+			// Stock Metrics
+			const metrics = {
+				'Open': Number(company.open || 0),
+				'Close': Number(company.close || 0),
+				'High': Number(company.high || 0),
+				'Low': Number(company.low || 0),
+				'VWAP': Number(company.vwap || 0)
+			};
+			
+			new Chart(document.getElementById('companyMetricsChart'), {
+				type: 'bar',
+				data: {
+					labels: Object.keys(metrics),
+					datasets: [{
+						label: 'Price',
+						data: Object.values(metrics),
+						backgroundColor: '#3b82f6',
+						borderRadius: 6
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					plugins: { 
+						legend: { display: false },
+						tooltip: { backgroundColor: isDark ? '#2d2d2d' : '#ffffff', titleColor: textColor, bodyColor: textColor }
+					},
+					scales: {
+						y: { ticks: { color: textColor }, grid: { color: gridColor } },
+						x: { ticks: { color: textColor }, grid: { color: gridColor } }
+					}
+				}
+			});
+
+			// Financial Metrics - normalize values for radar chart
+			const eps = Number(company.eps || 0);
+			const peRatio = Number(company.pe_ratio || 0);
+			const bookValue = Number(company.book_value || 0);
+			const dividendYield = Number(company.dividend_yield || 0);
+			const roe = Number(company.roe || 0);
+			
+			// Normalize to 0-1 scale for radar chart
+			const normalizedData = [
+				Math.min(eps / 100, 1),
+				Math.min(peRatio / 50, 1),
+				Math.min(bookValue / 1000, 1),
+				Math.min(dividendYield / 5, 1),
+				Math.min(roe / 30, 1)
+			];
+			
+			new Chart(document.getElementById('companyFinancialChart'), {
+				type: 'radar',
+				data: {
+					labels: [
+						`EPS (₹${eps.toFixed(1)})`,
+						`P/E (${peRatio.toFixed(1)})`,
+						`Book (₹${bookValue.toFixed(0)})`,
+						`Div Yield (${dividendYield.toFixed(1)}%)`,
+						`ROE (${roe.toFixed(1)}%)`
+					],
+					datasets: [{
+						label: 'Metrics',
+						data: normalizedData,
+						borderColor: '#10b981',
+						backgroundColor: 'rgba(16, 185, 129, 0.2)',
+						borderWidth: 2,
+						pointBackgroundColor: '#10b981',
+						pointRadius: 4
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					plugins: {
+						legend: { display: false },
+						tooltip: { 
+							backgroundColor: isDark ? '#2d2d2d' : '#ffffff', 
+							titleColor: textColor, 
+							bodyColor: textColor,
+							callbacks: {
+								label: function(context) {
+									const values = [eps, peRatio, bookValue, dividendYield, roe];
+									return `Value: ${values[context.dataIndex].toFixed(2)}`;
+								}
+							}
+						}
+					},
+					scales: {
+						r: { 
+							beginAtZero: true,
+							max: 1,
+							ticks: { display: false },
+							grid: { color: gridColor },
+							pointLabels: { color: textColor, font: { size: 11 } }
+						}
+					}
+				}
+			});
+
+			// Holdings
+			const holdings = {
+				'Promoter': Number(company.promoter_holding || 0),
+				'FII': Number(company.fii_holding || 0),
+				'DII': Number(company.dii_holding || 0),
+				'Public': 100 - (Number(company.promoter_holding || 0) + Number(company.fii_holding || 0) + Number(company.dii_holding || 0))
+			};
+			
+			new Chart(document.getElementById('companyHoldingsChart'), {
+				type: 'doughnut',
+				data: {
+					labels: Object.keys(holdings),
+					datasets: [{
+						data: Object.values(holdings),
+						backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					layout: {
+						padding: {
+							top: 10,
+							bottom: 10,
+							left: 10,
+							right: 10
+						}
+					},
+					plugins: {
+						legend: { 
+							position: 'right',
+							labels: { color: textColor, padding: 15, font: { size: 12 } }
+						},
+						tooltip: { backgroundColor: isDark ? '#2d2d2d' : '#ffffff', titleColor: textColor, bodyColor: textColor }
+					}
+				}
+			});
+
+			// Quarterly Performance - use profit data
+			const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+			const profits = [
+				Number(company.q1_profit || 0),
+				Number(company.q2_profit || 0),
+				Number(company.q3_profit || 0),
+				Number(company.q4_profit || 0)
+			];
+			
+			// Calculate quarter-over-quarter growth percentages
+			const growthRates = profits.map((profit, index) => {
+				if (index === 0 || profits[index - 1] === 0) return 0;
+				return ((profit - profits[index - 1]) / profits[index - 1]) * 100;
+			});
+			
+			// Determine colors based on positive/negative growth
+			const backgroundColors = growthRates.map(val => 
+				val >= 0 ? 'rgba(72, 187, 120, 0.8)' : 'rgba(245, 101, 101, 0.8)'
+			);
+			const borderColors = growthRates.map(val => 
+				val >= 0 ? 'rgba(72, 187, 120, 1)' : 'rgba(245, 101, 101, 1)'
+			);
+			
+			new Chart(document.getElementById('companyQuarterlyChart'), {
+				type: 'bar',
+				data: {
+					labels: quarters,
+					datasets: [{
+						label: 'Profit (₹ Cr)',
+						data: profits,
+						borderColor: '#8b5cf6',
+						backgroundColor: backgroundColors,
+						borderWidth: 2,
+						borderRadius: 6
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					plugins: { 
+						legend: { display: false },
+						tooltip: { 
+							backgroundColor: isDark ? '#2d2d2d' : '#ffffff', 
+							titleColor: textColor, 
+							bodyColor: textColor,
+							callbacks: {
+								afterLabel: function(context) {
+									const growth = growthRates[context.dataIndex];
+									if (context.dataIndex === 0) return '';
+									return `Growth: ${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+								}
+							}
+						}
+					},
+					scales: {
+						y: { 
+							beginAtZero: true,
+							ticks: { color: textColor }, 
+							grid: { color: gridColor } 
+						},
+						x: { ticks: { color: textColor }, grid: { display: false } }
+					}
+				}
+			});
+		}
+
+		// Enter key support for search
+		document.addEventListener('DOMContentLoaded', () => {
+			document.getElementById('companySearchInput')?.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') searchCompany();
+			});
+		});
+
+		// Filter functions
+		async function applyFilters() {
+			const minPrice = document.getElementById('minPrice').value;
+			const maxPrice = document.getElementById('maxPrice').value;
+			const minVolume = document.getElementById('minVolume').value;
+			const minChange = document.getElementById('minChange').value;
+			const filterMsg = document.getElementById('filterMessage');
+			
+			const filters = {};
+			if (minPrice) filters.min_price = parseFloat(minPrice);
+			if (maxPrice) filters.max_price = parseFloat(maxPrice);
+			if (minVolume) filters.min_volume = parseInt(minVolume);
+			if (minChange) filters.min_change = parseFloat(minChange);
+			
+			if (Object.keys(filters).length === 0) {
+				filterMsg.textContent = 'Please enter at least one filter';
+				filterMsg.style.color = 'var(--warning)';
+				return;
+			}
+			
+			try {
+				filterMsg.textContent = 'Applying filters...';
+				filterMsg.style.color = 'var(--info)';
+				
+				const response = await fetch('/api/filter', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(filters)
+				});
+				
+				if (!response.ok) throw new Error('Filter failed');
+				
+				screenerData = await response.json();
+				
+				// Update the stock selector with filtered results
+				const selectElem = document.getElementById('symbolSelect');
+				selectElem.innerHTML = '';
+				
+				if (screenerData.length === 0) {
+					selectElem.innerHTML = '<option>No stocks match the filters</option>';
+					filterMsg.textContent = 'No stocks match your criteria';
+					filterMsg.style.color = 'var(--danger)';
+				} else {
+					screenerData.forEach(d => {
+						const opt = document.createElement('option');
+						opt.value = d.symbol;
+						opt.textContent = `${d.symbol} - ${d.company}`;
+						selectElem.appendChild(opt);
+					});
+					
+					filterMsg.textContent = `Found ${screenerData.length} matching stocks`;
+					filterMsg.style.color = 'var(--success)';
+					
+					// Reload charts with filtered data
+					updateChartsWithData(screenerData);
+				}
+			} catch (err) {
+				console.error('Filter error:', err);
+				filterMsg.textContent = 'Failed to apply filters';
+				filterMsg.style.color = 'var(--danger)';
+			}
+		}
+		
+		async function clearFilters() {
+			document.getElementById('minPrice').value = '';
+			document.getElementById('maxPrice').value = '';
+			document.getElementById('minVolume').value = '';
+			document.getElementById('minChange').value = '';
+			document.getElementById('filterMessage').textContent = '';
+			
+			// Reload all data
+			loadKPIsAndCharts();
+		}
+		
+		function updateChartsWithData(data) {
+			// Update KPIs
+			document.getElementById('totalStocks').innerText = data.length;
+			
+			const totalMktCap = data.reduce((sum, d) => sum + Number(d['market cap'] || 0), 0);
+			document.getElementById('marketCap').innerText = '₹' + (totalMktCap / 10000000).toFixed(2);
+			
+			const avgVol = data.reduce((sum, d) => sum + Number(d.volume || 0), 0) / data.length;
+			document.getElementById('avgVolume').innerText = Math.round(avgVol).toLocaleString();
+			
+			const activeCount = data.filter(d => Number(d.volume || 0) > 0).length;
+			document.getElementById('activeStocks').innerText = activeCount;
+			
+			// Destroy and recreate charts with filtered data
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const textColor = isDark ? '#ffffff' : '#1a1a1a';
+			const gridColor = isDark ? 'rgba(74, 85, 104, 0.2)' : 'rgba(222, 226, 230, 0.3)';
+			
+			// Top performers
+			const top5 = [...data].sort((a, b) => Number(b['%chng'] || 0) - Number(a['%chng'] || 0)).slice(0, 5);
+			Chart.getChart('topPerformersChart')?.destroy();
+			
+			const canvas = document.getElementById('topPerformersChart');
+			const ctx = canvas.getContext('2d');
+			const topGradient = ctx.createLinearGradient(0, 0, 0, 400);
+			topGradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+			topGradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+			
+			new Chart(canvas, {
+				type: 'bar',
+				data: {
+					labels: top5.map(d => d.symbol),
+					datasets: [{
+						label: '% Change',
+						data: top5.map(d => Number(d['%chng'] || 0)),
+						backgroundColor: topGradient,
+						borderColor: '#10b981',
+						borderWidth: 2,
+						borderRadius: 8
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: true,
+					plugins: { legend: { display: false } },
+					scales: {
+						y: { ticks: { color: textColor }, grid: { color: gridColor } },
+						x: { ticks: { color: textColor }, grid: { display: false } }
+					}
+				}
+			});
+		}
+
+		// Candlestick chart function
+		async function loadCandlestickChart(symbol, isDark, textColor, gridColor) {
+			try {
+				const response = await fetch(`/api/candlestick/${symbol}?days=30`);
+				if (!response.ok) {
+					console.error('Failed to load candlestick data');
+					return;
+				}
+				
+				const data = await response.json();
+				
+				if (!data || data.length === 0) {
+					console.warn('No candlestick data available');
+					return;
+				}
+				
+				// Prepare data for line chart (showing closing prices as a trend)
+				const dates = data.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+				const closePrices = data.map(d => d.close);
+				const highPrices = data.map(d => d.high);
+				const lowPrices = data.map(d => d.low);
+				const openPrices = data.map(d => d.open);
+				
+				new Chart(document.getElementById('companyCandlestickChart'), {
+					type: 'line',
+					data: {
+						labels: dates,
+						datasets: [
+							{
+								label: 'Close Price',
+								data: closePrices,
+								borderColor: '#3b82f6',
+								backgroundColor: 'rgba(59, 130, 246, 0.1)',
+								borderWidth: 3,
+								fill: true,
+								tension: 0.4,
+								pointRadius: 4,
+								pointHoverRadius: 6,
+								pointBackgroundColor: '#3b82f6',
+								pointBorderColor: '#fff',
+								pointBorderWidth: 2
+							},
+							{
+								label: 'High',
+								data: highPrices,
+								borderColor: '#10b981',
+								backgroundColor: 'transparent',
+								borderWidth: 2,
+								borderDash: [5, 5],
+								fill: false,
+								tension: 0.4,
+								pointRadius: 0,
+								pointHoverRadius: 4
+							},
+							{
+								label: 'Low',
+								data: lowPrices,
+								borderColor: '#ef4444',
+								backgroundColor: 'transparent',
+								borderWidth: 2,
+								borderDash: [5, 5],
+								fill: false,
+								tension: 0.4,
+								pointRadius: 0,
+								pointHoverRadius: 4
+							}
+						]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						interaction: {
+							mode: 'index',
+							intersect: false
+						},
+						plugins: {
+							legend: {
+								display: true,
+								position: 'top',
+								labels: { color: textColor, font: { size: 13, weight: '600' } }
+							},
+							tooltip: {
+								backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+								titleColor: textColor,
+								bodyColor: textColor,
+								borderColor: isDark ? '#4a5568' : '#dee2e6',
+								borderWidth: 1,
+								padding: 14,
+								cornerRadius: 8,
+								titleFont: { size: 13, weight: 'bold' },
+								bodyFont: { size: 12 },
+								callbacks: {
+									afterBody: function(context) {
+										const index = context[0].dataIndex;
+										return [
+											'Open: ₹' + openPrices[index].toFixed(2),
+											'Volume: ' + data[index].volume.toLocaleString()
+										];
+									}
+								}
+							}
+						},
+						scales: {
+							y: {
+								ticks: {
+									color: textColor,
+									font: { size: 12 },
+									callback: (value) => '₹' + value.toFixed(0)
+								},
+								grid: { color: gridColor }
+							},
+							x: {
+								ticks: {
+									color: textColor,
+									font: { size: 11 },
+									maxRotation: 45,
+									minRotation: 45
+								},
+								grid: { display: false }
+							}
+						}
+					}
+				});
+			} catch (error) {
+				console.error('Error loading candlestick chart:', error);
+			}
+		}
+
+		// Close watchlist chart section
+		function closeWatchlistChart() {
+			document.getElementById('watchlistChartSection').style.display = 'none';
+			const existingChart = Chart.getChart('watchlistStockChart');
+			if (existingChart) existingChart.destroy();
+		}
+
+		// Load chart for a specific stock symbol (called from watchlist items)
+		async function loadWatchlistStockChart(symbol) {
+			const watchlistSection = document.getElementById('watchlistChartSection');
+			const stockNameDiv = document.getElementById('watchlistStockName');
+			
+			// Get theme before showing section
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const textColor = isDark ? '#ffffff' : '#1a1a1a';
+			const gridColor = isDark ? '#4a5568' : '#dee2e6';
+			
+			// Show the watchlist section
+			watchlistSection.style.display = 'block';
+			
+			// Scroll to the watchlist section
+			watchlistSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			
+			// Destroy existing chart
+			const existingChart = Chart.getChart('watchlistStockChart');
+			if (existingChart) existingChart.destroy();
+			
+			try {
+				const response = await fetch(`/api/candlestick/${symbol}?days=30`);
+				if (!response.ok) throw new Error('Failed to load data');
+				
+				const data = await response.json();
+				
+				if (!data || data.length === 0) {
+					stockNameDiv.innerHTML = '<p style="color: ' + textColor + '; text-align: center; padding: 20px;">No historical data available for ' + symbol + '</p>';
+					return;
+				}
+				
+				// Update stock name with proper color
+				stockNameDiv.innerHTML = '<span style="color: ' + textColor + '; font-size: 1.2rem; font-weight: 600;">📈 ' + symbol + ' - Last 30 Days</span>';
+				
+				const dates = data.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+				const closePrices = data.map(d => d.close);
+				const volumes = data.map(d => d.volume);
+				
+				new Chart(document.getElementById('watchlistStockChart'), {
+					type: 'line',
+					data: {
+						labels: dates,
+						datasets: [{
+							label: 'Price (₹)',
+							data: closePrices,
+							borderColor: '#3b82f6',
+							backgroundColor: 'rgba(59, 130, 246, 0.2)',
+							borderWidth: 2,
+							fill: true,
+							tension: 0.4,
+							pointRadius: 4,
+							pointHoverRadius: 6,
+							yAxisID: 'y'
+						}]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						interaction: {
+							mode: 'index',
+							intersect: false
+						},
+						plugins: {
+							legend: { 
+								display: true,
+								position: 'top',
+								labels: { color: textColor, font: { size: 12, weight: '600' } }
+							},
+							tooltip: {
+								backgroundColor: isDark ? 'rgba(45, 45, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+								titleColor: textColor,
+								bodyColor: textColor,
+								borderColor: isDark ? '#4a5568' : '#dee2e6',
+								borderWidth: 1,
+								padding: 14,
+								cornerRadius: 8,
+								titleFont: { size: 14, weight: 'bold' },
+								bodyFont: { size: 13 },
+								callbacks: {
+									afterBody: function(context) {
+										const index = context[0].dataIndex;
+										return 'Volume: ' + volumes[index].toLocaleString();
+									}
+								}
+							}
+						},
+						scales: {
+							y: {
+								type: 'linear',
+								position: 'left',
+								ticks: {
+									color: textColor,
+									font: { size: 12 },
+									callback: (value) => '₹' + value.toFixed(0)
+								},
+								grid: { color: gridColor }
+							},
+							x: {
+								ticks: {
+									color: textColor,
+									font: { size: 11 },
+									maxRotation: 45,
+									minRotation: 45
+								},
+								grid: { display: false }
+							}
+						}
+					}
+				});
+			} catch (error) {
+				console.error('Error loading chart:', error);
+				stockNameDiv.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Failed to load chart for ' + symbol + '</p>';
+			}
+		}
+
+		// Load chart for selected stock in Watchlist section below dashboard
+		async function loadSelectedStockChart() {
+			const selectElem = document.getElementById('symbolSelect');
+			const symbol = selectElem.value;
+			const watchlistSection = document.getElementById('watchlistChartSection');
+			const stockNameDiv = document.getElementById('watchlistStockName');
+			
+			// Get theme before showing section
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const textColor = isDark ? '#ffffff' : '#1a1a1a';
+			const gridColor = isDark ? '#4a5568' : '#dee2e6';
+			
+			if (!symbol) {
+				alert('Please select a stock first');
+				return;
+			}
+			
+			// Show the watchlist section
+			watchlistSection.style.display = 'block';
+			
+			// Scroll to the watchlist section
+			watchlistSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			
+			// Destroy existing chart
+			const existingChart = Chart.getChart('watchlistStockChart');
+			if (existingChart) existingChart.destroy();
+			
+			// Use the loadWatchlistStockChart function to display the chart
+			loadWatchlistStockChart(symbol);
+		}
+
+		// ============ PORTFOLIO FUNCTIONS ============
+		let currentTransactionType = 'BUY';
+
+		function togglePortfolioModal() {
+			const modal = document.getElementById('transactionModal');
+			if (modal.style.display === 'none' || modal.style.display === '') {
+				modal.style.display = 'flex';
+				populateSymbolDropdown();
+				updateTxnTotal();
+			} else {
+				modal.style.display = 'none';
+				resetTransactionForm();
+			}
+		}
+
+		function setTransactionType(type) {
+			currentTransactionType = type;
+			const buyBtn = document.getElementById('buyBtn');
+			const sellBtn = document.getElementById('sellBtn');
+			
+			if (type === 'BUY') {
+				buyBtn.style.background = 'var(--success)';
+				buyBtn.style.color = 'white';
+				sellBtn.style.background = 'var(--bg-tertiary)';
+				sellBtn.style.color = 'var(--text-primary)';
+			} else {
+				sellBtn.style.background = 'var(--danger)';
+				sellBtn.style.color = 'white';
+				buyBtn.style.background = 'var(--bg-tertiary)';
+				buyBtn.style.color = 'var(--text-primary)';
+			}
+		}
+
+		function populateSymbolDropdown() {
+			const select = document.getElementById('txnSymbol');
+			select.innerHTML = '<option value="">Select a stock...</option>';
+			
+			if (screenerData && screenerData.length > 0) {
+				screenerData.forEach(stock => {
+					const option = document.createElement('option');
+					option.value = stock.symbol;
+					option.textContent = `${stock.symbol} - ${stock.company || stock.symbol}`;
+					select.appendChild(option);
+				});
+			}
+		}
+
+		function updateTxnTotal() {
+			const qty = parseFloat(document.getElementById('txnQuantity').value) || 0;
+			const price = parseFloat(document.getElementById('txnPrice').value) || 0;
+			const total = qty * price;
+			document.getElementById('txnTotal').textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+		}
+
+		// Add event listeners for real-time total calculation
+		document.getElementById('txnQuantity').addEventListener('input', updateTxnTotal);
+		document.getElementById('txnPrice').addEventListener('input', updateTxnTotal);
+
+		function resetTransactionForm() {
+			document.getElementById('txnSymbol').value = '';
+			document.getElementById('txnQuantity').value = '';
+			document.getElementById('txnPrice').value = '';
+			document.getElementById('txnNotes').value = '';
+			document.getElementById('txnMessage').textContent = '';
+			document.getElementById('txnTotal').textContent = '₹0.00';
+			setTransactionType('BUY');
+		}
+
+		async function submitTransaction() {
+			const symbol = document.getElementById('txnSymbol').value;
+			const quantity = parseFloat(document.getElementById('txnQuantity').value);
+			const price = parseFloat(document.getElementById('txnPrice').value);
+			const notes = document.getElementById('txnNotes').value;
+			const msgElem = document.getElementById('txnMessage');
+			
+			msgElem.style.color = 'var(--danger)';
+			
+			if (!symbol) {
+				msgElem.textContent = 'Please select a stock';
+				return;
+			}
+			if (!quantity || quantity <= 0) {
+				msgElem.textContent = 'Please enter a valid quantity';
+				return;
+			}
+			if (!price || price <= 0) {
+				msgElem.textContent = 'Please enter a valid price';
+				return;
+			}
+			
+			try {
+				const token = localStorage.getItem('token');
+				const response = await fetch('/api/portfolio/transaction', {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						symbol: symbol,
+						transaction_type: currentTransactionType,
+						quantity: quantity,
+						price: price,
+						notes: notes || null
+					})
+				});
+				
+				const result = await response.json();
+				
+				if (!response.ok) {
+					msgElem.textContent = result.detail || 'Transaction failed';
+					return;
+				}
+				
+				msgElem.style.color = 'var(--success)';
+				msgElem.textContent = result.message || 'Transaction successful!';
+				
+				// Reload portfolio and close modal after delay
+				setTimeout(() => {
+					togglePortfolioModal();
+					loadPortfolio();
+					loadTransactions();
+				}, 1500);
+				
+			} catch (error) {
+				console.error('Transaction error:', error);
+				msgElem.textContent = 'Transaction failed. Please try again.';
+			}
+		}
+
+		async function loadPortfolio() {
+			try {
+				const token = localStorage.getItem('token');
+				if (!token) return;
+				
+				const response = await fetch('/api/portfolio', {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to load portfolio');
+				
+				const data = await response.json();
+				displayPortfolio(data);
+				
+			} catch (error) {
+				console.error('Portfolio load error:', error);
+			}
+		}
+
+		function displayPortfolio(data) {
+			// Update KPIs
+			document.getElementById('portfolioInvested').textContent = '₹' + data.total_invested.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+			document.getElementById('portfolioValue').textContent = '₹' + data.current_value.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+			
+			const pnlElem = document.getElementById('portfolioPnL');
+			const pnlPercentElem = document.getElementById('portfolioPnLPercent');
+			const pnl = data.total_pnl;
+			const pnlPercent = data.total_pnl_percent;
+			
+			pnlElem.textContent = (pnl >= 0 ? '+₹' : '-₹') + Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+			pnlElem.style.color = pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+			
+			pnlPercentElem.textContent = (pnlPercent >= 0 ? '+' : '') + pnlPercent.toFixed(2) + '%';
+			pnlPercentElem.style.color = pnlPercent >= 0 ? 'var(--success)' : 'var(--danger)';
+			
+			document.getElementById('holdingsCount').textContent = data.holdings_count;
+			
+			// Display holdings
+			const container = document.getElementById('portfolioHoldings');
+			
+			if (!data.holdings || data.holdings.length === 0) {
+				container.innerHTML = `
+					<div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+						<div style="font-size: 3rem; margin-bottom: 12px;">📈</div>
+						<p>No holdings yet</p>
+						<p style="font-size: 0.85rem; margin-top: 8px;">Add your first transaction to start tracking</p>
+					</div>
+				`;
+				return;
+			}
+			
+			container.innerHTML = `
+				<table style="width: 100%; border-collapse: collapse;">
+					<thead>
+						<tr style="background: var(--bg-tertiary); text-align: left;">
+							<th style="padding: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">Stock</th>
+							<th style="padding: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: right;">Qty</th>
+							<th style="padding: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: right;">Avg Price</th>
+							<th style="padding: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: right;">Current</th>
+							<th style="padding: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: right;">P&L</th>
+							<th style="padding: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: right;">Alloc</th>
+						</tr>
+					</thead>
+					<tbody>
+						${data.holdings.map(h => {
+							const pnlColor = h.pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+							const pnlSign = h.pnl >= 0 ? '+' : '';
+							return `
+								<tr style="border-bottom: 1px solid var(--border-color);">
+									<td style="padding: 12px; font-weight: 600; color: var(--text-primary);">${h.symbol}</td>
+									<td style="padding: 12px; text-align: right; color: var(--text-primary);">${h.quantity.toFixed(2)}</td>
+									<td style="padding: 12px; text-align: right; color: var(--text-secondary);">₹${h.avg_buy_price.toFixed(2)}</td>
+									<td style="padding: 12px; text-align: right; color: var(--text-primary);">₹${h.current_price.toFixed(2)}</td>
+									<td style="padding: 12px; text-align: right; color: ${pnlColor}; font-weight: 600;">
+										${pnlSign}₹${Math.abs(h.pnl).toFixed(2)}<br>
+										<span style="font-size: 0.8rem;">(${pnlSign}${h.pnl_percent.toFixed(2)}%)</span>
+									</td>
+									<td style="padding: 12px; text-align: right; color: var(--text-secondary);">${h.allocation.toFixed(1)}%</td>
+								</tr>
+							`;
+						}).join('')}
+					</tbody>
+				</table>
+			`;
+		}
+
+		async function loadTransactions() {
+			try {
+				const token = localStorage.getItem('token');
+				if (!token) return;
+				
+				const response = await fetch('/api/portfolio/transactions?limit=20', {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to load transactions');
+				
+				const data = await response.json();
+				displayTransactions(data.transactions);
+				
+			} catch (error) {
+				console.error('Transactions load error:', error);
+			}
+		}
+
+		function displayTransactions(transactions) {
+			const container = document.getElementById('portfolioTransactions');
+			
+			if (!transactions || transactions.length === 0) {
+				container.innerHTML = `
+					<div style="text-align: center; padding: 30px; color: var(--text-secondary);">
+						<p>No transactions yet</p>
+					</div>
+				`;
+				return;
+			}
+			
+			container.innerHTML = transactions.map(t => {
+				const isBuy = t.transaction_type === 'BUY';
+				const color = isBuy ? 'var(--success)' : 'var(--danger)';
+				const icon = isBuy ? '🟢' : '🔴';
+				const date = new Date(t.transaction_date).toLocaleDateString('en-IN', { 
+					day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+				});
+				
+				return `
+					<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border-color);">
+						<div style="display: flex; align-items: center; gap: 12px;">
+							<span style="font-size: 1.2rem;">${icon}</span>
+							<div>
+								<div style="font-weight: 600; color: var(--text-primary);">${t.symbol}</div>
+								<div style="font-size: 0.8rem; color: var(--text-secondary);">${date}</div>
+								${t.notes ? `<div style="font-size: 0.75rem; color: var(--text-tertiary); font-style: italic;">${t.notes}</div>` : ''}
+							</div>
+						</div>
+						<div style="text-align: right;">
+							<div style="font-weight: 600; color: ${color};">${t.transaction_type} ${t.quantity}</div>
+							<div style="font-size: 0.85rem; color: var(--text-secondary);">@ ₹${parseFloat(t.price).toFixed(2)}</div>
+							<div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">₹${parseFloat(t.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+						</div>
+					</div>
+				`;
+			}).join('');
+		}
+
+		// Close modal when clicking outside
+		document.getElementById('transactionModal').addEventListener('click', function(e) {
+			if (e.target === this) {
+				togglePortfolioModal();
+			}
+		});
+
+		// ========== STOCK ALERTS SYSTEM ==========
+		let alertCheckInterval = null;
+		let lastTriggeredAlerts = new Set();
+		let notifications = JSON.parse(localStorage.getItem('stock_notifications') || '[]');
+		let unreadCount = parseInt(localStorage.getItem('unread_notifications') || '0');
+
+		// ========== NOTIFICATIONS PANEL ==========
+		function toggleNotificationsPanel() {
+			const panel = document.getElementById('notificationsPanel');
+			const isHidden = panel.style.display === 'none' || panel.style.display === '';
+			panel.style.display = isHidden ? 'block' : 'none';
+			
+			if (isHidden) {
+				renderNotifications();
+			}
+		}
+
+		function addNotification(message, type = 'info', symbol = '', data = {}) {
+			const notification = {
+				id: Date.now(),
+				message: message,
+				type: type,
+				symbol: symbol,
+				data: data,
+				timestamp: new Date().toISOString(),
+				read: false
+			};
+			
+			notifications.unshift(notification);
+			
+			// Keep only last 50 notifications
+			if (notifications.length > 50) {
+				notifications = notifications.slice(0, 50);
+			}
+			
+			unreadCount++;
+			saveNotifications();
+			updateNotificationsBadge();
+			renderNotifications();
+		}
+
+		function saveNotifications() {
+			localStorage.setItem('stock_notifications', JSON.stringify(notifications));
+			localStorage.setItem('unread_notifications', unreadCount.toString());
+		}
+
+		function updateNotificationsBadge() {
+			const badge = document.getElementById('notificationsBadge');
+			const count = document.getElementById('notificationsCount');
+			
+			if (unreadCount > 0) {
+				badge.style.display = 'flex';
+				badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+			} else {
+				badge.style.display = 'none';
+			}
+			
+			count.textContent = notifications.length;
+		}
+
+		function renderNotifications() {
+			const list = document.getElementById('notificationsList');
+			
+			if (!notifications || notifications.length === 0) {
+				list.innerHTML = `
+					<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+						<div style="font-size: 2.5rem; margin-bottom: 12px;">🔕</div>
+						<p>No notifications yet</p>
+						<p style="font-size: 0.85rem; margin-top: 8px;">Alerts will appear here when triggered</p>
+					</div>
+				`;
+				return;
+			}
+			
+			list.innerHTML = notifications.map(n => {
+				const timeAgo = getTimeAgo(n.timestamp);
+				const bgColor = n.read ? 'var(--bg-secondary)' : 'var(--bg-tertiary)';
+				const borderColor = n.read ? 'var(--border-color)' : getTypeColor(n.type);
+				
+				const typeIcons = {
+					'success': '🚀',
+					'warning': '⚠️',
+					'error': '📉',
+					'info': '🔔'
+				};
+				const icon = typeIcons[n.type] || '🔔';
+				
+				return `
+					<div class="notification-item" data-id="${n.id}" style="padding: 12px; background: ${bgColor}; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid ${borderColor}; cursor: pointer; transition: all 0.2s;" onclick="markAsRead(${n.id})" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+						<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+							<div style="flex: 1;">
+								<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+									<span style="font-size: 1.2rem;">${icon}</span>
+									${n.symbol ? `<span style="font-weight: 700; color: var(--text-primary);">${n.symbol}</span>` : ''}
+									${!n.read ? '<span style="width: 8px; height: 8px; background: var(--info); border-radius: 50%;"></span>' : ''}
+								</div>
+								<p style="font-size: 0.9rem; color: var(--text-primary); margin: 0; line-height: 1.4;">${n.message}</p>
+								<span style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 6px; display: block;">${timeAgo}</span>
+							</div>
+							<button onclick="event.stopPropagation(); deleteNotification(${n.id})" style="background: none; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 1rem; padding: 4px;" title="Delete">✕</button>
+						</div>
+					</div>
+				`;
+			}).join('');
+		}
+
+		function getTypeColor(type) {
+			const colors = {
+				'success': 'var(--success)',
+				'warning': 'var(--warning)',
+				'error': 'var(--danger)',
+				'info': 'var(--info)'
+			};
+			return colors[type] || 'var(--border-color)';
+		}
+
+		function getTimeAgo(timestamp) {
+			const now = new Date();
+			const date = new Date(timestamp);
+			const seconds = Math.floor((now - date) / 1000);
+			
+			if (seconds < 60) return 'Just now';
+			if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+			if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+			if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+			return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+		}
+
+		function markAsRead(id) {
+			const notification = notifications.find(n => n.id === id);
+			if (notification && !notification.read) {
+				notification.read = true;
+				unreadCount = Math.max(0, unreadCount - 1);
+				saveNotifications();
+				updateNotificationsBadge();
+				renderNotifications();
+			}
+		}
+
+		function markAllAsRead() {
+			notifications.forEach(n => n.read = true);
+			unreadCount = 0;
+			saveNotifications();
+			updateNotificationsBadge();
+			renderNotifications();
+		}
+
+		function deleteNotification(id) {
+			const index = notifications.findIndex(n => n.id === id);
+			if (index > -1) {
+				if (!notifications[index].read) {
+					unreadCount = Math.max(0, unreadCount - 1);
+				}
+				notifications.splice(index, 1);
+				saveNotifications();
+				updateNotificationsBadge();
+				renderNotifications();
+			}
+		}
+
+		function clearAllNotifications() {
+			if (notifications.length === 0) return;
+			if (!confirm('Clear all notifications?')) return;
+			
+			notifications = [];
+			unreadCount = 0;
+			saveNotifications();
+			updateNotificationsBadge();
+			renderNotifications();
+		}
+
+		// Close notifications panel when clicking outside
+		document.addEventListener('click', function(e) {
+			const panel = document.getElementById('notificationsPanel');
+			const btn = document.getElementById('notificationsBtn');
+			const wrapper = document.querySelector('.notifications-wrapper');
+			
+			if (panel.style.display === 'block' && !wrapper.contains(e.target)) {
+				panel.style.display = 'none';
+			}
+		});
+
+		function toggleAlertModal() {
+			const modal = document.getElementById('alertModal');
+			const isHidden = modal.style.display === 'none' || modal.style.display === '';
+			modal.style.display = isHidden ? 'flex' : 'none';
+			
+			if (isHidden) {
+				loadStockSymbolsForAlert();
+				document.getElementById('alertModalMessage').textContent = '';
+			}
+		}
+
+		async function loadStockSymbolsForAlert() {
+			try {
+				const response = await fetch('/api/screener');
+				const stocks = await response.json();
+				
+				const select = document.getElementById('alertSymbol');
+				select.innerHTML = '<option value="">Select a stock...</option>';
+				
+				stocks.forEach(stock => {
+					const option = document.createElement('option');
+					option.value = stock.symbol;
+					option.textContent = `${stock.symbol} - ₹${parseFloat(stock.close || 0).toFixed(2)}`;
+					select.appendChild(option);
+				});
+			} catch (error) {
+				console.error('Error loading symbols for alert:', error);
+			}
+		}
+
+		function updateAlertPlaceholder() {
+			const type = document.getElementById('alertType').value;
+			const hint = document.getElementById('alertHint');
+			const input = document.getElementById('alertThreshold');
+			
+			if (type.includes('price')) {
+				hint.textContent = 'Enter target price in ₹';
+				input.placeholder = 'e.g., 1500';
+			} else {
+				hint.textContent = 'Enter percentage change (e.g., 5 for 5%)';
+				input.placeholder = 'e.g., 5';
+			}
+		}
+
+		async function createAlert() {
+			const symbol = document.getElementById('alertSymbol').value;
+			const alertType = document.getElementById('alertType').value;
+			const threshold = parseFloat(document.getElementById('alertThreshold').value);
+			const msgElem = document.getElementById('alertModalMessage');
+			
+			if (!symbol) {
+				msgElem.textContent = 'Please select a stock';
+				return;
+			}
+			if (!threshold || threshold <= 0) {
+				msgElem.textContent = 'Please enter a valid threshold value';
+				return;
+			}
+			
+			try {
+				const token = localStorage.getItem('token');
+				const response = await fetch('/api/alerts', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`
+					},
+					body: JSON.stringify({ symbol, alert_type: alertType, threshold })
+				});
+				
+				const result = await response.json();
+				
+				if (!response.ok) {
+					msgElem.textContent = result.detail || 'Failed to create alert';
+					return;
+				}
+				
+				showToast(`🔔 Alert created for ${symbol}!`, 'success');
+				toggleAlertModal();
+				loadUserAlerts();
+				
+			} catch (error) {
+				console.error('Create alert error:', error);
+				msgElem.textContent = 'Failed to create alert. Please try again.';
+			}
+		}
+
+		async function loadUserAlerts() {
+			try {
+				const token = localStorage.getItem('token');
+				if (!token) return;
+				
+				const response = await fetch('/api/alerts', {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to load alerts');
+				
+				const data = await response.json();
+				displayUserAlerts(data.alerts);
+				
+			} catch (error) {
+				console.error('Load alerts error:', error);
+			}
+		}
+
+		function displayUserAlerts(alerts) {
+			const container = document.getElementById('userAlertsList');
+			document.getElementById('myAlertsCount').textContent = alerts.length;
+			
+			if (!alerts || alerts.length === 0) {
+				container.innerHTML = `
+					<div style="text-align: center; padding: 30px; color: var(--text-secondary);">
+						<div style="font-size: 2.5rem; margin-bottom: 12px;">🔕</div>
+						<p>No alerts set up yet</p>
+						<p style="font-size: 0.85rem; margin-top: 8px;">Create an alert to get notified of price changes</p>
+					</div>
+				`;
+				return;
+			}
+			
+			container.innerHTML = alerts.map(alert => {
+				const typeIcons = {
+					'price_above': '📈',
+					'price_below': '📉',
+					'change_up': '🚀',
+					'change_down': '⚠️'
+				};
+				const typeLabels = {
+					'price_above': 'Price Above',
+					'price_below': 'Price Below',
+					'change_up': 'Change Up',
+					'change_down': 'Change Down'
+				};
+				const icon = typeIcons[alert.alert_type] || '🔔';
+				const label = typeLabels[alert.alert_type] || alert.alert_type;
+				const unit = alert.alert_type.includes('price') ? '₹' : '%';
+				const statusColor = alert.is_active ? 'var(--success)' : 'var(--text-tertiary)';
+				const statusText = alert.is_active ? 'Active' : 'Paused';
+				const triggeredInfo = alert.triggered_at ? `<div style="font-size: 0.75rem; color: var(--warning);">Last triggered at ₹${parseFloat(alert.triggered_price).toFixed(2)}</div>` : '';
+				
+				return `
+					<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border-color);">
+						<div style="display: flex; align-items: center; gap: 12px;">
+							<span style="font-size: 1.5rem;">${icon}</span>
+							<div>
+								<div style="font-weight: 600; color: var(--text-primary);">${alert.symbol}</div>
+								<div style="font-size: 0.85rem; color: var(--text-secondary);">${label}: ${unit}${alert.threshold}</div>
+								${triggeredInfo}
+							</div>
+						</div>
+						<div style="display: flex; align-items: center; gap: 8px;">
+							<span style="font-size: 0.8rem; color: ${statusColor}; font-weight: 600;">${statusText}</span>
+							<button onclick="toggleAlertStatus(${alert.id})" style="padding: 6px 12px; background: var(--bg-tertiary); color: var(--text-primary); border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" title="${alert.is_active ? 'Pause' : 'Resume'}">
+								${alert.is_active ? '⏸️' : '▶️'}
+							</button>
+							<button onclick="deleteAlert(${alert.id})" style="padding: 6px 12px; background: var(--danger); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" title="Delete">
+								🗑️
+							</button>
+						</div>
+					</div>
+				`;
+			}).join('');
+		}
+
+		async function toggleAlertStatus(alertId) {
+			try {
+				const token = localStorage.getItem('token');
+				const response = await fetch(`/api/alerts/${alertId}/toggle`, {
+					method: 'PATCH',
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to toggle alert');
+				
+				const result = await response.json();
+				showToast(result.message, 'info');
+				loadUserAlerts();
+				
+			} catch (error) {
+				console.error('Toggle alert error:', error);
+				showToast('Failed to toggle alert', 'error');
+			}
+		}
+
+		async function deleteAlert(alertId) {
+			if (!confirm('Are you sure you want to delete this alert?')) return;
+			
+			try {
+				const token = localStorage.getItem('token');
+				const response = await fetch(`/api/alerts/${alertId}`, {
+					method: 'DELETE',
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) throw new Error('Failed to delete alert');
+				
+				showToast('Alert deleted', 'info');
+				loadUserAlerts();
+				
+			} catch (error) {
+				console.error('Delete alert error:', error);
+				showToast('Failed to delete alert', 'error');
+			}
+		}
+
+		async function loadMarketMovers() {
+			try {
+				const response = await fetch('/api/alerts/market-movers?limit=3');
+				if (!response.ok) throw new Error('Failed to load market movers');
+				
+				const data = await response.json();
+				
+				// Display top gainers
+				const gainersHtml = data.gainers.map(s => 
+					`<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+						<span style="font-weight: 600;">${s.symbol}</span>
+						<span>+${s.change_pct}%</span>
+					</div>`
+				).join('') || '<div>No data</div>';
+				document.getElementById('topGainers').innerHTML = gainersHtml;
+				
+				// Display top losers
+				const losersHtml = data.losers.map(s => 
+					`<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+						<span style="font-weight: 600;">${s.symbol}</span>
+						<span>${s.change_pct}%</span>
+					</div>`
+				).join('') || '<div>No data</div>';
+				document.getElementById('topLosers').innerHTML = losersHtml;
+				
+			} catch (error) {
+				console.error('Market movers error:', error);
+			}
+		}
+
+		async function loadSuddenChanges() {
+			try {
+				const response = await fetch('/api/alerts/sudden-changes?threshold=3.0');
+				if (!response.ok) throw new Error('Failed to load sudden changes');
+				
+				const data = await response.json();
+				const section = document.getElementById('suddenChangesSection');
+				const list = document.getElementById('suddenChangesList');
+				const count = document.getElementById('suddenChangesCount');
+				
+				if (data.sudden_changes && data.sudden_changes.length > 0) {
+					section.style.display = 'block';
+					count.textContent = data.sudden_changes.length;
+					
+					list.innerHTML = data.sudden_changes.slice(0, 5).map(s => {
+						const color = s.direction === 'up' ? 'var(--success)' : 'var(--danger)';
+						return `
+							<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-primary); border-radius: 6px; margin-bottom: 6px;">
+								<span style="font-weight: 600; color: var(--text-primary);">${s.symbol}</span>
+								<span style="color: ${color}; font-weight: 600;">${s.change_pct > 0 ? '+' : ''}${s.change_pct}%</span>
+							</div>
+						`;
+					}).join('');
+				} else {
+					section.style.display = 'none';
+				}
+				
+			} catch (error) {
+				console.error('Sudden changes error:', error);
+			}
+		}
+
+		async function checkTriggeredAlerts() {
+			try {
+				const token = localStorage.getItem('token');
+				if (!token) return;
+				
+				const response = await fetch('/api/alerts/check', {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!response.ok) return;
+				
+				const data = await response.json();
+				
+				if (data.triggered_alerts && data.triggered_alerts.length > 0) {
+					// Update badge
+					const badge = document.getElementById('alertsBadge');
+					badge.style.display = 'inline';
+					badge.textContent = data.count;
+					
+					// Show notifications for new triggers only
+					data.triggered_alerts.forEach(alert => {
+						const alertKey = `${alert.alert_id}-${alert.current_price.toFixed(2)}`;
+						if (!lastTriggeredAlerts.has(alertKey)) {
+							const notifType = (alert.direction === 'up' || alert.alert_type.includes('up')) ? 'success' : 'warning';
+							
+							// Add to notifications panel
+							addNotification(alert.message, notifType, alert.symbol, {
+								alert_id: alert.alert_id,
+								price: alert.current_price,
+								change: alert.change_pct
+							});
+							
+							// Show toast
+							showToast(alert.message, notifType);
+							lastTriggeredAlerts.add(alertKey);
+							
+							// Also show browser notification if permitted
+							showBrowserNotification(alert.symbol, alert.message);
+						}
+					});
+					
+					// Reload alerts to show updated trigger info
+					loadUserAlerts();
+				} else {
+					document.getElementById('alertsBadge').style.display = 'none';
+				}
+				
+			} catch (error) {
+				console.error('Check alerts error:', error);
+			}
+		}
+
+		// Toast notification system
+		function showToast(message, type = 'info') {
+			const container = document.getElementById('toastContainer');
+			
+			const toast = document.createElement('div');
+			const bgColors = {
+				'success': 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+				'error': 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+				'warning': 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+				'info': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+			};
+			
+			toast.style.cssText = `
+				background: ${bgColors[type] || bgColors.info};
+				color: white;
+				padding: 14px 20px;
+				border-radius: 10px;
+				box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				min-width: 300px;
+				max-width: 400px;
+				animation: slideInRight 0.3s ease;
+				cursor: pointer;
+			`;
+			
+			toast.innerHTML = `
+				<span style="flex: 1; font-weight: 500;">${message}</span>
+				<button style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8;">✕</button>
+			`;
+			
+			toast.onclick = () => toast.remove();
+			container.appendChild(toast);
+			
+			// Auto remove after 5 seconds
+			setTimeout(() => {
+				if (toast.parentElement) {
+					toast.style.animation = 'slideOutRight 0.3s ease';
+					setTimeout(() => toast.remove(), 300);
+				}
+			}, 5000);
+		}
+
+		// Browser notification support
+		function requestNotificationPermission() {
+			if ('Notification' in window && Notification.permission === 'default') {
+				Notification.requestPermission();
+			}
+		}
+
+		function showBrowserNotification(title, body) {
+			if ('Notification' in window && Notification.permission === 'granted') {
+				new Notification(`Stock Alert: ${title}`, {
+					body: body,
+					icon: '📊',
+					tag: 'stock-alert'
+				});
+			}
+		}
+
+		// Start alert monitoring
+		function startAlertMonitoring() {
+			// Request notification permission
+			requestNotificationPermission();
+			
+			// Load saved notifications from localStorage
+			updateNotificationsBadge();
+			
+			// Initial load
+			loadUserAlerts();
+			loadMarketMovers();
+			loadSuddenChanges();
+			
+			// Check for triggered alerts every 30 seconds
+			alertCheckInterval = setInterval(() => {
+				checkTriggeredAlerts();
+				loadSuddenChanges();
+			}, 30000);
+			
+			// Refresh market movers every 60 seconds
+			setInterval(loadMarketMovers, 60000);
+		}
+
+		// Close alert modal when clicking outside
+		document.getElementById('alertModal').addEventListener('click', function(e) {
+			if (e.target === this) {
+				toggleAlertModal();
+			}
+		});
+
+		// Add CSS animation for toast
+		const toastStyle = document.createElement('style');
+		toastStyle.textContent = `
+			@keyframes slideInRight {
+				from { transform: translateX(100%); opacity: 0; }
+				to { transform: translateX(0); opacity: 1; }
+			}
+			@keyframes slideOutRight {
+				from { transform: translateX(0); opacity: 1; }
+				to { transform: translateX(100%); opacity: 0; }
+			}
+		`;
+		document.head.appendChild(toastStyle);
+
+		window.onload = function() {
+			loadKPIsAndCharts();
+			loadPortfolio();
+			loadTransactions();
+			startAlertMonitoring();
+		};
+	</script>
+</body>
+</html>
