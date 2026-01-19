@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-StockMaster | Intelligent Market Analysis</title>
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-sidebar: #020617;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --accent: #6366f1;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --border: #334155;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        
+        body { background-color: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+        .nav-item:hover, .nav-item.active { background-color: rgba(59, 130, 246, 0.1); color: var(--primary); }
+        .nav-item i { width: 20px; text-align: center; }
+
+        /* Main Content */
+        .main-content { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
+
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Dashboard Grid */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background-color: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-title { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; }
+        .card-value { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
+        .card-sub { font-size: 0.875rem; margin-top: 0.25rem; }
+        .text-green { color: var(--green); }
+        .text-red { color: var(--red); }
+        .text-orange { color: var(--orange); }
+
+        /* Chart Area */
+        .chart-container { grid-column: span 3; height: 400px; position: relative; }
+        .control-panel { grid-column: span 1; display: flex; flex-direction: column; gap: 1rem; }
+        
+        .stock-selector { width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: var(--radius); outline: none; }
+        .time-filters { display: flex; gap: 0.5rem; background: var(--bg-dark); padding: 0.25rem; border-radius: var(--radius); }
+        .filter-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .filter-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--shadow); }
+
+        /* Tables */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .data-table th, .data-table td { text-align: left; padding: 1rem; border-bottom: 1px solid var(--border); }
+        .data-table th { color: var(--text-muted); font-weight: 500; font-size: 0.875rem; }
+        .data-table tr:hover { background-color: rgba(255,255,255,0.02); }
+
+        /* Chatbot */
+        .chat-container { height: calc(100vh - 150px); display: flex; flex-direction: column; }
+        .chat-window { flex: 1; overflow-y: auto; padding: 1rem; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+        .message { max-width: 80%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; }
+        .message.bot { background: rgba(59, 130, 246, 0.1); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .message.user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-input-area { display: flex; gap: 1rem; }
+        .chat-input { flex: 1; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); color: white; border-radius: var(--radius); outline: none; }
+        .send-btn { background: var(--primary); color: white; border: none; padding: 0 1.5rem; border-radius: var(--radius); cursor: pointer; transition: 0.2s; }
+        .send-btn:hover { background: var(--accent); }
+
+        /* Action Buttons */
+        .btn { padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; transition: 0.2s; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--accent); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid var(--red); }
+        .btn-danger:hover { background: var(--red); color: white; }
+        .btn-warning { background: rgba(245, 158, 11, 0.1); color: var(--orange); border: 1px solid var(--orange); }
+        .btn-warning:hover { background: var(--orange); color: white; }
+        
+        /* Toast Notification */
+        .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: var(--bg-card); border-left: 4px solid var(--primary); padding: 1rem 1.5rem; border-radius: 4px; box-shadow: var(--shadow); color: white; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 0.75rem; min-width: 250px; }
+        .toast.warning { border-left-color: var(--orange); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity:1; } }
+
+        /* Portfolio Specific */
+        .portfolio-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .pie-chart-wrapper { height: 250px; display: flex; justify-content: center; }
+
+        /* Alert Specific */
+        .alert-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: end; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+        .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--green); border: 1px solid var(--green); }
+        .badge-triggered { background: rgba(245, 158, 11, 0.1); color: var(--orange); border: 1px solid var(--orange); }
+
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 1500; display: none; align-items: center; justify-content: center;
+        }
+        .modal {
+            background: var(--bg-card); width: 90%; max-width: 400px;
+            padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow);
+            border: 1px solid var(--border); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        .modal h3 { margin-bottom: 1.5rem; color: var(--text-main); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 0.8rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; outline: none; }
+        .form-control:focus { border-color: var(--primary); }
+        .modal-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .modal-actions .btn { flex: 1; justify-content: center; }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+            .chart-container { grid-column: span 2; }
+            .control-panel { grid-column: span 2; flex-direction: row; flex-wrap: wrap; }
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            .sidebar { width: 100%; flex-direction: row; padding: 1rem; justify-content: space-between; align-items: center; }
+            .nav-links { flex-direction: row; gap: 0.25rem; }
+            .nav-text { display: none; }
+            .dashboard-grid { grid-template-columns:1fr; }
+            .chart-container { grid-column: span 1; height: 300px; }
+            .control-panel { grid-column: span 1; }
+            .portfolio-summary { grid-template-columns: 1fr; }
+            .alert-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-chart-line"></i>
+            <span class="nav-text">StockAI</span>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item active" onclick="showSection('dashboard')">
+                <i class="fa-solid fa-grip"></i> <span class="nav-text">Dashboard</span>
+            </li>
+            <li class="nav-item" onclick="showSection('watchlist')">
+                <i class="fa-regular fa-star"></i> <span class="nav-text">Watchlist</span>
+            </li>
+            <li class="nav-item" onclick="showSection('portfolio')">
+                <i class="fa-solid fa-briefcase"></i> <span class="nav-text">Portfolio</span>
+            </li>
+            <li class="nav-item" onclick="showSection('alerts')">
+                <i class="fa-solid fa-bell"></i> <span class="nav-text">Alerts</span>
+            </li>
+            <li class="nav-item" onclick="showSection('ai-chat')">
+                <i class="fa-solid fa-robot"></i> <span class="nav-text">AI Analyst</span>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="dashboard-grid">
+                <!-- Top Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Current Price</span>
+                        <i class="fa-solid fa-tag text-muted"></i>
+                    </div>
+                    <div class="card-value" id="dash-price">--</div>
+                    <div class="card-sub" id="dash-change">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Volume</span>
+                        <i class="fa-solid fa-layer-group text-muted"></i>
+                    </div>
+                    <div class="card-value" id="dash-volume">--</div>
+                    <div class="card-sub">24h Traded</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">P/E Ratio</span>
+                        <i class="fa-solid fa-percent text-muted"></i>
+                    </div>
+                    <div class="card-value" id="dash-pe">--</div>
+                    <div class="card-sub">Trailing 12M</div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Market Cap</span>
+                        <i class="fa-solid fa-building text-muted"></i>
+                    </div>
+                    <div class="card-value" id="dash-mcap">--</div>
+                    <div class="card-sub">Est. Valuation</div>
+                </div>
+
+                <!-- Chart Controls -->
+                <div class="card control-panel">
+                    <div>
+                        <label style="display:block; color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Select Stock</label>
+                        <select id="stock-select" class="stock-selector" onchange="changeStock(this.value)">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Timeframe</label>
+                        <div class="time-filters">
+                            <button class="filter-btn active" onclick="setChartPeriod('1D')">1D</button>
+                            <button class="filter-btn" onclick="setChartPeriod('1W')">1W</button>
+                            <button class="filter-btn" onclick="setChartPeriod('1M')">1M</button>
+                        </div>
+                    </div>
+                    <div style="margin-top:auto;">
+                        <div class="card-title">AI Sentiment</div>
+                        <div id="ai-sentiment" class="text-green" style="font-weight: 700; font-size: 1.2rem; margin-top:0.5rem;">NEUTRAL</div>
+                        <div class="card-sub" style="font-size:0.75rem;">Based on revenue & PE</div>
+                    </div>
+                </div>
+
+                <!-- Main Chart -->
+                <div class="card chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Watchlist Section -->
+        <section id="watchlist" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-regular fa-star"></i> My Watchlist</h2>
+                    <div>
+                        <input type="text" id="watchlist-search" placeholder="Add Symbol" class="stock-selector" style="width:200px; display:inline-block;">
+                        <button class="btn btn-primary" onclick="addToWatchlist()"><i class="fa-solid fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th>Change %</th>
+                            <th>Volume</th>
+                            <th>PE Ratio</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="watchlist-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section id="portfolio" class="section">
+            <div class="portfolio-summary">
+                <div class="card">
+                    <div class="card-header"><h2>Portfolio Value</h2></div>
+                    <div class="card-value" id="port-total-val">₹0.00</div>
+                    <div class="card-sub" id="port-pl">₹0.00 (0.00%)</div>
+                </div>
+                <div class="card pie-chart-wrapper">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Holdings</h2>
+                    <div>
+                        <button class="btn btn-danger" onclick="clearPortfolio()"><i class="fa-solid fa-trash"></i> Clear All</button>
+                        <button class="btn btn-primary" onclick="openAddHoldingModal()"><i class="fa-solid fa-plus"></i> Add Holding</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Qty</th>
+                            <th>Avg Buy Price</th>
+                            <th>Cur Price</th>
+                            <th>Value</th>
+                            <th>P/L</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section id="alerts" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-bell text-orange"></i> Price Alerts</h2>
+                    <button class="btn btn-danger" onclick="clearAlerts()"><i class="fa-solid fa-trash"></i> Clear All</button>
+                </div>
+                
+                <div class="alert-grid">
+                    <div class="form-group">
+                        <label>Stock</label>
+                        <select id="alert-symbol" class="form-control">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Condition</label>
+                        <select id="alert-condition" class="form-control">
+                            <option value=">">Price Goes Above (>)</option>
+                            <option value="<">Price Drops Below (<)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Price (₹)</label>
+                        <input type="number" id="alert-price" class="form-control" placeholder="Target Price">
+                    </div>
+                    <div class="form-group">
+                        <label style="opacity:0">Action</label>
+                        <button class="btn btn-warning" onclick="addAlert()" style="width:100%"><i class="fa-solid fa-plus"></i> Set Alert</button>
+                    </div>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Stock</th>
+                            <th>Condition</th>
+                            <th>Target Price</th>
+                            <th>Current Price</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- AI Chat Section -->
+        <section id="ai-chat" class="section">
+            <div class="card chat-container">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-robot"></i> AI Market Analyst</h2>
+                    <span class="card-title">Ask about stocks, risk, or trends.</span>
+                </div>
+                <div class="chat-window" id="chat-window">
+                    <div class="message bot">
+                        Hello! I'm your AI Market Analyst. I have access to the provided dataset containing fundamentals like P/E, Revenue, and Debt. 
+                        <br><br>
+                        Try asking:
+                        <br>• "Should I buy TCS?"
+                        <br>• "Compare INFY vs TCS"
+                        <br>• "Analyze my portfolio risk"
+                        <br>• "Show me high growth stocks"
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Type your question here..." onkeypress="handleChatKey(event)">
+                    <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+    
+    <!-- Add Holding Modal -->
+    <div id="add-modal" class="modal-overlay">
+        <div class="modal">
+            <h3>Add New Holding</h3>
+            <div class="form-group">
+                <label>Select Stock</label>
+                <select id="modal-stock-select" class="form-control">
+                    <!-- Populated by JS -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="modal-qty" class="form-control" placeholder="e.g. 10" min="1">
+            </div>
+            <div class="form-group">
+                <label>Avg Buy Price (₹)</label>
+                <input type="number" id="modal-price" class="form-control" placeholder="e.g. 2500" min="1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="closeModal('add-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmAddHolding()">Add to Portfolio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Confirmation Modal -->
+    <div id="sell-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 style="color: var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> Confirm Sell</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                Are you sure you want to sell <strong id="sell-stock-name"></strong>?
+                <br>This action cannot be undone.
+            </p>
+            <div class="modal-actions">
+                <button class="btn" style="background: var(--border); color:white" onclick="closeModal('sell-modal')">Cancel</button>
+                <button class="btn btn-danger" onclick="executeSell()">Confirm Sell</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // --- 1. DATA PARSING & STATE ---
+
+        const RAW_CSV = `0 | symbol | revenuePerShare | trailingPE | earningsQuarterlyGrowth | previousClose | open | dayLow | dayHigh | volume | trailingEps | pegRatio | ebitda | totalDebt | totalRevenue | debtToEquity | revenuePerShare.1 | earningsGrowth | revenueGrowth
+1 | RELIANCE.BO | 1296.823 | 28.012129 | 0.093 | 2901.3 | 2897.05 | 2895.35 | 2920 | 562484 | 103.88 | 7.752124646 | 1.50E+12 | 3.17E+12 | 8.77E+12 | 36.1 | 1296.823 | 0.093 | 0.036
+2 | RELIANCE.NS | 1296.823 | 28.010878 | 0.093 | 2901.95 | 2899.95 | 2894.7 | 2920 | 9763420 | 103.89 | 7.752124646 | 1.50E+12 | 3.17E+12 | 8.77E+12 | 36.1 | 1296.823 | 0.093 | 0.036
+3 | HDFCBANK.BO | 293.74 | 16.260424 | 0.359 | 1445.1 | 1437.3 | 1437.3 | 1450.7 | 783356 | 88.74 | 7.752124646 | 12331239082 | 8.00E+12 | 1.93E+12 | 118.1582281 | 293.74 | -0.001 | 1.211
+4 | HINDUNILVR.NS | 263.412 | 51.28523 | 0.014 | 2242.35 | 2239.05 | 2232.05 | 2266 | 3507581 | 44 | 7.752124646 | 1.42E+11 | 12720000000 | 6.19E+11 | 2.515 | 263.412 | 0.014 | -0.002
+5 | ICICIBANK.NS | 197.399 | 18.315136 | 0.257 | 1081.8 | 1081.15 | 1078.7 | 1093.7 | 17212189 | 59.53 | 1.03 | 12331239082 | 2.01E+12 | 1.38E+12 | 118.1582281 | 197.399 | 0.253 | 0.204
+6 | HINDUNILVR.BO | 263.412 | 51.278408 | 0.014 | 2242.6 | 2241.95 | 2230.85 | 2265.35 | 265737 | 44 | 7.752124646 | 1.42E+11 | 12720000000 | 6.19E+11 | 2.515 | 263.412 | 0.014 | -0.002
+7 | INFY.NS | 4.481 | 25.573729 | -0.084 | 1554.7 | 1521 | 1498.2 | 1528.9 | 14671426 | 59 | 2.96 | 4249999872 | 1051000000 | 18552000512 | 10.871 | 4.481 | -0.068 | 0.001
+8 | TCS.NS | 653.036 | 31.84772 | 0.02 | 3972.95 | 3897 | 3855 | 3938 | 5851619 | 122.8 | 4.03 | 6.13E+11 | 75479998464 | 2.39E+12 | 8.297 | 653.036 | 0.022 | 0.04
+9 | HDFCBANK.NS | 293.74 | 16.259296 | 0.359 | 1445.75 | 1441 | 1437.75 | 1450.75 | 22986502 | 88.74 | 7.752124646 | 12331239082 | 8.00E+12 | 1.93E+12 | 118.1582281 | 293.74 | -0.001 | 1.211
+10 | TCS.BO | 653.036 | 31.84748 | 0.02 | 3974.05 | 3899 | 3856 | 3938.4 | 275926 | 122.87 | 7.752124646 | 6.13E+11 | 75479998464 | 2.39E+12 | 8.297 | 653.036 | 0.022 | 0.04
+11 | HDFC.NS | 628.471 | 19.15983 | 0.18 | 2724.3 | 2755.8 | 2710.6 | 2777.65 | 42365041 | 142.59 | 1.65 | 12331239082 | 4.36E+12 | 1.14E+12 | 118.1582281 | 628.471 | 0.168 | 0.217
+12 | BAJFINANCE.NS | 497.35 | 29.850765 | 0.224 | 6715.75 | 6705 | 6686.3 | 6803 | 1125038 | 226.49 | 7.752124646 | 12331239082 | 2.02E+12 | 3.02E+11 | 336.941 | 497.35 | 0.209 | 0.221
+13 | SBIN.NS | 331.701 | 10.449203 | -0.285 | 744.3 | 743.85 | 741.4 | 748.8 | 15529602 | 71.46 | 0.49 | 12331239082 | 5.48E+12 | 2.96E+12 | 118.1582281 | 331.701 | -0.285 | 0.166
+14 | WIPRO.NS | 169.494 | 22.729818 | -0.118 | 500.45 | 489.25 | 479.55 | 490.75 | 14320951 | 21.43 | 5.87 | 1.65E+11 | 1.79E+11 | 9.07E+11 | 24.507 | 169.494 | -0.074 | -0.044
+15 | BHARTIARTL.NS | 261.056 | 85.48409 | 0.538 | 1220.8 | 1226.95 | 1222 | 1245 | 7839987 | 14.46 | 7.752124646 | 6.95E+11 | 2.18E+12 | 1.48E+12 | 211.001 | 261.056 | 0.5 | 0.059
+16 | KOTAKBANK.NS | 325.645 | 20.283169 | 0.068 | 1772.15 | 1769.9 | 1765 | 1782.5 | 7060497 | 87.58 | 7.752124646 | 12331239082 | 6.15E+11 | 6.47E+11 | 118.1582281 | 325.645 | 0.067 | 0.2
+17 | HCLTECH.NS | 4.829 | 26.882656 | 0.05 | 1595.8 | 1560 | 1508.2 | 1571.45 | 7468632 | 57.95 | 3.75 | 2699000064 | 646000000 | 13075000320 | 7.962 | 4.829 | 0.056 | 0.053
+18 | HDFC.BO | 628.471 | 19.148136 | 0.18 | 2729.95 | 2750.4 | 2711.95 | 2777.5 | 438405 | 142.57 | 7.752124646 | 12331239082 | 4.36E+12 | 1.14E+12 | 118.1582281 | 628.471 | 0.168 | 0.217
+19 | INFY.BO | 4.481 | 25.573729 | -0.084 | 1555.2 | 1517.95 | 1497.65 | 1529 | 6022096 | 59 | 7.752124646 | 4249999872 | 1051000000 | 18552000512 | 10.871 | 4.481 | -0.068 | 0.001
+20 | DMART.NS | 749.054 | 114.93983 | 0.171 | 4163.1 | 4159.8 | 4151.15 | 4330.5 | 921402 | 37.39 | 5.18 | 37884751872 | 6303799808 | 4.87E+11 | 3.616 | 749.054 | 0.173 | 0.173
+21 | ICICIBANK.BO | 197.399 | 18.314852 | 0.257 | 1082.2 | 1077.35 | 1077.35 | 1093.5 | 1016026 | 59.52 | 7.752124646 | 12331239082 | 2.01E+12 | 1.38E+12 | 118.1582281 | 197.399 | 0.253 | 0.204
+22 | ASIANPAINT.NS | 370.192 | 50 | 0.35 | 2821.15 | 2821.15 | 2808 | 2855.15 | 1652122 | 56.83 | 7.752124646 | 75312201728 | 23267700736 | 3.55E+11 | 13.545 | 370.192 | 0.349 | 0.054
+23 | KOTAKBANK.BO | 325.645 | 20.284603 | 0.068 | 1772.2 | 1760.7 | 1760.7 | 1782.85 | 220011 | 87.49 | 7.752124646 | 12331239082 | 6.15E+11 | 6.47E+11 | 118.1582281 | 325.645 | 0.067 | 0.2
+24 | ITC.NS | 56.743 | 26.102314 | 0.066 | 421.25 | 421.25 | 421.25 | 429.65 | 38855561 | 16.42 | 3.25 | 2.62E+11 | 2840600064 | 7.06E+11 | 0.408 | 56.743 | 0.057 | 0.018
+25 | LT.NS | 1546.819 | 39.681915 | 0.155 | 3560 | 3546.2 | 3546.2 | 3647.3 | 3020256 | 91.17 | 1.44 | 2.67E+11 | 1.22E+12 | 2.16E+12 | 130.668 | 1546.819 | 0.18 | 0.187
+26 | MARUTI.NS | 4461.15 | 31.05621 | 0.341 | 11908.15 | 11890.05 | 11890.05 | 12427.3 | 1061891 | 397.27 | 1.23 | 1.48E+11 | 3924999936 | 1.35E+12 | 0.597 | 4461.15 | 0.288 | 0.153
+27 | BAJAJFINSV.NS | 631.981 | 32.787075 | 0.211 | 1602.6 | 1593 | 1583.4 | 1610 | 1569716 | 48.42 | 1.78 | 3.73E+11 | 1.97E+12 | 1.01E+12 | 231.603 | 631.981 | 0.196 | 0.336
+28 | BHARTIARTL.BO | 261.056 | 85.46335 | 0.538 | 1221.8 | 1227 | 1220.8 | 1244.95 | 4235017 | 14.46 | 7.752124646 | 6.95E+11 | 2.18E+12 | 1.48E+12 | 211.001 | 261.056 | 0.5 | 0.059
+29 | HCLTECH.BO | 4.829 | 26.955883 | 0.05 | 1597.3 | 1555.65 | 1507.5 | 1567.5 | 234870 | 57.8 | 7.752124646 | 2699000064 | 646000000 | 13075000320 | 7.962 | 4.829 | 0.056 | 0.053
+30 | TITAN.NS | 551.524 | 95.23895 | 0.165 | 3627.55 | 3627.55 | 3621.25 | 3726.9 | 1281067 | 38.92 | 5.19 | 48017498112 | 1.43E+11 | 4.90E+11 | 114.352 | 551.524 | 0.169 | 0.22
+31 | ULTRACEMCO.NS | 2399.123 | 43.47831 | 0.679 | 9600.75 | 9610 | 9580 | 9751.8 | 224498 | 222.68 | 7.752124646 | 1.19E+11 | 1.15E+11 | 6.92E+11 | 20.389 | 2399.123 | 0.68 | 0.079
+32 | AXISBANK.NS | 202.148 | 23.980043 | 0.049 | 1035.6 | 1040.1 | 1029.95 | 1047.25 | 9888818 | 43.09 | 7.752124646 | 12331239082 | 2.23E+12 | 6.22E+11 | 118.1582281 | 202.148 | 0.053 | 0.167
+33 | ADANIGREEN.NS | 65.149 | 217.34154 | 1.485 | 1855.35 | 1857.05 | 1837.05 | 1865 | 390256 | 8.52 | 7.752124646 | 72537497600 | 5.74E+11 | 93110001664 | 719.113 | 65.149 | 2.021 | 0.171
+34 | ITC.BO | 56.743 | 26.109081 | 0.066 | 421.25 | 421.25 | 421.25 | 429.6 | 1525884 | 16.41 | 7.752124646 | 2.62E+11 | 2840600064 | 7.06E+11 | 0.408 | 56.743 | 0.057 | 0.018
+35 | MARUTI.BO | 4461.15 | 31.05556 | 0.341 | 11913.8 | 11900.95 | 11900.45 | 12423.45 | 26854 | 397.23 | 1.48 | 1.48E+11 | 3924999936 | 1.35E+12 | 0.597 | 4461.15 | 0.288 | 0.153
+36 | ASIANPAINT.BO | 370.192 | 50.251945 | 0.35 | 2821.5 | 2820 | 2809 | 2854.75 | 74738 | 56.56 | 7.752124646 | 75312201728 | 23267700736 | 3.55E+11 | 13.545 | 370.192 | 0.349 | 0.054
+37 | SUNPHARMA.NS | 197.739 | 43.28491 | 0.165 | 1565.2 | 1568.9 | 1566.1 | 1621 | 4941192 | 37.17 | 0.83 | 1.28E+11 | 19282300928 | 4.74E+11 | 3.051 | 197.739 | 0.167 | 0.101
+38 | ATGL.NS | 40.191 | 172.26605 | 0.176 | 936.05 | 941.95 | 933.1 | 948.65 | 820555 | 5.45 | 7.752124646 | 9978024960 | 13564199936 | 44227801088 | 41.92 | 40.191 | 0.175 | 0.046
+39 | ONGC.NS | 467.185 | 7.898289 | -0.099 | 262.95 | 262.95 | 258.45 | 265.25 | 13024864 | 33.33 | -4.51 | 1.04E+12 | 1.43E+12 | 5.88E+12 | 42.656 | 467.185 | -0.099 | -0.022
+40 | BAJFINANCE.BO | 497.35 | 29.851254 | 0.224 | 6715.7 | 6690.05 | 6690.05 | 6800 | 27202 | 226.56 | 7.752124646 | 12331239082 | 2.02E+12 | 3.02E+11 | 336.941 | 497.35 | 0.209 | 0.221
+41 | WIPRO.BO | 169.494 | 22.727484 | -0.118 | 500.7 | 488.05 | 479.45 | 490.45 | 842058 | 21.43 | 7.752124646 | 1.65E+11 | 1.79E+11 | 9.07E+11 | 24.507 | 169.494 | -0.074 | -0.044
+42 | NESTLEIND.NS | 198.364 | 83.335495 | 0.071 | 2553.65 | 2540.2 | 2537 | 2592 | 1013484 | 30.88 | 7.752124646 | 45104898048 | 3415000064 | 1.91E+11 | 11.042 | 198.364 | 0.071 | 0.083
+43 | TATAMOTORS.NS | 903.391 | 19.340702 | 1.375 | 964.9 | 964.9 | 950.35 | 986.2 | 13633897 | 50.66 | 7.752124646 | 4.50E+11 | 1.28E+12 | 4.24E+12 | 210.024 | 903.391 | 1.072591783 | 0.25
+44 | ADANIENT.NS | 944.163 | 100.99772 | 1.303 | 3066.5 | 3066.55 | 3048.05 | 3128.95 | 951067 | 30.77 | 7.752124646 | 1.11E+11 | 5.71E+11 | 1.08E+12 | 136.906 | 944.163 | 1.298 | 0.065
+45 | SBIN.BO | 331.701 | 10.437701 | -0.285 | 743.8 | 743.3 | 741.55 | 749 | 656117 | 71.51 | 7.752124646 | 12331239082 | 5.48E+12 | 2.96E+12 | 118.1582281 | 331.701 | -0.285 | 0.166
+46 | ADANITRANS.NS | 368.6800454 | inf | 1.272780739 | 667.6394034 | 668.5182914 | 660.4500689 | 682.8824728 | 774366.3473 | 18.4682045 | 7.752124646 | 12331239082 | 72614166656 | 87657371063 | 118.1582281 | 368.6800454 | 1.072591783 | 0.490908862
+47 | TATAMTRDVR.NS | 903.391 | 12.803748 | 1.375 | 637.75 | 639.45 | 626.55 | 652.25 | 1401808 | 50.7 | 0.76 | 4.50E+11 | 1.28E+12 | 4.24E+12 | 210.024 | 903.391 | 1.072591783 | 0.25
+48 | JSWSTEEL.NS | 726.569 | 17.922642 | 3.929 | 812.35 | 808 | 806.75 | 832.95 | 3983356 | 46.02 | 7.752124646 | 3.23E+11 | 8.19E+11 | 1.76E+12 | 108.609 | 726.569 | 3.867 | 0.072
+49 | TECHM.NS | 598.028 | 39.8438 | -0.606 | 1282.75 | 1258.5 | 1236.1 | 1279.9 | 2990639 | 31.69 | 4.56 | 54702252032 | 26140999680 | 5.28E+11 | 9.733 | 598.028 | -0.607 | -0.046
+50 | ADANIPORTS.NS | 118.536 | 38.3139 | 0.679 | 1262.45 | 1262.45 | 1255.05 | 1289.1 | 3075733 | 33.45 | 1.03 | 1.48E+11 | 5.01E+11 | 2.56E+11 | 99.596 | 118.536 | 0.678 | 0.446`;
+
+        let stocks = [];
+        let watchlist = JSON.parse(localStorage.getItem('watchlist')) || ['RELIANCE.NS', 'TCS.NS', 'INFY.NS'];
+        let portfolio = [];
+        let alerts = []; // NEW: Alerts Array
+        let sellIndex = -1; 
+        let selectedStock = 'RELIANCE.NS';
+        let mainChart = null;
+        let portfolioChart = null;
+
+        // --- 2. INITIALIZATION & HELPERS ---
+
+        function init() {
+            parseData();
+            
+            // Load Portfolio
+            let storedPortfolio = JSON.parse(localStorage.getItem('portfolio'));
+            if (!storedPortfolio || storedPortfolio.length ===0) {
+                const r = getStock('RELIANCE.NS');
+                const t = getStock('TCS.NS');
+                const i = getStock('INFY.NS');
+                
+                portfolio = [
+                    { symbol: 'RELIANCE.NS', qty: 10, buyPrice: r ? r.previousClose : 2850 },
+                    { symbol: 'TCS.NS', qty: 5, buyPrice: t ? t.previousClose : 3900 },
+                    { symbol: 'INFY.NS', qty: 20, buyPrice: i ? i.previousClose : 1500 }
+                ];
+                localStorage.setItem('portfolio', JSON.stringify(portfolio));
+            } else {
+                portfolio = storedPortfolio;
+            }
+
+            // Load Alerts
+            alerts = JSON.parse(localStorage.getItem('alerts')) || [];
+
+            renderStockSelector();
+            populateModalSelect();
+            populateAlertSelect(); // NEW
+            updateDashboard();
+            renderWatchlist();
+            renderPortfolio();
+            renderAlerts(); // NEW
+            
+            setInterval(simulateLivePrices, 3000);
+        }
+
+        function parseData() {
+            const lines = RAW_CSV.split('\n');
+            const headers = lines[0].split('|').map(h => h.trim());
+            
+            for (let i =1; i < lines.length; i++) {
+                const values = lines[i].split('|').map(v => v.trim());
+                if (values.length < 5) continue; 
+
+                let stock = {};
+                headers.forEach((header, index) => {
+                    let val = values[index];
+                    if (typeof val === 'string' && val.includes('E+')) {
+                        val = parseFloat(val);
+                    } else if (!isNaN(val) && val !== '') {
+                        val = parseFloat(val);
+                    }
+                    stock[header] = val;
+                });
+                stocks.push(stock);
+            }
+        }
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
+        }
+
+        function formatNumber(num) {
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e7) return (num / 1e7).toFixed(2) + 'Cr';
+            return num.toLocaleString('en-IN');
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'warning' ? 'warning' : ''}`;
+            const icon = type === 'error' ? 'fa-circle-exclamation' : type === 'warning' ? 'fa-bell' : 'fa-circle-check';
+            toast.style.borderLeftColor = type === 'error' ? 'var(--red)' : (type === 'warning' ? 'var(--orange)' : 'var(--primary)');
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function getStock(symbol) {
+            return stocks.find(s => s.symbol === symbol);
+        }
+
+        // --- 3. DASHBOARD LOGIC ---
+
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            if(id === 'portfolio') renderPortfolioChart();
+        }
+
+        function renderStockSelector() {
+            const select = document.getElementById('stock-select');
+            select.innerHTML = '';
+            const uniqueStocks = [...new Set(stocks.map(s => s.symbol))].sort();
+            
+            uniqueStocks.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                select.appendChild(option);
+            });
+            select.value = selectedStock;
+        }
+
+        function changeStock(symbol) {
+            selectedStock = symbol;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const stock = getStock(selectedStock);
+            if (!stock) return;
+
+            const currentPrice = stock.dayHigh; 
+            const prevClose = stock.previousClose;
+            const change = currentPrice - prevClose;
+            const changePct = (change / prevClose) * 100;
+
+            document.getElementById('dash-price').textContent = formatCurrency(currentPrice);
+            
+            const changeEl = document.getElementById('dash-change');
+            changeEl.textContent = `${change > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+            changeEl.className = 'card-sub ' + (change >= 0 ? 'text-green' : 'text-red');
+
+            document.getElementById('dash-volume').textContent = formatNumber(stock.volume);
+            
+            const pe = stock.trailingPE === 'inf' ? '∞' : stock.trailingPE.toFixed(2);
+            document.getElementById('dash-pe').textContent = pe;
+
+            document.getElementById('dash-mcap').textContent = 'Rev: ' + formatNumber(stock.totalRevenue);
+
+            let sentiment = 'NEUTRAL';
+            let color = 'var(--text-muted)';
+            
+            if (stock.earningsQuarterlyGrowth > 0.1 && stock.trailingPE < 30) {
+                sentiment = 'BULLISH';
+                color = 'var(--green)';
+            } else if (stock.earningsQuarterlyGrowth < 0 || stock.trailingPE > 60) {
+                sentiment = 'BEARISH';
+                color = 'var(--red)';
+            }
+
+            const sentEl = document.getElementById('ai-sentiment');
+            sentEl.textContent = sentiment;
+            sentEl.style.color = color;
+
+            updateChart(stock);
+        }
+
+        function generateChartData(stock, period) {
+            const points = period === '1D' ? 24 : period === '1W' ? 7 : 30;
+            let labels = [];
+            let data = [];
+            
+            let startPrice = stock.open;
+            let volatility = (stock.dayHigh - stock.dayLow) / 2;
+            
+            for (let i = 0; i < points; i++) {
+                labels.push(i === points -1 ? 'Now' : `T-${points - 1 - i}`);
+                let noise = (Math.random() - 0.5) * volatility * 0.5;
+                let trend = (stock.dayHigh - stock.open) / points;
+                let price = startPrice + (trend * i) + noise;
+                data.push(price);
+            }
+            data[data.length - 1] = stock.dayHigh; 
+            
+            return { labels, data };
+        }
+
+        function updateChart(stock) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const period = document.querySelector('.filter-btn.active').textContent;
+            const chartData = generateChartData(stock, period);
+
+            const isPos = chartData.data[chartData.data.length-1] >= stock.previousClose;
+            const color = isPos ? '#10b981' : '#ef4444';
+
+            if (mainChart) mainChart.destroy();
+
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Price',
+                        data: chartData.data,
+                        borderColor: color,
+                        backgroundColor: (context) => {
+                            const bgCtx = context.chart.ctx;
+                            const gradient = bgCtx.createLinearGradient(0, 0, 0, 400);
+                            gradient.addColorStop(0, isPos ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)');
+                            gradient.addColorStop(1, 'rgba(30, 41, 59, 0)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function setChartPeriod(period) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateDashboard();
+        }
+
+        // --- 4. WATCHLIST LOGIC ---
+
+        function renderWatchlist() {
+            const tbody = document.getElementById('watchlist-body');
+            tbody.innerHTML = '';
+
+            watchlist.forEach(symbol => {
+                const stock = getStock(symbol);
+                if (!stock) return;
+
+                const current = stock.dayHigh;
+                const prev = stock.previousClose;
+                const change = ((current - prev) / prev) * 100;
+                const isPos = change >= 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600">${symbol}</td>
+                    <td>${formatCurrency(current)}</td>
+                    <td class="${isPos ? 'text-green' : 'text-red'}">${isPos?'+':''}${change.toFixed(2)}%</td>
+                    <td>${formatNumber(stock.volume)}</td>
+                    <td>${stock.trailingPE ? stock.trailingPE.toFixed(2) : 'N/A'}</td>
+                    <td><button class="btn btn-danger" onclick="removeFromWatchlist('${symbol}')"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            localStorage.setItem('watchlist', JSON.stringify(watchlist));
+        }
+
+        function addToWatchlist() {
+            const input = document.getElementById('watchlist-search');
+            const symbol = input.value.trim().toUpperCase();
+            
+            if (!symbol) return;
+            if (!getStock(symbol)) { showToast('Stock symbol not found in dataset!', 'error'); return; }
+            if (watchlist.includes(symbol)) { showToast('Already in watchlist', 'error'); return; }
+
+            watchlist.push(symbol);
+            renderWatchlist();
+            showToast(`${symbol} added to watchlist`);
+            input.value = '';
+        }
+
+        function removeFromWatchlist(symbol) {
+            watchlist = watchlist.filter(s => s !== symbol);
+            renderWatchlist();
+            showToast(`${symbol} removed`);
+        }
+
+        // --- 5. PORTFOLIO LOGIC ---
+
+        function renderPortfolio() {
+            const tbody = document.getElementById('portfolio-body');
+            tbody.innerHTML = '';
+            
+            let totalVal = 0;
+            let totalInvested = 0;
+
+            portfolio.forEach((holding, index) => {
+                const stock = getStock(holding.symbol);
+                if (!stock) return;
+
+                const curPrice = stock.dayHigh;
+                const curVal = curPrice * holding.qty;
+                const invested = holding.buyPrice * holding.qty;
+                const pl = curVal - invested;
+                const plPct = (pl / invested) * 100;
+
+                totalVal += curVal;
+                totalInvested += invested;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600">${holding.symbol}</td>
+                    <td>${holding.qty}</td>
+                    <td>${formatCurrency(holding.buyPrice)}</td>
+                    <td>${formatCurrency(curPrice)}</td>
+                    <td>${formatCurrency(curVal)}</td>
+                    <td class="${pl >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(pl)} (${plPct.toFixed(1)}%)</td>
+                    <td><button class="btn btn-danger" onclick="openSellModal(${index})">Sell</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('port-total-val').textContent = formatCurrency(totalVal);
+            
+            const totalPl = totalVal - totalInvested;
+            const totalPlPct = totalInvested > 0 ? (totalPl / totalInvested) * 100 : 0;
+            
+            const plEl = document.getElementById('port-pl');
+            plEl.textContent = `${formatCurrency(totalPl)} (${totalPlPct.toFixed(2)}%)`;
+            plEl.className = 'card-sub ' + (totalPl >= 0 ? 'text-green' : 'text-red');
+
+            localStorage.setItem('portfolio', JSON.stringify(portfolio));
+        }
+
+        function populateModalSelect() {
+            const select = document.getElementById('modal-stock-select');
+            select.innerHTML = '';
+            const uniqueStocks = [...new Set(stocks.map(s => s.symbol))].sort();
+            uniqueStocks.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                select.appendChild(option);
+            });
+        }
+
+        function openAddHoldingModal() {
+            document.getElementById('add-modal').style.display = 'flex';
+        }
+
+        function confirmAddHolding() {
+            const symbol = document.getElementById('modal-stock-select').value;
+            const qty = parseFloat(document.getElementById('modal-qty').value);
+            const price = parseFloat(document.getElementById('modal-price').value);
+            
+            if (!qty || qty <= 0) { showToast('Invalid Quantity', 'error'); return; }
+            if (!price || price <= 0) { showToast('Invalid Buy Price', 'error'); return; }
+
+            portfolio.push({ symbol, qty, buyPrice: price });
+            renderPortfolio();
+            closeModal('add-modal');
+            showToast("Holding added successfully");
+            
+            document.getElementById('modal-qty').value = '';
+            document.getElementById('modal-price').value = '';
+        }
+
+        function openSellModal(index) {
+            sellIndex = index;
+            const holding = portfolio[index];
+            document.getElementById('sell-stock-name').textContent = `${holding.qty} shares of ${holding.symbol}`;
+            document.getElementById('sell-modal').style.display = 'flex';
+        }
+
+        function executeSell() {
+            if (sellIndex > -1) {
+                portfolio.splice(sellIndex, 1);
+                renderPortfolio();
+                showToast("Holding sold");
+            }
+            closeModal('sell-modal');
+            sellIndex = -1;
+        }
+
+        function clearPortfolio() {
+            if(confirm("Clear all portfolio data?")) {
+                portfolio = [];
+                localStorage.removeItem('portfolio');
+                renderPortfolio();
+                showToast("Portfolio cleared");
+            }
+        }
+
+        function renderPortfolioChart() {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            
+            const labels = portfolio.map(p => p.symbol);
+            const data = portfolio.map(p => {
+                const s = getStock(p.symbol);
+                return s ? s.dayHigh * p.qty : 0;
+            });
+            
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+            if (portfolioChart) portfolioChart.destroy();
+
+            portfolioChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.length ? labels : ['Empty'],
+                    datasets: [{
+                        data: data.length ? data : [1],
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#cbd5e1' } }
+                    }
+                }
+            });
+        }
+
+        // --- 6. ALERTS LOGIC (NEW) ---
+
+        function populateAlertSelect() {
+            const select = document.getElementById('alert-symbol');
+            select.innerHTML = '';
+            const uniqueStocks = [...new Set(stocks.map(s => s.symbol))].sort();
+            uniqueStocks.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                select.appendChild(option);
+            });
+        }
+
+        function addAlert() {
+            const symbol = document.getElementById('alert-symbol').value;
+            const condition = document.getElementById('alert-condition').value;
+            const target = parseFloat(document.getElementById('alert-price').value);
+
+            if (!target || target <= 0) {
+                showToast('Please enter a valid target price.', 'error');
+                return;
+            }
+
+            alerts.push({ symbol, condition, target, triggered: false });
+            localStorage.setItem('alerts', JSON.stringify(alerts));
+            renderAlerts();
+            showToast(`Alert set for ${symbol}`);
+            
+            document.getElementById('alert-price').value = '';
+        }
+
+        function renderAlerts() {
+            const tbody = document.getElementById('alerts-body');
+            tbody.innerHTML = '';
+
+            if (alerts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted)">No active alerts.</td></tr>';
+                return;
+            }
+
+            alerts.forEach((alert, index) => {
+                const stock = getStock(alert.symbol);
+                const currentPrice = stock ? stock.dayHigh : 0;
+                const isTriggered = alert.triggered;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600">${alert.symbol}</td>
+                    <td>${alert.condition === '>' ? 'Above (>)' : 'Below (<)'}</td>
+                    <td>${formatCurrency(alert.target)}</td>
+                    <td>${formatCurrency(currentPrice)}</td>
+                    <td>
+                        <span class="badge ${isTriggered ? 'badge-triggered' : 'badge-active'}">
+                            ${isTriggered ? 'Triggered' : 'Active'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteAlert(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteAlert(index) {
+            alerts.splice(index, 1);
+            localStorage.setItem('alerts', JSON.stringify(alerts));
+            renderAlerts();
+            showToast("Alert removed");
+        }
+
+        function clearAlerts() {
+            if(confirm("Clear all alerts?")) {
+                alerts = [];
+                localStorage.removeItem('alerts');
+                renderAlerts();
+                showToast("All alerts cleared");
+            }
+        }
+
+        // --- 7. SIMULATION LOGIC ---
+
+        function simulateLivePrices() {
+            // Check Alerts
+            alerts.forEach((alert, idx) => {
+                if (alert.triggered) return; // Don't trigger again
+
+                const stock = getStock(alert.symbol);
+                if (!stock) return;
+
+                const currentPrice = stock.dayHigh; // Simulated price
+                let hit = false;
+
+                if (alert.condition === '>' && currentPrice >= alert.target) hit = true;
+                if (alert.condition === '<' && currentPrice <= alert.target) hit = true;
+
+                if (hit) {
+                    showToast(`ALERT: ${alert.symbol} hit ₹${alert.target}!`, 'warning');
+                    alerts[idx].triggered = true;
+                    localStorage.setItem('alerts', JSON.stringify(alerts));
+                    renderAlerts();
+                }
+            });
+
+            // Update Dashboard Chart & UI
+            if (mainChart && document.getElementById('dashboard').classList.contains('active')) {
+                const data = mainChart.data.datasets[0].data;
+                const lastIndex = data.length - 1;
+                const change = (Math.random() - 0.5) * 2; 
+                data[lastIndex] += change;
+                mainChart.update('none'); 
+                
+                const stock = getStock(selectedStock);
+                if(stock) {
+                    const newPrice = data[lastIndex];
+                    const changePct = ((newPrice - stock.previousClose)/stock.previousClose)*100;
+                    document.getElementById('dash-price').textContent = formatCurrency(newPrice);
+                    const el = document.getElementById('dash-change');
+                    el.textContent = `${changePct>0?'+':''}${changePct.toFixed(2)}%`;
+                    el.className = 'card-sub ' + (changePct>=0?'text-green':'text-red');
+                }
+            }
+        }
+
+        // --- 8. AI CHATBOT LOGIC ---
+
+        function handleChatKey(e) {
+            if(e.key === 'Enter') sendMessage();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                const response = getAIResponse(text);
+                addMessage(response, 'bot');
+            }, 600);
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = text; 
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getAIResponse(query) {
+            const q = query.toLowerCase();
+            const stockMatch = stocks.find(s => q.includes(s.symbol.toLowerCase()));
+            if (stockMatch) {
+                const rec = stockMatch.trailingPE < 25 && stockMatch.earningsQuarterlyGrowth > 0 ? "Undervalued & Growing" : 
+                           stockMatch.trailingPE > 50 ? "Overvalued (High PE)" : "Fair Value";
+                return `<strong>${stockMatch.symbol} Analysis:</strong><br>PE Ratio: ${stockMatch.trailingPE.toFixed(1)}<br>Revenue Growth: ${(stockMatch.revenueGrowth * 100).toFixed(1)}%<br>Opinion: ${rec}.`;
+            }
+            if (q.includes(" vs ")) {
+                const parts = q.split(" vs ");
+                const s1 = getStock(parts[0].trim().toUpperCase());
+                const s2 = getStock(parts[1].trim().toUpperCase());
+                if (s1 && s2) {
+                    return `<strong>Comparison (${s1.symbol} vs ${s2.symbol}):</strong><br>PE: ${s1.symbol} (${s1.trailingPE.toFixed(1)}) vs ${s2.symbol} (${s2.trailingPE.toFixed(1)})<br>Growth: ${s1.symbol} (${(s1.revenueGrowth*100).toFixed(1)}%) vs ${s2.symbol} (${(s2.revenueGrowth*100).toFixed(1)}%)`;
+                }
+            }
+            if (q.includes("risk") || q.includes("portfolio")) {
+                if(portfolio.length === 0) return "Your portfolio is empty. No risk to analyze.";
+                const peSum = portfolio.reduce((acc, h) => acc + (getStock(h.symbol)?.trailingPE || 0), 0);
+                const avgPE = peSum / portfolio.length;
+                let risk = "Low";
+                if (avgPE > 30) risk = "Moderate";
+                if (avgPE > 50) risk = "High";
+                return `Your portfolio has an average PE of ${avgPE.toFixed(1)}.<br>Risk Level: <strong>${risk}</strong>.<br>Diversification: You hold ${portfolio.length} assets.`;
+            }
+            if (q.includes("buy") || q.includes("sell")) {
+                return "I can provide fundamental data (PE, Growth) to help you decide, but I cannot give financial advice. Ask about a specific symbol to see its metrics.";
+            }
+            return "I can analyze stocks from the provided dataset. Try asking about 'RELIANCE.NS', 'compare TCS vs INFY', or 'analyze portfolio risk'.";
+        }
+
+        // --- 9. UTILS ---
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        window.onload = init;
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = "none";
+            }
+        }
+
+    </script>
+</body>
+</html>
