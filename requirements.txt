@@ -1,10 +1,18 @@
-Flask
-Flask-JWT-Extended
-SQLAlchemy
-psycopg2-binary
-requests
-Werkzeug
-dotenv
-flask_cors
+# Frontend
+streamlit
+streamlit-autorefresh
+plotly
 pandas
-google
+numpy
+
+# Backend
+flask
+requests
+psycopg2-binary
+python-dotenv
+
+# AI / LLM integration
+Gemini
+
+# Optional / Dev
+pytest
