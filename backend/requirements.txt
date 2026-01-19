@@ -1,0 +1,23 @@
+# Data Handling
+pandas
+sqlalchemy
+psycopg2-binary
+
+# AI and RAG Framework
+#langchain
+#langchain-community
+langchain-huggingface
+langchain-text-splitters
+#langchain-google-genai
+langchain-classic
+langchain-google-genai>=2.0.1
+langchain>=0.3.0
+langchain-community>=0.3.0
+
+# Vector Database and Embeddings
+pgvector
+sentence-transformers
+huggingface-hub
+
+# Core AI engine
+torch

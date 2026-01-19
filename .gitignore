@@ -1,0 +1,42 @@
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Sensitive Secrets (CRITICAL) ---
+# Prevents uploading your Firebase keys and Environment variables
+serviceAccountKey.json
+backend/serviceAccountKey.json
+.env
+backend/.env
+scripts/.env
+scripts/serviceAccountKey.json
+
+# --- Python / FastAPI (Backend) ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.venv/
+.pytest_cache/
+
+# --- Flutter / Dart (Frontend) ---
+frontend/.dart_tool/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/build/
+frontend/android/local.properties
+frontend/android/.gradle
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/flutter_export_environment.sh
+
+# --- IDEs and Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
