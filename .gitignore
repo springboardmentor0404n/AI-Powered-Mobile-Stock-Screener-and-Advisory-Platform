@@ -1,1 +1,5 @@
 backend/.env
+# Large data and vector store files
+backend/data/*.csv
+backend/vectorstore/*.faiss
+backend/vectorstore/*.pkl
