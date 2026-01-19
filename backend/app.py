@@ -22,7 +22,10 @@ def send_email(to_email, subject, body):
 
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        server.login("kh3059843@gmail.com", "ljtousinmponkliw")
+      EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
+server.login(EMAIL_USER, EMAIL_PASS)
+
         server.send_message(msg)
         server.quit()
         print("✅ Email sent to", to_email)
@@ -34,8 +37,8 @@ CORS(app)
 
 # ================= CONFIG =================
 CSV_FILE = "data/company_level_data.csv"
-SECRET_KEY = "secret123"
-ALPHA_VANTAGE_KEY = "QY191DNLIKENJLPN"
+ALPHA_VANTAGE_KEY = os.getenv("ALPHA_VANTAGE_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # ================= DB =================
 def get_connection():
