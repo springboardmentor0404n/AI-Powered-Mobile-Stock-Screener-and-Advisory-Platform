@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import and_, or_
 from models import Stock, Fundamentals, Technicals
-from schemas import ScreenerResponse
+from schemas import ScreenerResponse, StockResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -61,15 +61,10 @@ async def execute_screener_query(dsl_json: dict, db: AsyncSession):
             # Ideally use join in query for perf, but for detail view lazy load is acceptble if session open.
             # Actually with async, lazy load fails if not awaited properly or using select options.
             # Let's do a join fetch for safety.
-            stmt = select(Stock).where(Stock.id == stock.id).options(
-                # Import selectinload to fetch relations eagerly
-                # We need to import it first
-                # For now, let's just re-query or assume basic data is enough for the list, 
-                # but for functionality we need the details.
-                # Let's simple return stock and let endpoint handle full data fetch or do it here.
-                pass
-            )
-            return ScreenerResponse(type="stock_detail", data=stock, metadata={"symbol": stock.symbol})
+            # We have the stock object. The frontend will request full details via /stock/{symbol}
+            # So returning this lightweight object is sufficient.
+            pass
+            return ScreenerResponse(type="stock_detail", data=StockResponse.model_validate(stock), metadata={"symbol": stock.symbol})
         else:
             return ScreenerResponse(type="error", data="Stock not found")
 
@@ -97,6 +92,6 @@ async def execute_screener_query(dsl_json: dict, db: AsyncSession):
         result = await db.execute(stmt)
         stocks = result.scalars().all()
         
-        return ScreenerResponse(type="screener_results", data=stocks)
+        return ScreenerResponse(type="screener_results", data=[StockResponse.model_validate(s) for s in stocks])
     
     return ScreenerResponse(type="error", data="Unknown intent")

@@ -6,7 +6,9 @@ pydantic
 python-dotenv
 yfinance
 google-generativeai
-passlib[bcrypt]
+bcrypt
+
 python-jose[cryptography]
 python-multipart
 httpx
+email-validator

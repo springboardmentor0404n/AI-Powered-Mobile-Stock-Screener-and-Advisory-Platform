@@ -3,8 +3,10 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator }
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import client from '../api/client';
+import { useTheme } from '../context/ThemeContext';
 
 export default function WatchlistScreen({ navigation }) {
+    const { colors } = useTheme();
     const [watchlist, setWatchlist] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -25,27 +27,27 @@ export default function WatchlistScreen({ navigation }) {
     };
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('StockDetail', { stock: item })}>
+        <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]} onPress={() => navigation.navigate('StockDetail', { stock: item })}>
             <View style={styles.cardHeader}>
-                <Text style={styles.symbol}>{item.symbol}</Text>
-                <Text style={styles.price}>₹{item.current_price?.toFixed(2)}</Text>
+                <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
+                <Text style={[styles.price, { color: colors.accent }]}>₹{item.current_price?.toFixed(2)}</Text>
             </View>
-            <Text style={styles.name}>{item.company_name}</Text>
+            <Text style={[styles.name, { color: colors.textSecondary }]}>{item.company_name}</Text>
         </TouchableOpacity>
     );
 
     return (
-        <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.container}>
-            <Text style={styles.pageTitle}>Your Watchlist</Text>
+        <LinearGradient colors={colors.background} style={styles.container}>
+            <Text style={[styles.pageTitle, { color: colors.text }]}>Your Watchlist</Text>
             {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.accent} />
             ) : (
                 <FlatList
                     data={watchlist}
                     renderItem={renderItem}
                     keyExtractor={item => item.id.toString()}
                     contentContainerStyle={styles.list}
-                    ListEmptyComponent={<Text style={styles.empty}>Watchlist is empty</Text>}
+                    ListEmptyComponent={<Text style={[styles.empty, { color: colors.textSecondary }]}>Watchlist is empty</Text>}
                 />
             )}
         </LinearGradient>
@@ -53,18 +55,17 @@ export default function WatchlistScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
-    pageTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+    container: { flex: 1, padding: 20, paddingTop: 60 },
+    pageTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
     list: { paddingBottom: 20 },
     card: {
-        backgroundColor: 'rgba(255,255,255,0.08)',
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
     },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-    symbol: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    price: { color: '#00ff83', fontSize: 18, fontWeight: 'bold' },
-    name: { color: '#aaa', fontSize: 14 },
-    empty: { color: '#888', textAlign: 'center', marginTop: 50 }
+    symbol: { fontSize: 18, fontWeight: 'bold' },
+    price: { fontSize: 18, fontWeight: 'bold' },
+    name: { fontSize: 14 },
+    empty: { textAlign: 'center', marginTop: 50 }
 });

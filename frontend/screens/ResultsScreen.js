@@ -1,24 +1,26 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ResultsScreen({ route, navigation }) {
     const { results, title } = route.params;
+    const { colors } = useTheme();
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('StockDetail', { stock: item })}>
+        <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]} onPress={() => navigation.navigate('StockDetail', { stock: item })}>
             <View style={styles.cardHeader}>
-                <Text style={styles.symbol}>{item.symbol}</Text>
-                <Text style={styles.price}>₹{item.current_price?.toFixed(2)}</Text>
+                <Text style={[styles.symbol, { color: colors.text }]}>{item.symbol}</Text>
+                <Text style={[styles.price, { color: colors.accent }]}>₹{item.current_price?.toFixed(2)}</Text>
             </View>
-            <Text style={styles.name}>{item.company_name}</Text>
-            <Text style={styles.sector}>{item.sector}</Text>
+            <Text style={[styles.name, { color: colors.textSecondary }]}>{item.company_name}</Text>
+            <Text style={[styles.sector, { color: colors.textSecondary }]}>{item.sector}</Text>
         </TouchableOpacity>
     );
 
     return (
-        <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.container}>
-            <Text style={styles.pageTitle}>Results for: "{title}"</Text>
+        <LinearGradient colors={colors.background} style={styles.container}>
+            <Text style={[styles.pageTitle, { color: colors.textSecondary }]}>Results for: "{title}"</Text>
             <FlatList
                 data={results}
                 renderItem={renderItem}
@@ -30,18 +32,17 @@ export default function ResultsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
-    pageTitle: { color: '#ccc', marginBottom: 20, fontSize: 16, fontStyle: 'italic' },
+    container: { flex: 1, padding: 20, paddingTop: 60 },
+    pageTitle: { marginBottom: 20, fontSize: 16, fontStyle: 'italic' },
     list: { paddingBottom: 20 },
     card: {
-        backgroundColor: 'rgba(255,255,255,0.08)',
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
     },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-    symbol: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    price: { color: '#00ff83', fontSize: 18, fontWeight: 'bold' },
-    name: { color: '#aaa', fontSize: 14 },
-    sector: { color: '#888', fontSize: 12, marginTop: 5 }
+    symbol: { fontSize: 18, fontWeight: 'bold' },
+    price: { fontSize: 18, fontWeight: 'bold' },
+    name: { fontSize: 14 },
+    sector: { fontSize: 12, marginTop: 5 }
 });
