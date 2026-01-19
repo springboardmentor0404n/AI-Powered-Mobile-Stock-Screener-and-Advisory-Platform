@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Stock Screener | Login</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>AI Stock Screener</h2>
+        <p class="subtitle">Login to your account</p>
+
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+
+        <button onclick="login()">Login</button>
+
+        <p class="switch">
+            New user?
+            <a href="signup.html">Create account</a>
+        </p>
+
+        <p id="error" class="error"></p>
+    </div>
+</div>
+
+<script>
+function login() {
+    fetch("http://127.0.0.1:5000/api/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            email: email.value,
+            password: password.value
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.token) {
+            localStorage.setItem("token", d.token);
+            localStorage.setItem("username", d.username);
+            window.location.href = "dashboard.html";
+        } else {
+            error.innerText = d.error || "Login failed";
+        }
+    });
+}
+</script>
+</body>
+</html>

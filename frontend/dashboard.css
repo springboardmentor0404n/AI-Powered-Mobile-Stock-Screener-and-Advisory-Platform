@@ -1,0 +1,883 @@
+/* ================= THEME ================= */
+:root {
+    --bg: #f7f9fc;
+    --card: #ffffff;
+    --primary: #10b981;
+    --primary-soft: #d1fae5;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e5e7eb;
+    --radius: 22px;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --border: #334155;
+}
+
+/* ================= BASE ================= */
+body {
+    margin: 0;
+    display: flex;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+    width: 260px;
+    background: #ffffff;
+    padding: 26px 22px;
+    border-right: 1px solid var(--border);
+}
+
+.sidebar h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 30px;
+    color: var(--primary);
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 14px 16px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 14px;
+    background: transparent;
+    font-size: 14px;
+    text-align: left;
+    color: var(--muted);
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.sidebar button:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+/* ================= CONTENT ================= */
+.content {
+    flex: 1;
+    padding: 36px;
+}
+
+.hidden {
+    display: none;
+}
+
+h1 {
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 28px;
+}
+
+/* ================= METRICS ================= */
+.dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 26px;
+    margin-bottom: 34px;
+}
+
+.metric-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 26px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.06);
+}
+
+.metric-card p {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.metric-card h2 {
+    font-size: 26px;
+    margin: 6px 0;
+}
+
+/* ================= STOCK GRID ================= */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+/* ================= STOCK CARD ================= */
+.card {
+    background: var(--card);
+    border-radius: 26px;
+    padding: 24px;
+    min-height: 260px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0;
+}
+
+/* Price */
+.card .price {
+    font-size: 28px;
+    font-weight: 900;
+    margin: 8px 0;
+}
+
+/* ================= FAKE TREND LINE ================= */
+.trend-line {
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--primary-soft) 50%,
+        transparent 100%
+    );
+    margin: 16px 0;
+}
+
+/* ================= INSIGHTS ================= */
+.stock-insight {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+/* ================= CARD BUTTONS ================= */
+.card button {
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: #f9fafb;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.card button:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* ================= WATCHLIST ================= */
+.watch-card {
+    background: var(--card);
+    padding: 22px;
+    border-radius: var(--radius);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ================= PORTFOLIO ================= */
+.portfolio-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px;
+    margin-bottom: 26px;
+}
+
+.summary-card {
+    background: var(--card);
+    padding: 26px;
+    border-radius: var(--radius);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.07);
+}
+
+.portfolio-table {
+    width: 100%;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border-collapse: collapse;
+}
+
+.portfolio-table th {
+    background: #f1f5f9;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.portfolio-table th,
+.portfolio-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+}
+
+/* ================= AI SECTION ================= */
+.ai-search-card {
+    background: var(--card);
+    padding: 26px;
+    border-radius: var(--radius);
+    display: flex;
+    gap: 14px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.07);
+}
+
+.ai-search-card input {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+}
+
+.ai-search-card button {
+    padding: 14px 26px;
+    border-radius: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-weight: 700;
+}
+/* ================= 🔔 ALERT BELL ================= */
+.notification-bar {
+    position: fixed;
+    top: 22px;
+    right: 32px;
+    z-index: 999;
+}
+
+.notify-btn {
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 54px;
+    height: 54px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    position: relative;
+}
+
+.notify-btn.shake {
+    animation: bellShake 0.9s infinite;
+}
+
+@keyframes bellShake {
+    0% { transform: rotate(0); }
+    20% { transform: rotate(15deg); }
+    40% { transform: rotate(-15deg); }
+    60% { transform: rotate(10deg); }
+    80% { transform: rotate(-10deg); }
+    100% { transform: rotate(0); }
+}
+
+.badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: red;
+    color: white;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 999px;
+}
+
+/* ================= 🔔 NOTIFICATION PANEL ================= */
+.notification-panel {
+    position: fixed;
+    top: 90px;
+    right: 32px;
+    width: 320px;
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.25);
+    z-index: 999;
+}
+
+.notification-panel h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+}
+
+.notification-panel .alert-item {
+    background: #f1f5f9;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ================= ⭐ FAVORITE STAR ================= */
+.star {
+    font-size: 20px;
+    cursor: pointer;
+    color: #cbd5f5;
+    transition: 0.2s;
+}
+
+.star.active {
+    color: gold;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chart-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    height: 380px;
+}
+
+.chart-box canvas {
+    height: 260px !important;
+}
+/* ===== AI SCREENER IMPROVED UI ===== */
+
+.improved-ai {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.ai-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 24px;
+}
+
+.ai-info-card {
+    background: white;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.ai-info-card h3 {
+    margin-bottom: 16px;
+}
+
+.ai-metric {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.ai-metric strong {
+    color: #1e40af;
+}
+
+.ai-text {
+    margin-top: 16px;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.ai-chart-card {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.ai-chart-card canvas {
+    height: 320px !important;
+}
+/* ================= DASHBOARD SEARCH ================= */
+.dashboard-search-bar {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0 28px;
+    max-width: 420px;
+}
+
+.dashboard-search-bar input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    outline: none;
+    background: #ffffff;
+}
+
+.dashboard-search-bar input:focus {
+    border-color: #22c55e;
+}
+
+.dashboard-search-bar button {
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    background: #22c55e;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dashboard-search-bar button:hover {
+    background: #16a34a;
+}
+/* ===== THEME BUTTON (TOP RIGHT) ===== */
+.theme-btn {
+    margin-left: 10px;
+    background: #ffffff;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+}
+
+.theme-btn:hover {
+    transform: scale(1.08);
+    background: #f3f4f6;
+}
+/* ================= DARK MODE VISIBILITY FIX ================= */
+body.dark {
+    background: #0b1220;
+    color: #e5e7eb;
+}
+
+/* Cards */
+body.dark .card,
+body.dark .analysis-card,
+body.dark .chart-card,
+body.dark .panel,
+body.dark .box {
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+/* Headings */
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4 {
+    color: #f9fafb !important;
+}
+
+/* Normal text */
+body.dark p,
+body.dark span,
+body.dark div {
+    color: #d1d5db;
+}
+
+/* AI result text */
+body.dark #aiResult {
+    color: #e5e7eb !important;
+    opacity: 1 !important;
+}
+
+/* Inputs */
+body.dark input,
+body.dark textarea {
+    background: #020617;
+    color: #f9fafb;
+    border: 1px solid #334155;
+}
+
+/* Buttons */
+body.dark button {
+    background: #16a34a;
+    color: white;
+}
+
+/* Chart background */
+body.dark canvas {
+    background: #020617;
+    border-radius: 12px;
+}
+
+/* Sidebar */
+body.dark .sidebar {
+    background: #020617;
+    border-right: 1px solid #1f2933;
+}
+
+/* Remove faded effect */
+body.dark * {
+    opacity: 1 !important;
+}
+/* ================= PROFESSIONAL DARK UI POLISH ================= */
+/* ================= DARK MODE ONLY ================= */
+body.dark {
+    background: radial-gradient(
+        1200px 600px at top center,
+        #0f172a 0%,
+        #020617 65%,
+        #020617 100%
+    );
+    color: #e5e7eb;
+}
+
+/* Sidebar – dark only */
+body.dark .sidebar {
+    background: linear-gradient(180deg, #020617, #020617);
+    border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+body.dark .sidebar h2,
+body.dark .sidebar a {
+    color: #e5e7eb;
+}
+
+/* Sidebar buttons */
+body.dark .sidebar a {
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    border-radius: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(34,197,94,0.35);
+}
+
+/* Headings */
+body.dark h1,
+body.dark h2,
+body.dark h3 {
+    color: #f9fafb;
+}
+
+/* Inputs */
+body.dark input[type="text"] {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #f9fafb;
+}
+
+body.dark input::placeholder {
+    color: #9ca3af;
+}
+
+/* Cards */
+body.dark .card,
+body.dark .market-card,
+body.dark .analysis-card,
+body.dark .chart-card {
+    background: linear-gradient(
+        180deg,
+        rgba(255,255,255,0.07),
+        rgba(255,255,255,0.02)
+    );
+    backdrop-filter: blur(18px);
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 35px 70px rgba(0,0,0,0.75);
+}
+
+/* Prices */
+body.dark .price {
+    color: #22c55e;
+    font-weight: 900;
+}
+
+/* Subtext */
+body.dark .stock-insights,
+body.dark .market-card h4 {
+    color: #cbd5f5;
+}
+
+/* Buttons */
+body.dark button {
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    color: #ffffff;
+    border-radius: 14px;
+    font-weight: 700;
+    box-shadow: 0 12px 30px rgba(34,197,94,0.35);
+}
+
+body.dark button:hover {
+    transform: translateY(-1px);
+}
+
+/* Charts background */
+body.dark canvas {
+    background: transparent;
+}
+
+/* Notifications */
+body.dark #notificationPanel {
+    background: rgba(15,23,42,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Stars */
+body.dark .star {
+    color: #facc15;
+    text-shadow: 0 0 10px rgba(250,204,21,0.6);
+}
+/* ================= DARK MODE FINAL FIX ================= */
+body.dark {
+    background: radial-gradient(
+        1200px 600px at top center,
+        #0b1220 0%,
+        #020617 70%
+    );
+    color: #e5e7eb;
+}
+
+/* ===== Cards ===== */
+body.dark .analysis-card,
+body.dark .chart-card,
+body.dark .card,
+body.dark .market-card {
+    background: linear-gradient(
+        180deg,
+        rgba(255,255,255,0.12),
+        rgba(255,255,255,0.04)
+    );
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.85);
+}
+
+/* Card titles */
+body.dark h3,
+body.dark h4 {
+    color: #f9fafb;
+}
+
+/* Card text */
+body.dark .analysis-card p,
+body.dark .market-card span,
+body.dark .stock-insights {
+    color: #cbd5f5;
+}
+
+/* Prices */
+body.dark .price {
+    color: #22c55e;
+    font-weight: 900;
+}
+
+/* ===== Search bar ===== */
+body.dark input[type="text"] {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #ffffff;
+}
+
+body.dark input::placeholder {
+    color: #9ca3af;
+}
+
+/* ===== Buttons ===== */
+body.dark button,
+body.dark .btn {
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(34,197,94,0.45);
+}
+
+/* ===== Slider ===== */
+body.dark input[type="range"] {
+    accent-color: #22c55e;
+}
+
+/* ===== Chart fix ===== */
+body.dark .chart-card {
+    background: linear-gradient(
+        180deg,
+        rgba(2,6,23,0.9),
+        rgba(2,6,23,0.75)
+    );
+}
+
+body.dark canvas {
+    background: transparent;
+}
+
+/* ===== Sidebar ===== */
+body.dark .sidebar {
+    background: linear-gradient(180deg, #020617, #020617);
+    border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Sidebar buttons */
+body.dark .sidebar a {
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    box-shadow: 0 10px 25px rgba(34,197,94,0.4);
+}
+
+/* ===== Notification panel ===== */
+body.dark #notificationPanel {
+    background: rgba(15,23,42,0.95);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(18px);
+}
+
+/* ===== Icons ===== */
+body.dark .star {
+    color: #facc15;
+    text-shadow: 0 0 12px rgba(250,204,21,0.6);
+}
+/* ================= DARK MODE TEXT VISIBILITY PATCH (SAFE) ================= */
+/* This ONLY fixes unreadable text, nothing else */
+
+/* AI Analysis section */
+body.dark .ai-info-card,
+body.dark .ai-info-card span,
+body.dark .ai-info-card p,
+body.dark .ai-info-card strong {
+    color: #e5e7eb !important;
+}
+
+/* Metric cards (Current Price, Volume, etc.) */
+body.dark .metric-card p {
+    color: #9ca3af !important;
+}
+
+body.dark .metric-card h2 {
+    color: #f9fafb !important;
+}
+
+/* Dashboard cards text */
+body.dark .card h3,
+body.dark .card p,
+body.dark .card span {
+    color: #e5e7eb !important;
+}
+
+/* Sidebar buttons text (you are using <button>, not <a>) */
+body.dark .sidebar button {
+    color: #e5e7eb !important;
+}
+
+/* Notification panel text */
+body.dark #notificationPanel h3,
+body.dark #notificationPanel div,
+body.dark #notificationPanel span,
+body.dark #notificationPanel small {
+    color: #e5e7eb !important;
+}
+
+/* Fix generic override causing fade */
+body.dark div,
+body.dark span {
+    opacity: 1 !important;
+}
+/* === DARK MODE: FIX PRICE CHANGE + AI ANALYSIS CARD VISIBILITY ONLY === */
+
+body.dark .ai-info-card {
+    background: #ffffff !important;   /* keep card white */
+    color: #0f172a !important;        /* dark readable text */
+}
+
+body.dark .ai-info-card h3,
+body.dark .ai-info-card span,
+body.dark .ai-info-card p,
+body.dark .ai-info-card strong {
+    color: #0f172a !important;
+}
+
+/* Price Change Alert text */
+body.dark .percent-alert,
+body.dark .percent-alert label,
+body.dark .percent-alert span {
+    color: #f9fafb !important;
+}
+/* =========================================================
+   DARK MODE: FORCE AI ANALYSIS CARD TEXT VISIBILITY (FINAL)
+   ========================================================= */
+
+body.dark .ai-info-card {
+    background: #ffffff !important;      /* keep card white */
+    color: #0f172a !important;           /* base text color */
+}
+
+/* EVERYTHING inside the AI Analysis card */
+body.dark .ai-info-card *,
+body.dark .ai-info-card p,
+body.dark .ai-info-card span,
+body.dark .ai-info-card strong,
+body.dark .ai-info-card div,
+body.dark .ai-info-card small {
+    color: #0f172a !important;
+    opacity: 1 !important;
+}
+
+/* Headings inside the card */
+body.dark .ai-info-card h3 {
+    color: #020617 !important;
+}
+
+/* Price / values (optional emphasis) */
+body.dark .ai-info-card strong {
+    font-weight: 700;
+}
+/* =====================================================
+   DARK MODE – AI ANALYSIS CARD: FORCE FULL VISIBILITY
+   ===================================================== */
+
+body.dark .ai-info-card {
+    background: #ffffff !important;
+}
+
+/* Force EVERYTHING inside the card */
+body.dark .ai-info-card *,
+body.dark .ai-info-card p *,
+body.dark .ai-info-card span *,
+body.dark .ai-info-card div * {
+    color: #0f172a !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Bullet list / AI result specifically */
+body.dark .ai-info-card ul,
+body.dark .ai-info-card li {
+    color: #0f172a !important;
+    opacity: 1 !important;
+}
+
+/* Muted / disclaimer text */
+body.dark .ai-info-card .muted,
+body.dark .ai-info-card .disclaimer {
+    color: #334155 !important;
+}
+/* === DARK MODE: AI QUERY RESULT TEXT BLACK ONLY === */
+
+body.dark #aiResult,
+body.dark #aiResult *,
+body.dark .ai-info-card ul,
+body.dark .ai-info-card li {
+    color: #000000 !important;
+    opacity: 1 !important;
+}

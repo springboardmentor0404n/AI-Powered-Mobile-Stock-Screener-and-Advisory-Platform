@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Stock Screener</title>
+    <link rel="stylesheet" href="dashboard.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<script>
+if (!localStorage.getItem("token")) {
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="sidebar">
+    <h2>AI Screener</h2>
+    <button onclick="showSection('dashboard')">Dashboard</button>
+    <button onclick="showSection('ai')">AI Screener</button>
+    <button onclick="showSection('watchlist')">Watchlist</button>
+    <button onclick="showSection('portfolio')">Portfolio</button>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<div class="content">
+
+<!-- 🔔 Notification bar -->
+<div class="notification-bar">
+
+    <button class="notify-btn" onclick="toggleNotifications()">
+        🔔 <span id="alertCount" class="badge hidden">0</span>
+    </button>
+
+    <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+</div>
+
+<!-- 🔔 Notification Panel -->
+<div id="notificationPanel" class="notification-panel hidden">
+    <h3>Notifications</h3>
+
+    <!-- ✅ IMPORTANT: this ID is used by dashboard.js -->
+    <div id="notificationList">
+        <p class="empty">No new alerts</p>
+    </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<section id="dashboard">
+    <h1>Market Overview</h1>
+
+    <div class="dashboard-search-bar">
+        <input
+            type="text"
+            id="dashboardSearch"
+            placeholder="Search stock (e.g. TCS, INFY)"
+        />
+        <button onclick="searchDashboardStock()">Search</button>
+    </div>
+
+    <div class="dashboard-metrics">
+        <div class="metric-card">
+            <p>Current Price</p>
+            <h2 id="mPrice">₹ --</h2>
+            <span id="mChange">--%</span>
+        </div>
+
+        <div class="metric-card">
+            <p>Volume</p>
+            <h2 id="mVolume">--</h2>
+        </div>
+
+        <div class="metric-card">
+            <p>P/E Ratio</p>
+            <h2 id="mPE">--</h2>
+        </div>
+
+        <div class="metric-card">
+            <p>Market Cap</p>
+            <h2 id="mCap">--</h2>
+        </div>
+    </div>
+
+    <div id="cards" class="grid"></div>
+</section>
+
+<!-- ================= AI SCREENER ================= -->
+<section id="ai" class="hidden">
+    <h1>AI Stock Screener</h1>
+
+    <div class="ai-search-card improved-ai">
+        <input id="aiInput" placeholder="Enter stock symbol (PFC, TCS, HDFC)">
+        <button onclick="askAI()">Ask AI</button>
+    </div>
+
+    <div class="percent-alert">
+        <label>Price Change Alert (%)</label>
+        <input type="range" min="1" max="10" value="2" id="percentSlider"
+               oninput="percentValue.innerText=this.value">
+        <span id="percentValue">2</span>%
+        <button onclick="setPercentAlert()">Set Alert</button>
+    </div>
+
+    <div class="ai-grid">
+        <div class="ai-info-card">
+            <h3>AI Analysis</h3>
+
+            <div class="ai-metric">
+                <span>Current Price</span>
+                <strong id="priceText">₹ --</strong>
+            </div>
+
+            <div class="ai-metric">
+                <span>Trend</span>
+                <strong id="aiTrend">--</strong>
+            </div>
+
+            <div class="ai-metric">
+                <span>Outlook</span>
+                <strong id="aiOutlook">--</strong>
+            </div>
+
+            <p id="aiResult">
+                Ask AI to get professional stock insights..
+            </p>
+        </div>
+
+        <div class="ai-chart-card">
+            <h3>5-Year Price Trend</h3>
+            <canvas id="ai5yChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- ================= WATCHLIST ================= -->
+<section id="watchlist" class="hidden">
+    <h1>My Watchlist</h1>
+    <div class="card-grid" id="watchlistItems"></div>
+</section>
+
+<!-- ================= PORTFOLIO ================= -->
+<section id="portfolio" class="hidden">
+    <h1>My Portfolio</h1>
+
+    <div class="portfolio-summary">
+        <div class="summary-card">
+            <h3>Total Invested</h3>
+            <p id="totalInvested">₹0</p>
+        </div>
+        <div class="summary-card">
+            <h3>Current Value</h3>
+            <p id="currentValue">₹0</p>
+        </div>
+        <div class="summary-card">
+            <h3>P/L</h3>
+            <p id="totalPL">₹0</p>
+        </div>
+    </div>
+
+    <table class="portfolio-table">
+        <thead>
+            <tr>
+                <th>Stock</th>
+                <th>Qty</th>
+                <th>Buy</th>
+                <th>Current</th>
+                <th>P/L</th>
+            </tr>
+        </thead>
+        <tbody id="portfolioTable"></tbody>
+    </table>
+</section>
+
+</div>
+
+<script src="dashboard.js"></script>
+
+<script>
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+</script>
+<script>
+  const theme = localStorage.getItem("theme");
+  if (theme === "dark") {
+    document.body.classList.add("dark");
+  }
+</script>
+
+</body>
+</html>

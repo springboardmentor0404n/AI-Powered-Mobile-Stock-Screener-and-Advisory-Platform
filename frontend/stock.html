@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stock Analytics</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+/* ⚠️ UNCHANGED UI */
+body{margin:0;font-family:"Segoe UI",Arial;background:#f6f8fc}
+.container{padding:28px;max-width:1200px;margin:auto}
+.back{display:inline-block;margin-bottom:20px;padding:10px 16px;background:#2563eb;color:white;text-decoration:none;border-radius:8px;font-weight:600}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+
+/* 🔧 FIXED ALIGNMENT ONLY */
+.card,.chart-box{
+    background:white;
+    padding:18px;
+    border-radius:14px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    width:100%;
+}
+
+.chart-box{
+    margin-top:26px;
+}
+
+.range button{
+    padding:6px 12px;
+    margin-left:6px;
+    border-radius:6px;
+    border:1px solid #d1d5db;
+    background:#f9fafb;
+    cursor:pointer
+}
+.range button.active{background:#2563eb;color:white}
+
+/* 🔧 CRITICAL FIX */
+canvas{
+    width:100% !important;
+    height:260px !important;
+    display:block;
+}
+body.dark {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+/* ================= DARK MODE VISIBILITY FIX (STOCK PAGE ONLY) ================= */
+
+body.dark .card,
+body.dark .chart-box {
+    background-color: #111827; /* dark slate */
+    color: #f9fafb;
+}
+
+/* Labels like "Current Price", "Trend", etc */
+body.dark .card p {
+    color: #9ca3af;
+}
+
+/* Values like ₹1404.90, Stable, Moderate */
+body.dark .card h2,
+body.dark .card h3 {
+    color: #ffffff;
+}
+
+/* Chart titles */
+body.dark .chart-box h3 {
+    color: #f9fafb;
+}
+
+/* Buttons in range selector */
+body.dark .range button {
+    background-color: #1f2933;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+body.dark .range button.active {
+    background-color: #2563eb;
+    color: white;
+}
+
+
+</style>
+</head>
+
+<body>
+<div class="container">
+<a class="back" href="dashboard.html">← Back to Dashboard</a>
+
+<h1 id="title"></h1>
+
+<div class="summary">
+    <div class="card"><p>Current Price</p><h2 id="price">₹--</h2></div>
+    <div class="card"><p>Trend</p><h2 id="trend">--</h2></div>
+    <div class="card"><p>Risk</p><h2 id="risk">--</h2></div>
+    <div class="card"><p>Volatility</p><h2 id="volatility">Moderate</h2></div>
+</div>
+
+<div class="chart-box">
+    <div class="chart-header">
+        <h3>Price Trend</h3>
+        <div class="range">
+            <button onclick="setRange(30,this)">1M</button>
+            <button onclick="setRange(180,this)">6M</button>
+            <button onclick="setRange(365,this)" class="active">1Y</button>
+        </div>
+    </div>
+    <canvas id="priceChart"></canvas>
+</div>
+
+<div class="chart-box">
+    <h3>Volume</h3>
+    <canvas id="volumeChart"></canvas>
+</div>
+
+<div class="chart-box">
+    <h3>RSI Indicator</h3>
+    <canvas id="rsiChart"></canvas>
+</div>
+
+<div class="chart-box">
+    <h3>5-Year Price</h3>
+    <canvas id="fiveYearChart"></canvas>
+</div>
+
+</div>
+
+<script>
+const symbol = new URLSearchParams(location.search).get("symbol");
+document.getElementById("title").innerText = symbol + " Analytics";
+
+let fullPrices=[], fullLabels=[], range=365;
+let priceChart, volumeChart, rsiChart, fiveYearChart;
+
+/* ✅ REAL DATA FROM BACKEND */
+fetch(`http://127.0.0.1:5000/api/history/${symbol}`)
+.then(r=>r.json())
+.then(d=>{
+    fullPrices=d.prices;
+    fullLabels=d.labels;
+    updateSummary();
+    renderAll();
+});
+
+function updateSummary(){
+    const latest=fullPrices.at(-1);
+    document.getElementById("price").innerText="₹"+latest.toFixed(2);
+    document.getElementById("trend").innerText=latest>fullPrices.at(-2)?"Bullish 📈":"Stable ➖";
+    document.getElementById("risk").innerText=latest>3000?"High ⚠️":"Moderate ⚡";
+}
+
+function setRange(r,btn){
+    range=r;
+    document.querySelectorAll(".range button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    renderAll();
+}
+
+function renderAll(){
+    const prices=fullPrices.slice(-range);
+    const labels=fullLabels.slice(-range);
+    renderPrice(labels,prices);
+    renderVolume(labels,prices);
+    renderRSI(labels,prices);
+    renderFiveYear();
+}
+
+function renderPrice(labels,prices){
+    if(priceChart) priceChart.destroy();
+    priceChart=new Chart(priceChartCanvas,{
+        type:"line",
+        data:{labels,datasets:[{
+            data:prices,
+            borderColor:"#22c55e",
+            backgroundColor:"rgba(34,197,94,.2)",
+            fill:true,tension:.4,pointRadius:0
+        }]},
+        options:{plugins:{legend:{display:false}}}
+    });
+}
+
+function renderVolume(labels,prices){
+    if(volumeChart) volumeChart.destroy();
+    const vol=prices.map((p,i)=>i?Math.abs(prices[i]-prices[i-1])*150000:0);
+    volumeChart=new Chart(volumeChartCanvas,{
+        type:"bar",
+        data:{labels,datasets:[{data:vol,backgroundColor:"#2563eb"}]},
+        options:{plugins:{legend:{display:false}}}
+    });
+}
+
+function renderRSI(labels,prices){
+    if(rsiChart) rsiChart.destroy();
+    const rsi=prices.map((p,i)=>i?50+(prices[i]-prices[i-1])*0.8:50);
+    rsiChart=new Chart(rsiChartCanvas,{
+        type:"line",
+        data:{labels,datasets:[{data:rsi,borderColor:"#9333ea",tension:.4}]},
+        options:{scales:{y:{min:0,max:100}}}
+    });
+}
+
+function renderFiveYear(){
+    if(fiveYearChart) fiveYearChart.destroy();
+    fiveYearChart=new Chart(fiveYearChartCanvas,{
+        type:"line",
+        data:{labels:fullLabels,datasets:[{data:fullPrices,borderColor:"#0ea5e9"}]},
+        options:{plugins:{legend:{display:false}}}
+    });
+}
+
+const priceChartCanvas=document.getElementById("priceChart");
+const volumeChartCanvas=document.getElementById("volumeChart");
+const rsiChartCanvas=document.getElementById("rsiChart");
+const fiveYearChartCanvas=document.getElementById("fiveYearChart");
+</script>
+
+</body>
+<script>
+  const theme = localStorage.getItem("theme");
+  if (theme === "dark") {
+    document.body.classList.add("dark");
+  }
+</script>
+
+</html>

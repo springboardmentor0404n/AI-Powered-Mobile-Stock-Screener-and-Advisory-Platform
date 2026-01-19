@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+venv/
+*.pyc
+
+# AI generated files
+*.pkl
+*.faiss
+
+# Unwanted SQL files
+12.sql
+ai stock ass.sql
+dfds.sql
+kjjk.sql
+table.sql
+watch.sql
+watchlistonly.sql
+
+# Editor / OS
+.vscode/
+.DS_Store
