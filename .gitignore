@@ -19,3 +19,6 @@ watchlistonly.sql
 # Editor / OS
 .vscode/
 .DS_Store
+# Environment variables / secrets
+.env
+.env.*
