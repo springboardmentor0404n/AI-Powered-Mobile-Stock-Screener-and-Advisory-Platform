@@ -1,0 +1,142 @@
+/* ================= THEME VARIABLES ================= */
+
+:root {
+  --page-bg: #f5f7fb;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: rgba(0, 0, 0, 0.1);
+  --appbar: #141a2d;
+}
+
+/* 🌙 DARK MODE = ONLY BACKGROUND DARK */
+.dark {
+  --page-bg: #020617;   /* dark canvas */
+  --surface: #ffffff;  /* EVERYTHING ELSE STAYS WHITE */
+  --text: #111827;
+  --muted: #6b7280;
+  --border: rgba(0, 0, 0, 0.12);
+  --appbar: #020617;
+}
+
+/* ================= PAGE ================= */
+
+.chat-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+  overflow: hidden;
+}
+
+/* ================= APP BAR ================= */
+
+.chat-appbar {
+  background: var(--appbar) !important;
+}
+
+/* ================= CHAT CONTAINER ================= */
+
+.chat-container {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 16px;
+}
+
+/* ================= TITLE ================= */
+
+.chat-container h6 {
+  background-color:#0b68c5ff;
+  text-align: center;
+  margin: 16px 0;
+  font-weight: 600;
+  color: var(--surface);
+  border-radius: 10px;
+}
+
+/* ================= CHAT HISTORY ================= */
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+  scroll-behavior: smooth;
+}
+
+/* Bubble text */
+.chat-history .MuiPaper-root {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Assistant bubble */
+.chat-history .MuiPaper-root:not([style*="primary"]) {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid var(--border);
+}
+
+/* ================= INPUT BAR ================= */
+
+.chat-input {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* Text input */
+.chat-input .MuiTextField-root {
+  background: #ffffff;
+  border-radius: 8px;
+}
+
+/* Send button */
+.chat-input .MuiButton-root {
+  min-width: 90px;
+  font-weight: 700;
+}
+
+/* ================= AVATAR ================= */
+
+.chat-avatar {
+  background: #0b68c5ff !important;
+  color: #ffffff !important;
+}
+
+/* ================= SCROLLBAR ================= */
+
+.chat-history::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+}
+
+.chat-history::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .chat-container {
+    padding: 0 8px;
+  }
+
+  .chat-input {
+    padding: 12px;
+  }
+}

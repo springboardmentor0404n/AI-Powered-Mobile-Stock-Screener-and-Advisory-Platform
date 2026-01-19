@@ -1,0 +1,148 @@
+/* ===============================
+   ROOT LAYOUT
+================================ */
+.live-root {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 24px 32px;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0f172a;
+}
+
+/* ===============================
+   PAGE TITLE
+================================ */
+.live-root h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===============================
+   SEARCH BAR
+================================ */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.search-bar input {
+  width: 280px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #cbd5f5;
+  background-color: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.search-bar input::placeholder {
+  color: #64748b;
+}
+
+.search-bar input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.search-bar button {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.search-bar button:hover {
+  background-color: #1e40af;
+}
+
+.search-bar button:active {
+  transform: translateY(1px);
+}
+
+/* ===============================
+   INTERVAL / TIMEFRAME BAR
+================================ */
+.interval-bar {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0 16px;
+  flex-wrap: wrap;
+}
+
+.interval-bar button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+  transition: all 0.15s ease;
+}
+
+.interval-bar button:hover {
+  background: #eef2ff;
+}
+
+.interval-bar button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* ===============================
+   CHART CONTAINER
+================================ */
+.chart-box {
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.03);
+
+  height: 520px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ACTUAL LIGHTWEIGHT-CHART TARGET */
+.chart-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar input {
+    width: 100%;
+  }
+
+  .interval-bar {
+    justify-content: center;
+  }
+}
