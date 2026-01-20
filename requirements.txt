@@ -1,0 +1,18 @@
+# Frontend
+streamlit
+streamlit-autorefresh
+plotly
+pandas
+numpy
+
+# Backend
+flask
+requests
+psycopg2-binary
+python-dotenv
+
+# AI / LLM integration
+Gemini
+
+# Optional / Dev
+pytest

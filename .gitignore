@@ -1,0 +1,17 @@
+# Python virtual environments
+faissenv/
+myenv/
+.venv/
+frontendenv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+node_modules/
