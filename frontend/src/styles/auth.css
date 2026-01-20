@@ -1,0 +1,113 @@
+/* ===== PAGE BACKGROUNDS ===== */
+
+.login-bg {
+  background: linear-gradient(135deg, #3a90d6ed, #35bca8d1);
+}
+
+.signup-bg {
+  background: linear-gradient(135deg, #3a90d6ed, #35bca8d1);
+}
+
+.otp-bg {
+  background: linear-gradient(135deg, #3a90d6ed, #35bca8d1);
+}
+
+/* ===== AUTH LAYOUT ===== */
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-card {
+  width: 380px;
+  background: rgba(33, 49, 86, 0.774);
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  color: white;
+}
+
+/* ===== INPUTS ===== */
+
+.auth-input {
+  width: 100%;
+  padding: 11px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0206176a;
+  color: white;
+  transition: 0.3s;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+}
+
+/* ===== BUTTONS ===== */
+
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+/* Button Colors */
+.btn-login {
+  background: #22c55ec2;
+}
+.btn-signup {
+  background: #22c55ec2;
+}
+.btn-otp {
+  background: #f59f0bad;
+}
+
+/* Hover Effects */
+.auth-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== LINKS ===== */
+
+.auth-link {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+.otp-bg {
+  background: linear-gradient(135deg, #1f4037, #99f2c8);
+}
+
+.btn-verify {
+  background: #1abc9c;
+}
+
+.btn-verify:hover {
+  background: #16a085;
+}
+.login-bg {
+  background: linear-gradient(135deg, #141e30, #243b55);
+}
+
+.btn-login {
+  background: #3498db;
+}
+
+.btn-login:hover {
+  background: #2980b9;
+}

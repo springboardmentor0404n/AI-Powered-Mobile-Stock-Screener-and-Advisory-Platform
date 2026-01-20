@@ -1,0 +1,342 @@
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Alert item */
+.notification-alert {
+  margin: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #020617, #0f172a);
+  color: #f1f5f9;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+  transition: all 0.25s ease;
+}
+
+
+.notification-alert:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, #020617, #1e293b);
+}
+
+.notification-alert.unread {
+  border-left: 4px solid #22c55e;
+  background: linear-gradient(145deg, #0c542a, #020617);
+}
+
+
+.p-4.text-sm.text-gray-500 {
+  color: #9ca3af;
+  text-align: center;
+}
+.p-4.text-sm.text-gray-500 {
+  color: #94a3b8;
+  text-align: center;
+  padding: 24px;
+}
+/* Force notification dropdown above all dashboards */
+.notification-alert {
+  position: relative;
+  z-index: 10001;
+}
+
+/* Prevent parent containers from hiding it */
+.relative {
+  overflow: visible !important;
+}
+/* ===============================
+   PREMIUM NOTIFICATION UI
+   =============================== */
+
+.notification-dropdown {
+  background: rgba(2, 6, 23, 0.96);
+  backdrop-filter: blur(18px);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.85);
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.notification-alert {
+  padding: 14px 18px;
+  font-size: 14px;
+  color: #e5e7eb;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.2s ease;
+}
+
+.notification-alert:last-child {
+  border-bottom: none;
+}
+
+.notification-alert:hover {
+  background: rgba(99,102,241,0.12);
+}
+
+/* Unread highlight */
+.notification-alert.unread {
+  background: linear-gradient(
+    135deg,
+    rgba(34,197,94,0.18),
+    rgba(34,197,94,0.05)
+  );
+  border-left: 4px solid #22c55e;
+}
+
+/* Message wrapping fix */
+.notification-alert span {
+  word-break: break-word;
+  line-height: 1.4;
+}
+/* ===============================
+   NOTIFICATION BELL PULSE
+   =============================== */
+
+.notification-bell {
+  position: relative;
+}
+
+/* Red dot badge */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+
+  background: linear-gradient(135deg, #ff4d4d, #ff0000);
+  color: white;
+
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 0 0 rgba(255, 0, 0, 0.6);
+  animation: pulseRing 1.8s infinite;
+}
+
+/* Outer pulse ring */
+@keyframes pulseRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+}
+
+/* Bell hover glow */
+.notification-bell:hover {
+  filter: drop-shadow(0 0 10px rgba(255, 200, 0, 0.6));
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
+/* ===============================
+   PREMIUM NOTIFICATION DROPDOWN
+   =============================== */
+
+.notification-dropdown {
+  background: linear-gradient(
+    145deg,
+    rgba(20, 25, 60, 0.75),
+    rgba(10, 15, 40, 0.65)
+  );
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 30px rgba(120, 150, 255, 0.25);
+
+  animation: dropdownFade 0.35s ease forwards;
+}
+
+/* Dropdown entrance */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Notification item */
+.notification-alert {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 8px;
+
+  transition: all 0.3s ease;
+}
+
+/* Hover glow */
+.notification-alert:hover {
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 20px rgba(120, 160, 255, 0.35);
+}
+
+/* Unread pulse */
+.notification-alert.unread {
+  border-left: 3px solid #4f7cff;
+  animation: unreadPulse 1.8s infinite;
+}
+
+@keyframes unreadPulse {
+  0% { box-shadow: 0 0 0 rgba(79, 124, 255, 0.6); }
+  70% { box-shadow: 0 0 20px rgba(79, 124, 255, 0); }
+  100% { box-shadow: 0 0 0 rgba(79, 124, 255, 0); }
+}
+/* ===============================
+   🔔 NOTIFICATION BELL (PREMIUM)
+   =============================== */
+
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  font-size: 20px;
+  color: #fff;
+}
+
+/* 🔴 Pulse when unread */
+.notification-bell.unread {
+  animation: bellPulse 2s infinite;
+}
+
+@keyframes bellPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 156, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(79, 156, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 156, 255, 0);
+  }
+}
+
+/* 🔢 Badge */
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: linear-gradient(135deg, #ff5f6d, #ffc371);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  animation: badgePulse 1.8s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+/* ===============================
+   📦 NOTIFICATION DROPDOWN
+   =============================== */
+
+.notification-dropdown {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: 340px;
+  max-height: 360px;
+  overflow-y: auto;
+
+  background: linear-gradient(
+    135deg,
+    rgba(20, 30, 60, 0.65),
+    rgba(10, 15, 35, 0.75)
+  );
+
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.7),
+    inset 0 0 25px rgba(255, 255, 255, 0.05);
+
+  animation: dropdownIn 0.35s ease forwards;
+  transform-origin: top right;
+  z-index: 9999;
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.notification-alert {
+  padding: 12px 14px;
+  margin: 10px;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.04)
+  );
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  color: #e8ecff;
+  font-size: 14px;
+  line-height: 1.4;
+
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.04);
+  transition: all 0.3s ease;
+}
+
+.notification-alert:hover {
+  transform: translateX(4px);
+  background: linear-gradient(
+    135deg,
+    rgba(90, 130, 255, 0.25),
+    rgba(60, 80, 200, 0.15)
+  );
+}
+
+/* unread highlight */
+.notification-alert.unread {
+  border-left: 4px solid #4f9cff;
+}

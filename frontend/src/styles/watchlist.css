@@ -1,0 +1,153 @@
+
+.watchlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+ 
+}
+
+.watchlist-tabs button {
+  margin-left: 10px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #222;
+  color: white;
+  cursor: pointer;
+}
+
+.watchlist-tabs .active {
+  background: #4f46e5;
+}
+.empty-watchlist {
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #8ba1c0;
+  text-align: center;
+}
+
+.empty-watchlist h2 {
+  color: #e5e7eb;
+  margin-bottom: 8px;
+}
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.watch-card {
+  background: linear-gradient(145deg, #020617, #0f172a);
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  transition: transform 0.25s ease;
+}
+
+.watch-card:hover {
+  transform: translateY(-4px);
+
+}
+
+.watch-card h3 {
+  color: #e5e7eb;
+}
+
+.watch-card span {
+  color: #22c55e;
+  font-size: 18px;
+}
+
+.watch-card small {
+  color: #94a3b8;
+}
+.page-title {
+  color: #e5e7eb;
+  margin-bottom: 20px;
+}
+
+.empty-watchlist {
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.empty-watchlist h2 {
+  color: #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.watch-card {
+  background: linear-gradient(145deg, #020617, #192645);
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.watch-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+}
+
+.watch-card h3 {
+  color: #e5e7eb;
+  margin-bottom: 10px;
+}
+
+.watch-card .price {
+  display: block;
+  color: #22c55e;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.watch-card small {
+  color: #94a3b8;
+}
+.buy-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  cursor: pointer;
+}
+h3 {
+  margin-bottom: 12px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td, th {
+  padding: 12px 10px;
+}
+
+.buy-btn {
+  background: #22c55e;
+  color: #fff;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+}
+.main-content{
+  color: #fff;
+}

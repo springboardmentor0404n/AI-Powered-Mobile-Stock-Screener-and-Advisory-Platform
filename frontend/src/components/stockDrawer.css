@@ -1,0 +1,59 @@
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  z-index: 40;
+}
+
+.stock-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 380px;
+  background: linear-gradient(180deg, #0b1220, #05070d);
+  color: white;
+  z-index: 50;
+  box-shadow: 8px 0 30px rgba(0,0,0,0.6);
+  animation: slideIn 0.35s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.drawer-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+}
+
+.drawer-tabs button {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.drawer-tabs button.active {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.drawer-content {
+  padding: 14px;
+  overflow-y: auto;
+  height: calc(100vh - 120px);
+}
