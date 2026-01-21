@@ -1,4 +1,5 @@
 # Use Python 3.11 slim image
+# Updated: 2026-01-22 - Gemini 2.5 model integration
 FROM python:3.11-slim
 
 # Set working directory
