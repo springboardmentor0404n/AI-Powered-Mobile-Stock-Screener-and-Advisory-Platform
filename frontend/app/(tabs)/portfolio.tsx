@@ -64,7 +64,7 @@ export default function PortfolioScreen() {
     const { isDark } = useTheme();
     const colors = isDark ? Colors.dark : Colors.light;
     const router = useRouter();
-    
+
     const [overview, setOverview] = useState<PortfolioOverview | null>(null);
     const [stocks, setStocks] = useState<Stock[]>([]);
     const [analysis, setAnalysis] = useState<PortfolioAnalysis | null>(null);
@@ -269,15 +269,13 @@ export default function PortfolioScreen() {
                             </View>
 
                             <Text style={[styles.overviewText, { color: colors.textSecondary }]}>
-                                You are tracking {overview.total_stocks} stocks. 
+                                You are tracking {overview.total_stocks} stocks.
                                 {overview.top_sectors && Object.keys(overview.top_sectors).length > 0 && (
                                     ` Portfolio is ${overview.risk_level === 'High' ? 'highly' : 'moderately'} concentrated in ${Object.keys(overview.top_sectors)[0]} sector.`
                                 )}
                             </Text>
 
-                            <Text style={[styles.lastRefresh, { color: colors.textTertiary }]}>
-                                Last updated: {new Date(overview.last_refresh).toLocaleTimeString()}
-                            </Text>
+
                         </View>
                     )}
 
@@ -332,16 +330,46 @@ export default function PortfolioScreen() {
                                             </View>
 
                                             <View style={styles.stockStatus}>
+                                                {/* Trend Icon - Keep or Remove? User asked to replace tick/cross. 
+                                                    The tick/cross is the second icon (getScreenerStatusIcon).
+                                                    The first one is global trend. I will keep global trend as is if not asked to remove.
+                                                */}
                                                 <Ionicons
                                                     name={getTrendIcon(stock.trend) as any}
                                                     size={16}
                                                     color={stock.trend === 'up' ? '#10B981' : stock.trend === 'down' ? '#EF4444' : colors.textTertiary}
                                                 />
-                                                <Ionicons
-                                                    name={getScreenerStatusIcon(stock.screener_status) as any}
-                                                    size={20}
-                                                    color={getScreenerStatusColor(stock.screener_status)}
-                                                />
+
+                                                {/* Buy/Sell/Hold Badge */}
+                                                {(() => {
+                                                    let badgeText = 'HOLD';
+                                                    let badgeColor = '#F59E0B'; // Orange
+                                                    let badgeBg = 'rgba(245, 158, 11, 0.15)';
+
+                                                    // Use recommendation if available, otherwise fallback to screener_status
+                                                    const status = stock.recommendation || (
+                                                        stock.screener_status === 'fully_matched' ? 'buy' :
+                                                            stock.screener_status === 'not_matched' ? 'sell' : 'hold'
+                                                    );
+
+                                                    if (status === 'buy') {
+                                                        badgeText = 'BUY';
+                                                        badgeColor = '#10B981'; // Green
+                                                        badgeBg = 'rgba(16, 185, 129, 0.15)';
+                                                    } else if (status === 'sell') {
+                                                        badgeText = 'SELL';
+                                                        badgeColor = '#EF4444'; // Red
+                                                        badgeBg = 'rgba(239, 68, 68, 0.15)';
+                                                    }
+
+                                                    return (
+                                                        <View style={[styles.actionBadge, { backgroundColor: badgeBg }]}>
+                                                            <Text style={[styles.actionBadgeText, { color: badgeColor }]}>
+                                                                {badgeText}
+                                                            </Text>
+                                                        </View>
+                                                    );
+                                                })()}
                                             </View>
                                         </View>
 
@@ -355,22 +383,22 @@ export default function PortfolioScreen() {
                                                     Screener Status: {stock.screener_status.replace('_', ' ')}
                                                 </Text>
                                                 {stock.recommendation && (
-                                                    <View style={[styles.recommendationBadge, { 
-                                                        backgroundColor: stock.recommendation === 'buy' ? '#10B98120' : 
-                                                                        stock.recommendation === 'sell' ? '#EF444420' : '#F59E0B20',
-                                                        borderColor: stock.recommendation === 'buy' ? '#10B981' : 
-                                                                    stock.recommendation === 'sell' ? '#EF4444' : '#F59E0B'
+                                                    <View style={[styles.recommendationBadge, {
+                                                        backgroundColor: stock.recommendation === 'buy' ? '#10B98120' :
+                                                            stock.recommendation === 'sell' ? '#EF444420' : '#F59E0B20',
+                                                        borderColor: stock.recommendation === 'buy' ? '#10B981' :
+                                                            stock.recommendation === 'sell' ? '#EF4444' : '#F59E0B'
                                                     }]}>
-                                                        <Ionicons 
-                                                            name={stock.recommendation === 'buy' ? 'trending-up' : 
-                                                                 stock.recommendation === 'sell' ? 'trending-down' : 'remove'} 
-                                                            size={16} 
-                                                            color={stock.recommendation === 'buy' ? '#10B981' : 
-                                                                   stock.recommendation === 'sell' ? '#EF4444' : '#F59E0B'} 
+                                                        <Ionicons
+                                                            name={stock.recommendation === 'buy' ? 'trending-up' :
+                                                                stock.recommendation === 'sell' ? 'trending-down' : 'remove'}
+                                                            size={16}
+                                                            color={stock.recommendation === 'buy' ? '#10B981' :
+                                                                stock.recommendation === 'sell' ? '#EF4444' : '#F59E0B'}
                                                         />
-                                                        <Text style={[styles.recommendationText, { 
-                                                            color: stock.recommendation === 'buy' ? '#10B981' : 
-                                                                   stock.recommendation === 'sell' ? '#EF4444' : '#F59E0B'
+                                                        <Text style={[styles.recommendationText, {
+                                                            color: stock.recommendation === 'buy' ? '#10B981' :
+                                                                stock.recommendation === 'sell' ? '#EF4444' : '#F59E0B'
                                                         }]}>
                                                             {stock.recommendation.toUpperCase()}
                                                         </Text>
@@ -685,6 +713,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+    },
+    actionBadge: {
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionBadgeText: {
+        fontSize: 11,
+        fontWeight: '700',
     },
     expandedContent: {
         marginTop: 12,

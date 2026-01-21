@@ -62,8 +62,9 @@ class GeminiService:
                 from google import genai
                 self.client = genai.Client(api_key=self.gemini_api_key)
                 
-                # Check available models
-                self.model_id = self._get_working_model_id()
+                # Optimized: Directly use the fastest stable model
+                # Skipping startup connectivity check to reduce latency
+                self.model_id = "gemini-1.5-flash"
                 print(f"[AI SERVICE] ✅ Google Gemini initialized with model: {self.model_id}")
             except Exception as e:
                 print(f"[AI SERVICE] ❌ Failed to initialize Gemini: {e}")
@@ -148,7 +149,8 @@ class GeminiService:
     @retry_gemini(retries=2)
     def _generate_with_fallback(self, prompt=None, contents=None):
         """Try primary model, then fallback to lighter models"""
-        models_to_try = [self.model_id, "gemini-1.5-flash-8b", "gemini-1.5-flash"]
+        # Prioritize speed: Flash -> Pro -> Flash-8b
+        models_to_try = [self.model_id, "gemini-1.5-pro", "gemini-1.5-flash-8b"]
         # Deduplicate
         models_to_try = list(dict.fromkeys(models_to_try))
         
@@ -193,13 +195,13 @@ class GeminiService:
                 # Enforce SEBI Compliance & Informational Tone
                 system_instruction = (
                     "Context: You are an AI assistant for an Indian Stock Screener App.\n"
-                    "Role: Provide market analysis and data-driven insights.\n"
+                    "Role: Provide market analysis, educational insights, and data-driven observations.\n"
                     "Constraints (CRITICAL):\n"
-                    "1. INFORMATIONAL ONLY: Do not give direct 'Buy', 'Sell', or 'Hold' recommendations.\n"
-                    "2. DISCLAIMER: Always imply or state that you are not a SEBI registered advisor.\n"
-                    "3. TONE: Use phrases like 'Technical indicators suggest...', 'Historical data shows...', 'Analysts often look at...' instead of 'You should buy...'.\n"
-                    "4. COMPLIANCE: If asked for a tip, refuse politely and offer data analysis instead.\n"
-                    "5. SYNONYMS: Understand that 'IT' means 'Technology', 'Auto' means 'Automobile', etc.\n\n"
+                    "1. INFORMATIONAL ONLY: You must NEVER give direct 'Buy', 'Sell', or 'Hold' recommendations. Your output is for educational purposes only.\n"
+                    "2. DISCLAIMER: Always imply that you are an AI and not a SEBI registered investment advisor.\n"
+                    "3. TONE: Objective and analytical. Use phrases like 'Technical indicators suggest...', 'Past performance shows...', 'Market data indicates...'.\n"
+                    "4. COMPLIANCE: If asked for a 'tip' or 'call', strictly refuse and explain that you provide analysis, not advice.\n"
+                    "5. SYNONYMS: Understand 'IT' as 'Technology', 'Auto' as 'Automobile', etc.\n\n"
                     f"User Query: {prompt}"
                 )
                 
@@ -213,15 +215,11 @@ class GeminiService:
                 
                 response = self._generate_with_fallback(system_instruction, contents=None)
                 
-                # Append standard disclaimer if not present
+                # Append mandatory disclaimer
                 final_text = response.text
-                disclaimer = "\\n\\n*(Disclaimer: This is AI-generated for informational purposes only and is not SEBI-registered investment advice. Please consult a profit advisor before trading.)*"
+                disclaimer = "\n\n*(Disclaimer: This content is for informational purposes only and does not constitute financial advice. I am an AI assistant and not a SEBI-registered investment advisor. Please consult a qualified financial professional before making investment decisions.)*"
                 
-                # Append standard disclaimer if not present
-                final_text = response.text
-                disclaimer = "\n\n*(Disclaimer: This is AI-generated for informational purposes only and is not SEBI-registered investment advice. Please consult a qualified financial advisor before trading.)*"
-                
-                if "Disclaimer:" not in final_text and "not SEBI-registered" not in final_text:
+                if "Disclaimer:" not in final_text and "informational purposes only" not in final_text:
                     final_text += disclaimer
                 
                 # Cache the response
