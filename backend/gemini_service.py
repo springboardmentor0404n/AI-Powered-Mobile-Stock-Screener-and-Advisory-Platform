@@ -64,7 +64,7 @@ class GeminiService:
                 
                 # Optimized: Directly use the fastest stable model
                 # Skipping startup connectivity check to reduce latency
-                self.model_id = "gemini-2.0-flash-exp"
+                self.model_id = "gemini-2.5-flash"
                 print(f"[AI SERVICE] ✅ Google Gemini initialized with model: {self.model_id}")
             except Exception as e:
                 print(f"[AI SERVICE] ❌ Failed to initialize Gemini: {e}")
@@ -110,13 +110,12 @@ class GeminiService:
     
     def _get_working_model_id(self) -> str:
         """Find the best available model for the API key"""
-        # Prioritize fastest models first - using models compatible with google-genai SDK
+        # Prioritize fastest models first - using official Gemini API model names
         candidates = [
-            "gemini-2.0-flash-exp",  # Fastest experimental model
-            "gemini-1.5-flash-002",  # Stable flash version
-            "gemini-1.5-flash-latest",  # Latest flash
-            "gemini-1.5-pro-002",  # Stable pro version
-            "gemini-1.5-pro-latest",  # Latest pro
+            "gemini-2.5-flash",      # Best price-performance (stable)
+            "gemini-2.5-pro",        # Advanced thinking model (stable)
+            "gemini-2.0-flash-exp",  # Experimental 2.0 model
+            "gemini-2.0-flash",      # Stable 2.0 workhorse
         ]
         
         # Try to use each model with a dummy request to check availability & quota
@@ -140,15 +139,15 @@ class GeminiService:
                 print(f"[AI SERVICE] Skipping {candidate} due to error: {e}")
                 continue
             
-        print("[AI SERVICE] ⚠️ No working model found in candidates. Defaulting to gemini-2.0-flash-exp")
-        # Fallback: return the standard one and hope
-        return "gemini-2.0-flash-exp"
+        print("[AI SERVICE] ⚠️ No working model found in candidates. Defaulting to gemini-2.5-flash")
+        # Fallback: return the stable standard one
+        return "gemini-2.5-flash"
     
     @retry_gemini(retries=2)
     def _generate_with_fallback(self, prompt=None, contents=None):
         """Try primary model, then fallback to lighter models"""
-        # Prioritize speed: Flash-exp -> Pro-002 -> Flash-002
-        models_to_try = [self.model_id, "gemini-1.5-pro-002", "gemini-1.5-flash-002"]
+        # Prioritize: Primary -> 2.5 Pro -> 2.0 Flash
+        models_to_try = [self.model_id, "gemini-2.5-pro", "gemini-2.0-flash"]
         # Deduplicate
         models_to_try = list(dict.fromkeys(models_to_try))
         
