@@ -15,3 +15,9 @@ Thumbs.db
 
 # Node / frontend
 node_modules/
+
+#faiss
+.faiss
+.pkl
+# Ignore Python virtual environment
+*.cfg
