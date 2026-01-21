@@ -21,3 +21,8 @@ node_modules/
 .pkl
 # Ignore Python virtual environment
 *.cfg
+
+# Node.js files not needed
+package.json
+package-lock.json
+
