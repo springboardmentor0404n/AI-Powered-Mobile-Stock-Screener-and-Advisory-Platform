@@ -34,6 +34,16 @@ else:
 
 
 def test_gainers_losers():
+    print("--------------------------------------------------", flush=True)
+    print("Attempting initial login...", flush=True)
+    from angelone_service import get_smart_api
+    api = get_smart_api(force_fresh=True)
+    if not api:
+        print("CRITICAL: Initial login failed. The account might be rate-limited.", flush=True)
+        return
+    else:
+        print("Initial login successful. Proceeding with load test.", flush=True)
+
     print(f"[{datetime.now()}] Starting Gainers/Losers Test...", flush=True)
     start_time = time.time()
     
@@ -49,7 +59,7 @@ def test_gainers_losers():
     end_time = time.time()
     duration = end_time - start_time
     
-    print(f"[{datetime.now()}] Ccompleted in {duration:.2f} seconds", flush=True)
+    print(f"[{datetime.now()}] Completed in {duration:.2f} seconds", flush=True)
     print(f"Total Fetched: {result.get('total_fetched')}", flush=True)
     print(f"Gainers Found: {len(result.get('gainers', []))}", flush=True)
     print(f"Losers Found: {len(result.get('losers', []))}", flush=True)

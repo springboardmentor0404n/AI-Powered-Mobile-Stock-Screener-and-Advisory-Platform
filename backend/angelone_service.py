@@ -267,32 +267,46 @@ def login_to_publisher_angel_one():
         print(f"[ANGELONE ERROR] Publisher Login exception: {e}")
         return False
 
+# Login Lock
+login_lock = Lock()
+
 def get_smart_api(force_fresh=False):
     """
-    Get or create authenticated SmartAPI session
+    Get or create authenticated SmartAPI session with Double-Checked Locking
     force_fresh: If True, force a new login
     """
     global smart_api, auth_token, _last_login_attempt
     
-    # 1. If we have a valid session and not forcing fresh, return it
+    # 1. Fast Path: If we have a valid session and not forcing fresh, return it
     if smart_api and auth_token and not force_fresh:
         return smart_api
     
-    # Check global cooldown to prevent spamming login on persistent failures
-    now = datetime.now()
-    if 'main' in _last_login_attempt:
-        time_since_last = (now - _last_login_attempt['main']).total_seconds()
-        if time_since_last < 10 and not force_fresh: # 10s short cooldown for main logic
-             return smart_api # Return what we have, might be None
-    
-    _last_login_attempt['main'] = now
-    
-    # 2. Try to login
-    print("[ANGELONE] Initializing or Refreshing SmartAPI Session...")
-    if login_to_angel_one():
-        return smart_api
-    
-    return None
+    # 2. Acquire Lock
+    with login_lock:
+        # 3. Double Check: Check again in case another thread initialized it while we were waiting
+        if smart_api and auth_token and not force_fresh:
+            return smart_api
+            
+        # Check global cooldown to prevent spamming login on persistent failures
+        now = datetime.now()
+        if 'main' in _last_login_attempt:
+            time_since_last = (now - _last_login_attempt['main']).total_seconds()
+            if time_since_last < 5 and not force_fresh: # 5s cooldown
+                 print("[ANGELONE] Login cooldown active, skipping...")
+                 return smart_api # Return what we have, might be None
+        
+        _last_login_attempt['main'] = now
+        
+        # 4. Perform Login
+        import threading
+        print(f"[ANGELONE] Initializing or Refreshing SmartAPI Session... (Thread: {threading.current_thread().name})")
+        if login_to_angel_one():
+            return smart_api
+        
+        # If login failed, add a small sleep to slow down all waiting threads
+        time.sleep(1)
+        
+        return None
 
 def search_stocks_angel(query: str):
     """
