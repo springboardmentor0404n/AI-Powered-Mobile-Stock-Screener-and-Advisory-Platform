@@ -68,6 +68,8 @@ Run Backend
 ```bash
 cd backend
 python run.py
+python faiss_api.py
+
 ```
 
 ---
@@ -102,7 +104,30 @@ Dashboard Tabs & Functionality
 4. **LLM / AI Chat:** Ask natural language queries about stocks and portfolios.
 5. **Notifications:** Alerts triggered when stocks are added or removed from portfolio/watchlist.
 
----
+
+Constraints & Limitations
+
+Technical Constraints:
+Python Version: Requires Python 3.8+ (uses modern type hints and async features)
+Database: PostgreSQL required (uses specific PostgreSQL features)
+Memory: Vector embeddings require sufficient RAM for large datasets
+API Limits: Subject to yahoo finance rate limits and Google AI quotas
+
+Data Constraints:
+Market Data: Currently optimized for NSE stocks
+Historical Data: CSV format must match expected schema
+Real-time Updates: Market data updates depend on API availability
+
+Security Constraints:
+Environment Variables: All sensitive keys must be in .env file
+CORS: Frontend must run on configured origin 
+JWT Tokens: Implement token refresh for production use
+
+Performance Constraints:
+Query Processing: AI parsing may have latency for complex queries
+Data Processing: Large CSV files may require significant processing time
+Concurrent Users: Database connection pooling needed for high traffic
+
 
 Folder Structure 
 
@@ -207,5 +232,10 @@ Support
 * Contact developer: Rishitha Sandiri
 * Verify data before making financial decisions
 
--
+ 
+
+
+Note: This application is for educational and research purposes. Always verify data accuracy and consult financial professionals before making investment decisions.
+
+
 
