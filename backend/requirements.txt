@@ -1,0 +1,32 @@
+fastapi
+uvicorn
+python-dotenv
+pyjwt
+passlib[bcrypt]
+bcrypt==3.2.2
+certifi
+
+smartapi-python
+pyotp
+requests
+logzero
+websocket-client
+
+email-validator
+yfinance
+pandas
+
+# HTTP client for push notifications
+aiohttp>=3.9.0
+
+# Redis dependencies
+redis>=5.0.0
+
+# Firebase
+firebase-admin>=6.2.0
+
+# AI Service
+google-genai
+
+# Scheduler
+schedule>=1.2.0

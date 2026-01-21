@@ -1,0 +1,52 @@
+services:
+  # Python Backend Service
+  - type: web
+    name: stock-screener-backend
+    runtime: docker
+    repo: https://github.com/hdubey16/AI-Powered-Mobile-Stock-Screener-and-Advisory-Platform
+    rootDir: backend
+    plan: free 
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: stock-cache
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: stock-cache
+          property: port
+      - key: DATABASE_URL
+        fromService:
+          type: redis
+          name: stock-cache
+          property: connectionString
+      # Firebase Secret File Path
+      - key: FIREBASE_CREDENTIALS
+        value: /etc/secrets/firebase-credentials.json
+      # User must provide these in Render Dashboard
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: ANGELONE_API_KEY
+        sync: false
+      - key: ANGELONE_CLIENT_CODE
+        sync: false
+      - key: ANGELONE_PASSWORD
+        sync: false
+      - key: ANGELONE_TOTP_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+
+    healthCheckPath: /health
+
+# Redis Cache
+  - type: redis
+    name: stock-cache
+    plan: free # Note: Free Redis on Render is ephemeral (data lost on restart)
+    ipAllowList: [] # internal access only
