@@ -1,7 +1,5 @@
 # AI Stock Screener 📈
 
-**Developer:** V Naga Veeranna
-
 An intelligent stock screening and analysis platform built with Flask (backend) and React (frontend). This application allows users to query stocks using natural language, set price alerts, upload historical data, and visualize market analytics through an AI-powered chat interface.
 
 ## Features 💡
@@ -24,7 +22,6 @@ An intelligent stock screening and analysis platform built with Flask (backend) 
 ## Backend (Flask) ⚙️
 
 ### Backend Prerequisites 📋
-- Python 3.8+
 - PostgreSQL 12+
 - Git
 
@@ -33,10 +30,7 @@ An intelligent stock screening and analysis platform built with Flask (backend) 
 - **MarketStack API Key**: For real-time market data
 - **SMTP Configuration**: For email OTP verification
 
-### Backend Installation 🚀
-
-#### Install Python Dependencies 🐍
-```bash
+### Backend Installation 
 pip install -r requirements.txt
 ```
 
@@ -46,8 +40,6 @@ pip install -r requirements.txt
 ```sql
 CREATE DATABASE ai_screener_db;
 ```
-3. Update `app/config.py` with your database credentials:
-```python
 DATABASE_URL = "postgresql://username:password@localhost:5432/ai_screener_db"
 ```
 
@@ -80,7 +72,7 @@ FROM_EMAIL=noreply@yourdomain.com
 - **Market Data** 📊: Ensure MarketStack API key is valid for NSE data
 - **Vector Database** 🤖: Uses FAISS for vector storage
 
-## Frontend (React + Vite) 🎨
+## Frontend (html+css+js) 🎨
 
 ### Frontend Prerequisites 📋
 - Node.js 16+
@@ -104,10 +96,7 @@ npm install
 
 ### Development Mode 🛠️
 
-#### Start Backend 🚀
-```bash
-python run.py
-```
+#### Start Backend ```
 The backend will run on `http://localhost:5000`
 
 #### Start Alert Monitoring Service 🔔 (Optional - Run in separate terminal)
@@ -174,12 +163,11 @@ npm run build
 ```
 
 ### CSV Upload
-Upload CSV files with columns: date, open, high, low, close, volume, turnover, trades, %deliverble
+Uploaded CSV files with columns: date, open, high, low, close, volume, turnover, trades, %deliverble
 
 ## Constraints & Limitations
 
 ### Technical Constraints
-- **Python Version**: Requires Python 3.8+ (uses modern type hints and async features)
 - **Database**: PostgreSQL required (uses specific PostgreSQL features)
 - **Memory**: Vector embeddings require sufficient RAM for large datasets
 - **API Limits**: Subject to MarketStack API rate limits and Google AI quotas
@@ -201,63 +189,7 @@ Upload CSV files with columns: date, open, high, low, close, volume, turnover, t
 
 ## Development
 
-### Project Structure 📁
-```
-├── app/
-│   ├── __init__.py      # Flask app factory
-│   ├── alert_service.py # Background alert monitoring service
-│   ├── app.py           # Main app file
-│   ├── config.py        # Configuration settings
-│   ├── db.py            # Database models and connections
-│   ├── extensions.py    # Flask extensions
-│   ├── routes/          # API endpoints
-│   │   ├── alerts.py    # Alert management routes
-│   │   ├── analytics.py # Market analytics routes
-│   │   ├── auth_routes.py # Authentication routes
-│   │   ├── chat.py      # Chat and stock queries
-│   │   ├── gateway_routes.py # API gateway routes
-│   │   └── upload.py    # File upload routes
-│   ├── models/          # Database models
-│   │   ├── api_key.py   # API key model
-│   │   ├── email_otp.py # OTP model
-│   │   └── email_user.py # User model
-│   ├── services/        # Business logic
-│   │   ├── chat_intelligence.py # Chat AI logic
-│   │   ├── emailer.py   # Email service
-│   │   ├── forwarder.py # Data forwarding service
-│   │   └── stock_resolver.py # Stock symbol resolution
-│   ├── embeddings/      # Vector processing
-│   │   ├── embedder.py  # Embedding generation
-│   │   └── vector_db.py # Vector database operations
-│   ├── llm/            # AI integration
-│   │   ├── parser.py    # Query parsing
-│   │   └── prompt.py    # AI prompts
-│   ├── screener/       # Stock screening logic
-│   │   └── runner.py    # Screener engine
-│   └── utils/          # Utility functions
-│       ├── hash_utils.py # Password hashing
-│       └── otp.py       # OTP generation
-├── data/               # Data storage
-│   ├── uploads/        # Uploaded CSV files
-│   ├── vector.index    # Vector database index
-│   └── cache/          # Cached data
-├── database/           # Database operations
-│   ├── embeddings_repo.py # Embedding repository
-│   └── postgres.py     # PostgreSQL connections
-├── frontend/           # React frontend
-│   └── vite-project/   # Vite React app
-├── tests/              # Test suites
-│   ├── test_alert_processing.py
-│   ├── test_api_response_time.py
-│   ├── test_concurrent_requests.py
-│   ├── test_csv_processing.py
-│   ├── test_db_query_time.py
-│   ├── test_health_check.py
-│   └── test_notifications_time.py
-├── run.py              # Application entry point
-├── requirements.txt    # Python dependencies
-└── README.md           # This file
-```
+
 
 ### Testing
 Run tests with:
