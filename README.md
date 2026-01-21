@@ -155,10 +155,10 @@ npm run build
 ```json
 {
   "user_id": 1,
-  "symbol": "RELIANCE",
+  "symbol": "TCS.NS",
   "alert_type": "PRICE_THRESHOLD",
   "condition": "ABOVE",
-  "value": 2500.00
+  "value": 1500.00
 }
 ```
 
