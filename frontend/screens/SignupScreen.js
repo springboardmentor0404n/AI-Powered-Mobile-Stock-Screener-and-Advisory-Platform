@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SignupScreen({ navigation }) {
-    const { sendOtp, validateOtp, verifySignup, isLoading } = useContext(AuthContext);
+    const { sendOtp, validateOtp, verifySignup, login, isLoading } = useContext(AuthContext);
     const { colors } = useTheme();
 
     const [step, setStep] = useState(1);
@@ -163,12 +163,18 @@ export default function SignupScreen({ navigation }) {
                                 {/* SKIP BUTTON */}
                                 <TouchableOpacity
                                     onPress={async () => {
-                                        // Auto-login with dev credentials
-                                        const devEmail = `dev_${Date.now()}@example.com`;
+                                        const devEmail = 'dev@example.com';
                                         const devPassword = 'devpass123';
-                                        const result = await verifySignup(devEmail, devPassword, '000000', 'Dev User');
-                                        if (!result.success) {
-                                            Alert.alert("Error", "Skip failed: " + result.error);
+
+                                        // 1. Try Login (using login from context)
+                                        const loginResult = await login(devEmail, devPassword);
+                                        if (loginResult.success) return;
+
+                                        // 2. If Login failed, Signup
+                                        const signupResult = await verifySignup(devEmail, devPassword, '000000', 'Dev User');
+                                        if (!signupResult.success) {
+                                            const errMsg = typeof signupResult.error === 'object' ? JSON.stringify(signupResult.error) : signupResult.error;
+                                            Alert.alert("Error", "Dev Mode Failed: " + errMsg);
                                         }
                                     }}
                                     style={{ marginBottom: 15, padding: 10 }}

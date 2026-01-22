@@ -110,25 +110,82 @@ async def fetch_and_update_data(db: AsyncSession = None):
         async with SessionLocal() as session:
             await process_symbols(session)
 
-async def process_symbols(db: AsyncSession):
-    for symbol in SYMBOLS:
+# Concurrency Limit
+SEMAPHORE = asyncio.Semaphore(10) # 10 Concurrent requests
+
+async def fetch_symbol_data(symbol):
+    """
+    Fetches all data for a symbol concurrently from YFinance
+    """
+    async with SEMAPHORE:
         try:
-            # Run sync yfinance call in executor
             loop = asyncio.get_event_loop()
             
-            # Use specific concurrent executor to avoid loop variable issues or just run direct if io blocked
-            # yfinance is synchronous.
-            
+            # Run blocking yf calls in executor
             ticker = await loop.run_in_executor(None, yf.Ticker, symbol)
             
-            # Fetch essential data
-            # info property is a property, calling it might trigger a request.
-            info = await loop.run_in_executor(None, lambda: ticker.info)
+            # Fetch Info and History in parallel if possible? 
+            # Ticker object is not thread safe? Actually yfinance Ticker is mostly stateless lazy loader.
+            # But let's keep it simple: just run the IO bound property access in executor
             
-            # Fetch History for Technicals (1Y 1d)
-            history = await loop.run_in_executor(None, lambda: ticker.history(period="1y"))
-            tech_data = calculate_technicals(history) if not history.empty else {}
+            def get_info():
+                return ticker.info
+            
+            def get_history():
+                return ticker.history(period="1y")
+                
+            def get_news():
+                return ticker.news
+            
+            # Run these in parallel
+            # We wrap them in executor
+            
+            info_task = loop.run_in_executor(None, get_info)
+            hist_task = loop.run_in_executor(None, get_history)
+            news_task = loop.run_in_executor(None, get_news)
+            
+            info, history, news_items = await asyncio.gather(info_task, hist_task, news_task)
+            
+            tech_data = {}
+            if not history.empty:
+                tech_data = calculate_technicals(history)
+                
+            return {
+                "symbol": symbol,
+                "info": info,
+                "history": history,
+                "news": news_items,
+                "tech_data": tech_data,
+                "success": True
+            }
+            
+        except Exception as e:
+            print(f"❌ Error fetching {symbol}: {e}")
+            return {"symbol": symbol, "success": False, "error": str(e)}
 
+async def process_symbols(db: AsyncSession):
+    print(f"🚀 Starting parallel ingestion for {len(SYMBOLS)} stocks...")
+    start_time = asyncio.get_event_loop().time()
+    
+    # 1. Fetch ALL data in parallel
+    tasks = [fetch_symbol_data(symbol) for symbol in SYMBOLS]
+    results = await asyncio.gather(*tasks)
+    
+    print("✅ Fetch complete. Writing to database...")
+    
+    # 2. Write to DB Sequentially (Safe for single session)
+    count = 0
+    for data in results:
+        if not data["success"]:
+            continue
+            
+        try:
+            symbol = data["symbol"]
+            info = data["info"]
+            history = data["history"]
+            tech_data = data["tech_data"]
+            yf_news = data["news"]
+            
             clean_symbol = symbol.split('.')[0]
             
             # Upsert Stock
@@ -146,17 +203,15 @@ async def process_symbols(db: AsyncSession):
                 await db.commit()
                 await db.refresh(stock)
             
-            # Update Stock Price with Validation
+            # Update Stock Price
             current_price = info.get('currentPrice') or info.get('regularMarketPrice')
             previous_close = info.get('previousClose')
-
+            
             if not current_price and not history.empty:
                 current_price = history['Close'].iloc[-1]
-            
             if not previous_close and len(history) >= 2:
-                # Use the close of the day before the last one
                 previous_close = history['Close'].iloc[-2]
-
+                
             stock.current_price = current_price
             stock.previous_close = previous_close
             stock.market_cap = info.get('marketCap')
@@ -179,32 +234,33 @@ async def process_symbols(db: AsyncSession):
             fund.book_value = info.get('bookValue')
             fund.profit_growth = info.get('earningsGrowth')
             fund.sales_growth = info.get('revenueGrowth')
-
-            # Mock Financial History (Real API for this is hard with just yf info, usually requires Paid API or detailed balance sheet parsing)
-            # Keeping mock history for charts visualization as yf.financials is complex to parse robustly in this scope
+            
+            # Mock History (Preserve existing logic)
             import json
             import random
-            base_rev = (info.get('totalRevenue') or 10000000000) / 10000000 
-            rev_hist = []
-            prof_hist = []
-            for i in range(5):
-                year = 2020 + i
-                growth = random.uniform(1.05, 1.20)
-                base_rev *= growth
-                net_profit = base_rev * random.uniform(0.10, 0.20)
-                rev_hist.append({"year": str(year), "value": round(base_rev, 2)})
-                prof_hist.append({"year": str(year), "value": round(net_profit, 2)})
-            
-            fund.revenue_history = json.dumps(rev_hist)
-            fund.profit_history = json.dumps(prof_hist)
-            fund.shareholding = json.dumps({
-                "Promoters": round(random.uniform(40, 70), 2),
-                "FII": round(random.uniform(10, 30), 2),
-                "DII": round(random.uniform(5, 20), 2),
-                "Public": round(random.uniform(5, 15), 2)
-            })
+            if not fund.revenue_history: # Only gen if missing to save time? Or usually just gen
+                base_rev = (info.get('totalRevenue') or 10000000000) / 10000000 
+                rev_hist = []
+                prof_hist = []
+                for i in range(5):
+                    year = 2020 + i
+                    growth = random.uniform(1.05, 1.20)
+                    base_rev *= growth
+                    net_profit = base_rev * random.uniform(0.10, 0.20)
+                    rev_hist.append({"year": str(year), "value": round(base_rev, 2)})
+                    prof_hist.append({"year": str(year), "value": round(net_profit, 2)})
+                fund.revenue_history = json.dumps(rev_hist)
+                fund.profit_history = json.dumps(prof_hist)
+                
+            if not fund.shareholding:
+                fund.shareholding = json.dumps({
+                    "Promoters": round(random.uniform(40, 70), 2),
+                    "FII": round(random.uniform(10, 30), 2),
+                    "DII": round(random.uniform(5, 20), 2),
+                    "Public": round(random.uniform(5, 15), 2)
+                })
 
-            # Techs - Using Real Calculations
+            # Upsert Technicals
             tech_stmt = select(Technicals).where(Technicals.stock_id == stock.id)
             result = await db.execute(tech_stmt)
             tech = result.scalars().first()
@@ -222,51 +278,35 @@ async def process_symbols(db: AsyncSession):
             tech.r1 = tech_data.get('r1', 0.0)
             tech.s1 = tech_data.get('s1', 0.0)
             
-           # Upsert Real News from YFinance
+            # Upsert News
             from models import News
-            
-            # Fetch real news
-            yf_news = ticker.news
-            
             if yf_news:
-                # Clear old news to keep fresh? Or just append?
-                # For simplicity, let's keep adding but maybe limit duplicates in prod.
-                # Here we will just add if not exists.
-                
-                for item in yf_news[:3]: # Top 3 news
+                for item in yf_news[:3]:
                     headline = item.get('title')
                     if not headline: continue
-                    
-                    # check dupe
                     news_stmt = select(News).where(News.stock_id == stock.id, News.headline == headline)
                     res = await db.execute(news_stmt)
-                    if res.scalars().first():
-                         continue
-
-                    # Basic Sentiment Heuristic since we don't have a specialized NLP model running here
+                    if res.scalars().first(): continue
+                    
                     sentiment = "NEUTRAL"
                     lower_hl = headline.lower()
-                    if any(x in lower_hl for x in ['growth', 'profit', 'rise', 'soar', 'buy', 'bull', 'up', 'high', 'record']):
-                        sentiment = "POSITIVE"
-                    elif any(x in lower_hl for x in ['loss', 'drop', 'fall', 'plunge', 'sell', 'bear', 'down', 'low', 'miss']):
-                        sentiment = "NEGATIVE"
-                        
-                    new_news = News(
-                        stock_id=stock.id, 
-                        headline=headline, 
-                        summary=item.get('link'), # Store Link as summary or separate field
-                        sentiment=sentiment, 
-                        url=item.get('link')
-                    )
+                    if any(x in lower_hl for x in ['growth', 'profit', 'rise', 'soar', 'buy', 'bull']): sentiment = "POSITIVE"
+                    elif any(x in lower_hl for x in ['loss', 'drop', 'fall', 'plunge', 'sell', 'bear']): sentiment = "NEGATIVE"
+                    
+                    new_news = News(stock_id=stock.id, headline=headline, summary=item.get('link'), sentiment=sentiment, url=item.get('link'))
                     db.add(new_news)
             
-            await db.commit()
-            await db.refresh(tech)
-            print(f"Updated {clean_symbol} | Price: {current_price} | News Items: {len(yf_news)}")
-            
+            count += 1
+            if count % 10 == 0:
+                await db.commit() # Commit every 10 to save roundtrips
+                
         except Exception as e:
-            await db.rollback()
-            print(f"Error updating {symbol}: {e}")
+            print(f"Error updating DB for {clean_symbol}: {e}")
+            await db.rollback() # Rollback on error but continue loop?
+            
+    await db.commit() # Final commit
+    duration = asyncio.get_event_loop().time() - start_time
+    print(f"🏁 Ingestion complete. Updated {count} stocks in {duration:.2f} seconds.")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

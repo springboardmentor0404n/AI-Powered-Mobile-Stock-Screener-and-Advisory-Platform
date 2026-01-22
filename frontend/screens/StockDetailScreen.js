@@ -189,6 +189,7 @@ export default function StockDetailScreen({ route }) {
             setAlertModalVisible(false);
             setTargetPrice('');
             setHasAlert(true); // Visually update the bell
+            Alert.alert("Success", `Alert set for ${details.symbol} ${alertCondition} ₹${price}`);
 
         } catch (err) {
             console.error("Alert creation failed:", err);
