@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-StockMaster | Intelligent Market Analysis</title>
-    <!-- Chart.js for Data Visualization -->
+    <title>AI-StockMaster | Login</title>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome for Icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -28,7 +28,60 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         
-        body { background-color: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* --- LOGIN PAGE STYLES --- */
+        #login-view {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-dark);
+            z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        #login-view.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .login-card {
+            background-color: var(--bg-card);
+            padding: 3rem;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            width: 100%; max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border);
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .login-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 2rem; color: var(--primary); }
+        .login-subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        .form-label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem; }
+        .form-input {
+            width: 100%; padding: 0.8rem; background: var(--bg-dark); border: 1px solid var(--border);
+            border-radius: 8px; color: white; font-size: 1rem; outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus { border-color: var(--primary); }
+
+        .btn-login { width: 100%; padding: 0.8rem; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 1rem; }
+        .btn-login:hover { background: var(--accent); }
+
+        .divider { margin: 1.5rem 0; position: relative; text-align: center; }
+        .divider::before { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: var(--border); }
+        .divider span { position: relative; background: var(--bg-card); padding: 0 10px; color: var(--text-muted); font-size: 0.8rem; }
+
+        .btn-google {
+            width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);
+            background: white; color: #333; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: background 0.2s;
+        }
+        .btn-google:hover { background: #f1f1f1; }
+
+        /* --- APP STYLES (Existing) --- */
+        .app-wrapper { display: none; height: 100%; width: 100%; flex: 1; opacity: 0; transition: opacity 0.5s ease; }
+        .app-wrapper.visible { display: flex; opacity: 1; }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -48,38 +101,23 @@
             z-index: 100;
         }
         
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; }
+        .logo i { color: var(--primary); }
 
         .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
         .nav-item {
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius);
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
+            padding: 0.75rem 1rem; border-radius: var(--radius); cursor: pointer; color: var(--text-muted);
+            transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; font-weight: 500;
         }
         .nav-item:hover, .nav-item.active { background-color: rgba(59, 130, 246, 0.1); color: var(--primary); }
         .nav-item i { width: 20px; text-align: center; }
 
         /* Main Content */
-        .main-content { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
+        .main-content { flex: 1; overflow-y: auto; padding: 0; position: relative; }
 
         /* Sections */
-        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section { display: none; padding: 2rem; animation: fadeIn 0.4s ease; }
         .section.active { display: block; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Dashboard Grid */
@@ -91,12 +129,10 @@
         .card-sub { font-size: 0.875rem; margin-top: 0.25rem; }
         .text-green { color: var(--green); }
         .text-red { color: var(--red); }
-        .text-orange { color: var(--orange); }
 
         /* Chart Area */
         .chart-container { grid-column: span 3; height: 400px; position: relative; }
         .control-panel { grid-column: span 1; display: flex; flex-direction: column; gap: 1rem; }
-        
         .stock-selector { width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: var(--radius); outline: none; }
         .time-filters { display: flex; gap: 0.5rem; background: var(--bg-dark); padding: 0.25rem; border-radius: var(--radius); }
         .filter-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: 0.2s; }
@@ -109,7 +145,7 @@
         .data-table tr:hover { background-color: rgba(255,255,255,0.02); }
 
         /* Chatbot */
-        .chat-container { height: calc(100vh - 150px); display: flex; flex-direction: column; }
+        .chat-container { height: calc(100vh - 200px); display: flex; flex-direction: column; }
         .chat-window { flex: 1; overflow-y: auto; padding: 1rem; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 1rem; }
         .message { max-width: 80%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; }
         .message.bot { background: rgba(59, 130, 246, 0.1); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
@@ -127,9 +163,11 @@
         .btn-danger:hover { background: var(--red); color: white; }
         .btn-warning { background: rgba(245, 158, 11, 0.1); color: var(--orange); border: 1px solid var(--orange); }
         .btn-warning:hover { background: var(--orange); color: white; }
+        .btn-logout { background: transparent; color: var(--text-muted); border: 1px solid var(--border); width: 100%; margin-top: auto; justify-content: center; }
+        .btn-logout:hover { background: rgba(255,255,255,0.05); color: var(--red); border-color: var(--red); }
         
         /* Toast Notification */
-        .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--bg-card); border-left: 4px solid var(--primary); padding: 1rem 1.5rem; border-radius: 4px; box-shadow: var(--shadow); color: white; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 0.75rem; min-width: 250px; }
         .toast.warning { border-left-color: var(--orange); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity:1; } }
@@ -144,19 +182,29 @@
         .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--green); border: 1px solid var(--green); }
         .badge-triggered { background: rgba(245, 158, 11, 0.1); color: var(--orange); border: 1px solid var(--orange); }
 
+        /* Notification Center */
+        .top-bar { padding: 1rem 2rem; background-color: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .page-title { font-size: 1.25rem; font-weight: 700; }
+        .bell-container { position: relative; cursor: pointer; }
+        .bell-icon { font-size: 1.5rem; color: var(--text-muted); transition: color 0.2s; }
+        .bell-container:hover .bell-icon { color: var(--primary); }
+        .notif-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-card); transform: scale(0); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .notif-badge.show { transform: scale(1); }
+        .notif-dropdown { position: absolute; top: 100%; right: 0; width: 320px; max-height: 400px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: none; z-index: 1000; overflow: hidden; margin-top: 0.5rem; animation: dropIn 0.2s ease; }
+        @keyframes dropIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .notif-header { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
+        .notif-header h4 { font-size: 0.9rem; color: var(--text-main); }
+        .notif-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
+        .notif-item { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        .notif-item-content h5 { margin-bottom: 0.2rem; color: var(--primary); }
+        .notif-item-content span { color: var(--text-muted); font-size: 0.75rem; }
+        .notif-delete { color: var(--text-muted); cursor: pointer; }
+        .notif-delete:hover { color: var(--red); }
+
         /* MODAL STYLES */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-            z-index: 1500; display: none; align-items: center; justify-content: center;
-        }
-        .modal {
-            background: var(--bg-card); width: 90%; max-width: 400px;
-            padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow);
-            border: 1px solid var(--border); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1500; display: none; align-items: center; justify-content: center; }
+        .modal { background: var(--bg-card); width: 90%; max-width: 400px; padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        
         .modal h3 { margin-bottom: 1.5rem; color: var(--text-main); }
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
@@ -172,263 +220,316 @@
             .control-panel { grid-column: span 2; flex-direction: row; flex-wrap: wrap; }
         }
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; overflow: auto; }
+            .app-wrapper { flex-direction: column; }
             .sidebar { width: 100%; flex-direction: row; padding: 1rem; justify-content: space-between; align-items: center; }
             .nav-links { flex-direction: row; gap: 0.25rem; }
             .nav-text { display: none; }
-            .dashboard-grid { grid-template-columns:1fr; }
+            .dashboard-grid { grid-template-columns: 1fr; }
             .chart-container { grid-column: span 1; height: 300px; }
             .control-panel { grid-column: span 1; }
             .portfolio-summary { grid-template-columns: 1fr; }
             .alert-grid { grid-template-columns: 1fr; }
+            .top-bar { padding: 1rem; }
+            .page-title { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="logo">
-            <i class="fa-solid fa-chart-line"></i>
-            <span class="nav-text">StockAI</span>
+    <!-- LOGIN SECTION -->
+    <div id="login-view">
+        <div class="login-card">
+            <div class="login-title">StockAI</div>
+            <div class="login-subtitle">Login</div>
+            
+            <div id="login-form">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder=" ">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder=" ">
+                </div>
+                <button class="btn-login" onclick="handleEmailLogin()">Sign In</button>
+            </div>
+
+            <div class="divider"><span>OR</span></div>
+
+            <button class="btn-google" onclick="handleGoogleLogin()">
+                <i class="fa-brands fa-google"></i> Continue with Google
+            </button>
+            
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+            </div>
         </div>
-        <ul class="nav-links">
-            <li class="nav-item active" onclick="showSection('dashboard')">
-                <i class="fa-solid fa-grip"></i> <span class="nav-text">Dashboard</span>
-            </li>
-            <li class="nav-item" onclick="showSection('watchlist')">
-                <i class="fa-regular fa-star"></i> <span class="nav-text">Watchlist</span>
-            </li>
-            <li class="nav-item" onclick="showSection('portfolio')">
-                <i class="fa-solid fa-briefcase"></i> <span class="nav-text">Portfolio</span>
-            </li>
-            <li class="nav-item" onclick="showSection('alerts')">
-                <i class="fa-solid fa-bell"></i> <span class="nav-text">Alerts</span>
-            </li>
-            <li class="nav-item" onclick="showSection('ai-chat')">
-                <i class="fa-solid fa-robot"></i> <span class="nav-text">AI Analyst</span>
-            </li>
-        </ul>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="section active">
-            <div class="dashboard-grid">
-                <!-- Top Stats -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Current Price</span>
-                        <i class="fa-solid fa-tag text-muted"></i>
-                    </div>
-                    <div class="card-value" id="dash-price">--</div>
-                    <div class="card-sub" id="dash-change">--</div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Volume</span>
-                        <i class="fa-solid fa-layer-group text-muted"></i>
-                    </div>
-                    <div class="card-value" id="dash-volume">--</div>
-                    <div class="card-sub">24h Traded</div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">P/E Ratio</span>
-                        <i class="fa-solid fa-percent text-muted"></i>
-                    </div>
-                    <div class="card-value" id="dash-pe">--</div>
-                    <div class="card-sub">Trailing 12M</div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Market Cap</span>
-                        <i class="fa-solid fa-building text-muted"></i>
-                    </div>
-                    <div class="card-value" id="dash-mcap">--</div>
-                    <div class="card-sub">Est. Valuation</div>
-                </div>
+    <!-- APP WRAPPER (Dashboard, Portfolio, etc) -->
+    <div id="app-wrapper" class="app-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-chart-line"></i> StockAI
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" onclick="showSection('dashboard')">
+                    <i class="fa-solid fa-grip"></i> <span class="nav-text">Dashboard</span>
+                </li>
+                <li class="nav-item" onclick="showSection('watchlist')">
+                    <i class="fa-regular fa-star"></i> <span class="nav-text">Watchlist</span>
+                </li>
+                <li class="nav-item" onclick="showSection('portfolio')">
+                    <i class="fa-solid fa-briefcase"></i> <span class="nav-text">Portfolio</span>
+                </li>
+                <li class="nav-item" onclick="showSection('alerts')">
+                    <i class="fa-solid fa-bell"></i> <span class="nav-text">Alerts</span>
+                </li>
+                <li class="nav-item" onclick="showSection('ai-chat')">
+                    <i class="fa-solid fa-robot"></i> <span class="nav-text">AI Analyst</span>
+                </li>
+                <li class="nav-item" style="margin-top: auto;" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span class="nav-text">Logout</span>
+                </li>
+            </ul>
+        </nav>
 
-                <!-- Chart Controls -->
-                <div class="card control-panel">
-                    <div>
-                        <label style="display:block; color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Select Stock</label>
-                        <select id="stock-select" class="stock-selector" onchange="changeStock(this.value)">
-                            <!-- Populated by JS -->
-                        </select>
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Top Bar with Notifications -->
+            <div class="top-bar">
+                <div class="page-title" id="page-title">Dashboard</div>
+                <div class="bell-container">
+                    <i class="fa-solid fa-bell bell-icon" id="bell-icon"></i>
+                    <span class="notif-badge" id="notif-badge">0</span>
+                    
+                    <!-- Notification Dropdown -->
+                    <div class="notif-dropdown" id="notif-dropdown">
+                        <div class="notif-header">
+                            <h4>Notifications</h4>
+                            <button class="btn btn-danger" style="font-size: 0.7rem; padding: 4px 8px;" onclick="clearAllNotifications()">Clear</button>
+                        </div>
+                        <ul class="notif-list" id="notif-list">
+                            <li style="padding:1rem; text-align:center; color:var(--text-muted); font-size:0.8rem;">No new notifications.</li>
+                        </ul>
                     </div>
-                    <div>
-                        <label style="display:block; color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Timeframe</label>
-                        <div class="time-filters">
-                            <button class="filter-btn active" onclick="setChartPeriod('1D')">1D</button>
-                            <button class="filter-btn" onclick="setChartPeriod('1W')">1W</button>
-                            <button class="filter-btn" onclick="setChartPeriod('1M')">1M</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="dashboard-grid">
+                    <!-- Top Stats -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Current Price</span>
+                            <i class="fa-solid fa-tag text-muted"></i>
+                        </div>
+                        <div class="card-value" id="dash-price">--</div>
+                        <div class="card-sub" id="dash-change">--</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Volume</span>
+                            <i class="fa-solid fa-layer-group text-muted"></i>
+                        </div>
+                        <div class="card-value" id="dash-volume">--</div>
+                        <div class="card-sub">24h Traded</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">P/E Ratio</span>
+                            <i class="fa-solid fa-percent text-muted"></i>
+                        </div>
+                        <div class="card-value" id="dash-pe">--</div>
+                        <div class="card-sub">Trailing 12M</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Market Cap</span>
+                            <i class="fa-solid fa-building text-muted"></i>
+                        </div>
+                        <div class="card-value" id="dash-mcap">--</div>
+                        <div class="card-sub">Est. Valuation</div>
+                    </div>
+
+                    <!-- Chart Controls -->
+                    <div class="card control-panel">
+                        <div>
+                            <label style="display:block; color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Select Stock</label>
+                            <select id="stock-select" class="stock-selector" onchange="changeStock(this.value)">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Timeframe</label>
+                            <div class="time-filters">
+                                <button class="filter-btn active" onclick="setChartPeriod('1D')">1D</button>
+                                <button class="filter-btn" onclick="setChartPeriod('1W')">1W</button>
+                                <button class="filter-btn" onclick="setChartPeriod('1M')">1M</button>
+                            </div>
+                        </div>
+                        <div style="margin-top:auto;">
+                            <div class="card-title">AI Sentiment</div>
+                            <div id="ai-sentiment" class="text-green" style="font-weight: 700; font-size: 1.2rem; margin-top:0.5rem;">NEUTRAL</div>
+                            <div class="card-sub" style="font-size:0.75rem;">Based on revenue & PE</div>
                         </div>
                     </div>
-                    <div style="margin-top:auto;">
-                        <div class="card-title">AI Sentiment</div>
-                        <div id="ai-sentiment" class="text-green" style="font-weight: 700; font-size: 1.2rem; margin-top:0.5rem;">NEUTRAL</div>
-                        <div class="card-sub" style="font-size:0.75rem;">Based on revenue & PE</div>
+
+                    <!-- Main Chart -->
+                    <div class="card chart-container">
+                        <canvas id="mainChart"></canvas>
                     </div>
                 </div>
+            </section>
 
-                <!-- Main Chart -->
-                <div class="card chart-container">
-                    <canvas id="mainChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Watchlist Section -->
-        <section id="watchlist" class="section">
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fa-regular fa-star"></i> My Watchlist</h2>
-                    <div>
-                        <input type="text" id="watchlist-search" placeholder="Add Symbol" class="stock-selector" style="width:200px; display:inline-block;">
-                        <button class="btn btn-primary" onclick="addToWatchlist()"><i class="fa-solid fa-plus"></i> Add</button>
-                    </div>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Price</th>
-                            <th>Change %</th>
-                            <th>Volume</th>
-                            <th>PE Ratio</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="watchlist-body">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Portfolio Section -->
-        <section id="portfolio" class="section">
-            <div class="portfolio-summary">
+            <!-- Watchlist Section -->
+            <section id="watchlist" class="section">
                 <div class="card">
-                    <div class="card-header"><h2>Portfolio Value</h2></div>
-                    <div class="card-value" id="port-total-val">₹0.00</div>
-                    <div class="card-sub" id="port-pl">₹0.00 (0.00%)</div>
-                </div>
-                <div class="card pie-chart-wrapper">
-                    <canvas id="portfolioChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2>Holdings</h2>
-                    <div>
-                        <button class="btn btn-danger" onclick="clearPortfolio()"><i class="fa-solid fa-trash"></i> Clear All</button>
-                        <button class="btn btn-primary" onclick="openAddHoldingModal()"><i class="fa-solid fa-plus"></i> Add Holding</button>
+                    <div class="card-header">
+                        <h2><i class="fa-regular fa-star"></i> My Watchlist</h2>
+                        <div>
+                            <input type="text" id="watchlist-search" placeholder="Add Symbol (e.g., RELIANCE.NS)" class="stock-selector" style="width:200px; display:inline-block;">
+                            <button class="btn btn-primary" onclick="addToWatchlist()"><i class="fa-solid fa-plus"></i> Add</button>
+                        </div>
                     </div>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Qty</th>
-                            <th>Avg Buy Price</th>
-                            <th>Cur Price</th>
-                            <th>Value</th>
-                            <th>P/L</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="portfolio-body">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Alerts Section -->
-        <section id="alerts" class="section">
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fa-solid fa-bell text-orange"></i> Price Alerts</h2>
-                    <button class="btn btn-danger" onclick="clearAlerts()"><i class="fa-solid fa-trash"></i> Clear All</button>
-                </div>
-                
-                <div class="alert-grid">
-                    <div class="form-group">
-                        <label>Stock</label>
-                        <select id="alert-symbol" class="form-control">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Price</th>
+                                <th>Change %</th>
+                                <th>Volume</th>
+                                <th>PE Ratio</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="watchlist-body">
                             <!-- Populated by JS -->
-                        </select>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Portfolio Section -->
+            <section id="portfolio" class="section">
+                <div class="portfolio-summary">
+                    <div class="card">
+                        <div class="card-header"><h2>Portfolio Value</h2></div>
+                        <div class="card-value" id="port-total-val">₹0.00</div>
+                        <div class="card-sub" id="port-pl">₹0.00 (0.00%)</div>
                     </div>
-                    <div class="form-group">
-                        <label>Condition</label>
-                        <select id="alert-condition" class="form-control">
-                            <option value=">">Price Goes Above (>)</option>
-                            <option value="<">Price Drops Below (<)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Target Price (₹)</label>
-                        <input type="number" id="alert-price" class="form-control" placeholder="Target Price">
-                    </div>
-                    <div class="form-group">
-                        <label style="opacity:0">Action</label>
-                        <button class="btn btn-warning" onclick="addAlert()" style="width:100%"><i class="fa-solid fa-plus"></i> Set Alert</button>
+                    <div class="card pie-chart-wrapper">
+                        <canvas id="portfolioChart"></canvas>
                     </div>
                 </div>
 
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Stock</th>
-                            <th>Condition</th>
-                            <th>Target Price</th>
-                            <th>Current Price</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="alerts-body">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- AI Chat Section -->
-        <section id="ai-chat" class="section">
-            <div class="card chat-container">
-                <div class="card-header">
-                    <h2><i class="fa-solid fa-robot"></i> AI Market Analyst</h2>
-                    <span class="card-title">Ask about stocks, risk, or trends.</span>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Holdings</h2>
+                        <div>
+                            <button class="btn btn-danger" onclick="clearPortfolio()"><i class="fa-solid fa-trash"></i> Clear All</button>
+                            <button class="btn btn-primary" onclick="openAddHoldingModal()"><i class="fa-solid fa-plus"></i> Add Holding</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Qty</th>
+                                <th>Avg Buy Price</th>
+                                <th>Cur Price</th>
+                                <th>Value</th>
+                                <th>P/L</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
                 </div>
-                <div class="chat-window" id="chat-window">
-                    <div class="message bot">
-                        Hello! I'm your AI Market Analyst. I have access to the provided dataset containing fundamentals like P/E, Revenue, and Debt. 
-                        <br><br>
-                        Try asking:
-                        <br>• "Should I buy TCS?"
-                        <br>• "Compare INFY vs TCS"
-                        <br>• "Analyze my portfolio risk"
-                        <br>• "Show me high growth stocks"
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-bell text-orange"></i> Manage Price Alerts</h2>
+                        <button class="btn btn-danger" onclick="clearAlerts()"><i class="fa-solid fa-trash"></i> Clear All</button>
+                    </div>
+                    
+                    <div class="alert-grid">
+                        <div class="form-group">
+                            <label>Stock</label>
+                            <select id="alert-symbol" class="form-control">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Condition</label>
+                            <select id="alert-condition" class="form-control">
+                                <option value=">">Price Goes Above (>)</option>
+                                <option value="<">Price Drops Below (<)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Target Price (₹)</label>
+                            <input type="number" id="alert-price" class="form-control" placeholder="Target Price">
+                        </div>
+                        <div class="form-group">
+                            <label style="opacity:0">Action</label>
+                            <button class="btn btn-warning" onclick="addAlert()" style="width:100%"><i class="fa-solid fa-plus"></i> Set Alert</button>
+                        </div>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Stock</th>
+                                <th>Condition</th>
+                                <th>Target Price</th>
+                                <th>Current Price</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alerts-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- AI Chat Section -->
+            <section id="ai-chat" class="section">
+                <div class="card chat-container">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-robot"></i> AI Market Analyst</h2>
+                        <span class="card-title">Ask about stocks, risk, or trends.</span>
+                    </div>
+                    <div class="chat-window" id="chat-window">
+                        <div class="message bot">
+                            Hello! I'm your AI Market Analyst. I have access to provided dataset containing fundamentals like P/E, Revenue, and Debt. 
+                            <br><br>
+                            Try asking:
+                            <br>• "Should I buy TCS?"
+                            <br>• "Compare INFY vs TCS"
+                            <br>• "Analyze my portfolio risk"
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" class="chat-input" placeholder="Type your question here..." onkeypress="handleChatKey(event)">
+                        <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
                 </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" class="chat-input" placeholder="Type your question here..." onkeypress="handleChatKey(event)">
-                    <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </section>
+            </section>
 
-    </main>
+        </main>
+    </div>
 
     <!-- Modals -->
-    
-    <!-- Add Holding Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal">
             <h3>Add New Holding</h3>
@@ -472,9 +573,68 @@
     <div class="toast-container" id="toast-container"></div>
 
     <script>
-        // --- 1. DATA PARSING & STATE ---
+        // --- 1. LOGIN LOGIC ---
 
-        const RAW_CSV = `0 | symbol | revenuePerShare | trailingPE | earningsQuarterlyGrowth | previousClose | open | dayLow | dayHigh | volume | trailingEps | pegRatio | ebitda | totalDebt | totalRevenue | debtToEquity | revenuePerShare.1 | earningsGrowth | revenueGrowth
+        function checkLoginStatus() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            if (isLoggedIn) {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-wrapper').classList.add('visible');
+                // Allow UI to transition then init charts
+                setTimeout(() => init(), 100);
+            } else {
+                document.getElementById('login-view').classList.remove('hidden');
+                document.getElementById('app-wrapper').classList.remove('visible');
+            }
+        }
+
+        function handleEmailLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // MOCK CREDENTIALS
+            if (email === 'admin@stockai.com' && password === 'admin123') {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                showToast('Login Successful');
+                transitionToApp();
+            } else {
+                showToast('Invalid email or password', 'error');
+                // Shake animation logic could go here
+            }
+        }
+
+        function handleGoogleLogin() {
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            
+            // Simulate Google OAuth Loading
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                sessionStorage.setItem('isLoggedIn', 'true');
+                showToast('Logged in with Google');
+                transitionToApp();
+            }, 1500);
+        }
+
+        function transitionToApp() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-wrapper').classList.add('visible');
+            setTimeout(() => init(), 100);
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            window.location.reload();
+        }
+
+
+        // --- 2. DATA PARSING & STATE ---
+
+        const_CSV = `0 | symbol | revenuePerShare | trailingPE | earningsQuarterlyGrowth | previousClose | open | dayLow | dayHigh | volume | trailingEps | pegRatio | ebitda | totalDebt | totalRevenue | debtToEquity | revenuePerShare.1 | earningsGrowth | revenueGrowth
 1 | RELIANCE.BO | 1296.823 | 28.012129 | 0.093 | 2901.3 | 2897.05 | 2895.35 | 2920 | 562484 | 103.88 | 7.752124646 | 1.50E+12 | 3.17E+12 | 8.77E+12 | 36.1 | 1296.823 | 0.093 | 0.036
 2 | RELIANCE.NS | 1296.823 | 28.010878 | 0.093 | 2901.95 | 2899.95 | 2894.7 | 2920 | 9763420 | 103.89 | 7.752124646 | 1.50E+12 | 3.17E+12 | 8.77E+12 | 36.1 | 1296.823 | 0.093 | 0.036
 3 | HDFCBANK.BO | 293.74 | 16.260424 | 0.359 | 1445.1 | 1437.3 | 1437.3 | 1450.7 | 783356 | 88.74 | 7.752124646 | 12331239082 | 8.00E+12 | 1.93E+12 | 118.1582281 | 293.74 | -0.001 | 1.211
@@ -529,13 +689,15 @@
         let stocks = [];
         let watchlist = JSON.parse(localStorage.getItem('watchlist')) || ['RELIANCE.NS', 'TCS.NS', 'INFY.NS'];
         let portfolio = [];
-        let alerts = []; // NEW: Alerts Array
+        let alerts = [];
+        let notifications = [];
+        
         let sellIndex = -1; 
         let selectedStock = 'RELIANCE.NS';
         let mainChart = null;
         let portfolioChart = null;
 
-        // --- 2. INITIALIZATION & HELPERS ---
+        // --- 3. INITIALIZATION & HELPERS ---
 
         function init() {
             parseData();
@@ -546,11 +708,10 @@
                 const r = getStock('RELIANCE.NS');
                 const t = getStock('TCS.NS');
                 const i = getStock('INFY.NS');
-                
                 portfolio = [
                     { symbol: 'RELIANCE.NS', qty: 10, buyPrice: r ? r.previousClose : 2850 },
                     { symbol: 'TCS.NS', qty: 5, buyPrice: t ? t.previousClose : 3900 },
-                    { symbol: 'INFY.NS', qty: 20, buyPrice: i ? i.previousClose : 1500 }
+                    { symbol: 'INFY.NS', status: 20, buyPrice: i ? i.previousClose : 1500 }
                 ];
                 localStorage.setItem('portfolio', JSON.stringify(portfolio));
             } else {
@@ -559,14 +720,25 @@
 
             // Load Alerts
             alerts = JSON.parse(localStorage.getItem('alerts')) || [];
+            if (alerts.length === 0) {
+                alerts = [
+                    { symbol: 'TCS.NS', condition: '>', target: 4000, triggered: false },
+                    { symbol: 'RELIANCE.NS', condition: '<', target: 2800, triggered: false }
+                ];
+                localStorage.setItem('alerts', JSON.stringify(alerts));
+            }
+
+            notifications = JSON.parse(localStorage.getItem('notifications')) || [];
 
             renderStockSelector();
             populateModalSelect();
-            populateAlertSelect(); // NEW
+            populateAlertSelect(); 
             updateDashboard();
             renderWatchlist();
             renderPortfolio();
-            renderAlerts(); // NEW
+            renderAlerts(); 
+            updateBellBadge(); 
+            renderNotifications();
             
             setInterval(simulateLivePrices, 3000);
         }
@@ -619,13 +791,80 @@
             return stocks.find(s => s.symbol === symbol);
         }
 
-        // --- 3. DASHBOARD LOGIC ---
+        // --- 4. NOTIFICATION SYSTEM ---
+
+        function updateBellBadge() {
+            const count = notifications.length;
+            const badge = document.getElementById('notif-badge');
+            badge.textContent = count;
+            if (count > 0) badge.classList.add('show');
+            else badge.classList.remove('show');
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notif-dropdown');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notif-list');
+            list.innerHTML = '';
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<li style="padding:1rem; text-align:center; color:var(--text-muted);">No new notifications.</li>';
+                return;
+            }
+
+            notifications.forEach((notif, index) => {
+                const li = document.createElement('li');
+                li.className = 'notif-item';
+                li.innerHTML = `
+                    <div class="notif-item-content">
+                        <h5>${notif.symbol} Alert</h5>
+                        <span>${notif.msg} • ${notif.time}</span>
+                    </div>
+                    <i class="fa-solid fa-xmark notif-delete" onclick="removeNotification(${index})"></i>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function addNotification(symbol, message) {
+            const newNotif = {
+                symbol: symbol,
+                msg: message,
+                time: new Date().toLocaleTimeString()
+            };
+            notifications.unshift(newNotif);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateBellBadge();
+            renderNotifications();
+            showToast(message, 'warning');
+        }
+
+        function removeNotification(index) {
+            notifications.splice(index, 1);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateBellBadge();
+            renderNotifications();
+        }
+
+        function clearAllNotifications() {
+            notifications = [];
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateBellBadge();
+            renderNotifications();
+        }
+
+        // --- 5. DASHBOARD LOGIC ---
 
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             event.currentTarget.classList.add('active');
+            
+            document.getElementById('page-title').textContent = id.charAt(0).toUpperCase() + id.slice(1);
             
             if(id === 'portfolio') renderPortfolioChart();
         }
@@ -698,7 +937,7 @@
             let volatility = (stock.dayHigh - stock.dayLow) / 2;
             
             for (let i = 0; i < points; i++) {
-                labels.push(i === points -1 ? 'Now' : `T-${points - 1 - i}`);
+                labels.push(i === points - 1 ? 'Now' : `T-${points - 1 - i}`);
                 let noise = (Math.random() - 0.5) * volatility * 0.5;
                 let trend = (stock.dayHigh - stock.open) / points;
                 let price = startPrice + (trend * i) + noise;
@@ -758,7 +997,7 @@
             updateDashboard();
         }
 
-        // --- 4. WATCHLIST LOGIC ---
+        // --- 6. WATCHLIST LOGIC ---
 
         function renderWatchlist() {
             const tbody = document.getElementById('watchlist-body');
@@ -808,7 +1047,7 @@
             showToast(`${symbol} removed`);
         }
 
-        // --- 5. PORTFOLIO LOGIC ---
+        // --- 7. PORTFOLIO LOGIC ---
 
         function renderPortfolio() {
             const tbody = document.getElementById('portfolio-body');
@@ -947,7 +1186,11 @@
             });
         }
 
-        // --- 6. ALERTS LOGIC (NEW) ---
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // --- 8. ALERTS LOGIC ---
 
         function populateAlertSelect() {
             const select = document.getElementById('alert-symbol');
@@ -1028,17 +1271,17 @@
             }
         }
 
-        // --- 7. SIMULATION LOGIC ---
+        // --- 9. SIMULATION LOGIC ---
 
         function simulateLivePrices() {
             // Check Alerts
             alerts.forEach((alert, idx) => {
-                if (alert.triggered) return; // Don't trigger again
+                if (alert.triggered) return;
 
                 const stock = getStock(alert.symbol);
                 if (!stock) return;
 
-                const currentPrice = stock.dayHigh; // Simulated price
+                const currentPrice = stock.dayHigh; 
                 let hit = false;
 
                 if (alert.condition === '>' && currentPrice >= alert.target) hit = true;
@@ -1072,7 +1315,7 @@
             }
         }
 
-        // --- 8. AI CHATBOT LOGIC ---
+        // --- 10. AI CHATBOT LOGIC ---
 
         function handleChatKey(e) {
             if(e.key === 'Enter') sendMessage();
@@ -1129,16 +1372,8 @@
             if (q.includes("buy") || q.includes("sell")) {
                 return "I can provide fundamental data (PE, Growth) to help you decide, but I cannot give financial advice. Ask about a specific symbol to see its metrics.";
             }
-            return "I can analyze stocks from the provided dataset. Try asking about 'RELIANCE.NS', 'compare TCS vs INFY', or 'analyze portfolio risk'.";
+            return "I can analyze stocks from provided dataset. Try asking about 'RELIANCE.NS', 'compare TCS vs INFY', or 'analyze portfolio risk'.";
         }
-
-        // --- 9. UTILS ---
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        window.onload = init;
 
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
@@ -1146,6 +1381,7 @@
             }
         }
 
+        window.onload = checkLoginStatus;
     </script>
 </body>
 </html>
