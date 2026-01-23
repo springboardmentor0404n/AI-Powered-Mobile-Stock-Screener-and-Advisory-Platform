@@ -34,12 +34,31 @@ def chat():
     if talk: return jsonify({"message": talk["response"], "data": []})
 
     parsed = parse_query(query)
+    
+    # If parsing failed to find any meaningful intent or filters, and it's just a general word
+    # that isn't explicitly asking for "all stocks", we should ask for clarification.
+    # We allow "stocks" or "all" to pass through as a request for the full list.
+    is_explicit_request = any(w in query.lower() for w in ["stock", "stocks", "all", "list", "show"])
+    
+    if parsed["intent"] == "general" and not parsed["filters"] and not parsed["keywords"] and not is_explicit_request:
+         return jsonify({
+            "message": "I didn't quite catch that. Could you be more specific? You can ask for 'high price stocks', 'volume leaders', etc.",
+            "data": [],
+            "intent": "clarification",
+            "quarters": None
+        })
+
     results = run_screener(parsed.get("filters", []), parsed.get("keywords"), quarters=parsed.get("quarters"))
     
     # Apply the new directional sorting
     sorted_results = apply_intent_sorting(results, parsed.get("intent"))
     
-    limit = int(parsed.get("limit") or 10)
+    limit = parsed.get("limit")
+    if limit is None:
+        limit = len(sorted_results) # Show all if no limit specified
+    else:
+        limit = int(limit)
+
     return jsonify({
         "message": f"Analyzing {len(sorted_results)} stocks based on your query.",
         "data": sorted_results[:limit],

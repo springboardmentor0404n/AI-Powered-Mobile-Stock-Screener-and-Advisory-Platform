@@ -9,6 +9,14 @@ def run_screener(filters, symbols=None, quarters=None):
 
     for file in os.listdir(UPLOAD_DIR):
         if not file.endswith(".csv") or file.startswith("STOCKS"): continue
+        
+        symbol_name = file.replace("cleaned_","").replace(".csv","").lower()
+        
+        # If specific symbols/keywords are requested, skip files that don't match
+        # We do a loose match: if ANY keyword is in the symbol name
+        if symbols:
+             if not any(k.lower() in symbol_name for k in symbols): continue
+
         try:
             df = pd.read_csv(os.path.join(UPLOAD_DIR, file))
             # Normalized Header Mapping
@@ -27,6 +35,7 @@ def run_screener(filters, symbols=None, quarters=None):
             for f in filters:
                 if f["field"] == "close":
                     if f["operator"] == "<" and not (price < f["value"]): match = False
+                    if f["operator"] == ">" and not (price > f["value"]): match = False
             
             if match:
                 results.append({
