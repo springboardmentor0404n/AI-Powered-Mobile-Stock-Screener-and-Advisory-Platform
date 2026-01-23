@@ -22,16 +22,7 @@ yarn-error.log*
 .vite/
 vite-temp/
 
-# --- Python & AI Backend ---
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.venv/
-venv/
-ENV/
-env/
-.python-version
+
 
 # --- Data & Local Storage (Greyed out in VS Code) ---
 uploads/
