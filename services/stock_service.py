@@ -316,6 +316,7 @@ def screener():
                         day_high = float(fast.day_high) if hasattr(fast, 'day_high') else current_price
                         day_low = float(fast.day_low) if hasattr(fast, 'day_low') else current_price
                         volume = int(fast.last_volume) if hasattr(fast, 'last_volume') else 0
+                        fast_market_cap = int(fast.market_cap) if hasattr(fast, 'market_cap') else 0
                     except:
                         info = ticker.info
                         current_price = info.get('regularMarketPrice', 0) or 0
@@ -323,6 +324,7 @@ def screener():
                         day_high = info.get('regularMarketDayHigh', current_price)
                         day_low = info.get('regularMarketDayLow', current_price)
                         volume = info.get('regularMarketVolume', 0)
+                        fast_market_cap = 0
                     
                     if current_price > 0:
                         change = current_price - prev_close if prev_close else 0
@@ -331,13 +333,14 @@ def screener():
                         # Get additional info for P/E and sector (use cache if available)
                         pe_ratio = 0
                         industry = stock['name'].split()[0]  # Default to first word of company name
-                        market_cap = 0
+                        market_cap = fast_market_cap
                         
                         try:
                             info = ticker.info
                             pe_ratio = info.get('trailingPE', 0) or info.get('forwardPE', 0) or 0
                             industry = info.get('industry', '') or info.get('sector', '') or industry
-                            market_cap = info.get('marketCap', 0) or 0
+                            if market_cap == 0:
+                                market_cap = info.get('marketCap', 0) or 0
                         except:
                             pass
                         

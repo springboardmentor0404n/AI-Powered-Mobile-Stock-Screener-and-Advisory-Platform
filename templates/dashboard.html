@@ -1936,7 +1936,7 @@
 				// Update KPIs
 				document.getElementById('totalStocks').innerText = screenerData.length;
 				
-				const totalMktCap = screenerData.reduce((sum, d) => sum + Number(d['market cap'] || 0), 0);
+				const totalMktCap = screenerData.reduce((sum, d) => sum + Number(d['market_cap'] || 0), 0);
 				document.getElementById('marketCap').innerText = '₹' + (totalMktCap / 10000000).toFixed(2);
 				
 				const avgVol = screenerData.reduce((sum, d) => sum + Number(d.volume || 0), 0) / screenerData.length;
@@ -2669,7 +2669,7 @@
 			// Update KPIs
 			document.getElementById('totalStocks').innerText = data.length;
 			
-			const totalMktCap = data.reduce((sum, d) => sum + Number(d['market cap'] || 0), 0);
+			const totalMktCap = data.reduce((sum, d) => sum + Number(d['market_cap'] || 0), 0);
 			document.getElementById('marketCap').innerText = '₹' + (totalMktCap / 10000000).toFixed(2);
 			
 			const avgVol = data.reduce((sum, d) => sum + Number(d.volume || 0), 0) / data.length;
